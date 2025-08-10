@@ -7,9 +7,9 @@ public class ProductEntity
     public int ProductSubTypeId { get; set; }
     public ProductSubTypeEntity? ProductSubTypeEntity { get; set; }
     public int FactoryId { get; set; }
-    public FactoryEntity? Factory { get; set; } = null;
+    public FactoryEntity? FactoryEntity { get; set; } = null;
     public int OrderId { get; set; }
-    public OrderEntity? Order { get; set; } = null;
+    public OrderEntity? OrderEntity { get; set; } = null;
     public string Status { get; set; }
     public DateOnly? Start_date { get; set; } = null;
     public DateOnly? End_date { get; set; } = null;

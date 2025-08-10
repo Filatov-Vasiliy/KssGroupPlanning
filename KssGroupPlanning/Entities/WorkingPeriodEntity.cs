@@ -1,16 +1,14 @@
-﻿namespace KssGroupPlanning.Entities
-{
-    public class WorkingPeriodEntity
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Status { get; set; }
+﻿namespace KssGroupPlanning.Entities;
 
-        public int ProductId { get; set; }
-        public ProductEntity? Product { get; set; }
-        public DateTime DateFrom { get; set; }
-        public DateTime DateTo { get; set; }
-        public DateTime CreateTime { get; set; } = DateTime.Now;
-        public DateTime UpdateTime { get; set; } = DateTime.Now;
-    }
+public class WorkingPeriodEntity
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Status { get; set; }
+    public int ProductId { get; set; }
+    public ProductEntity? ProductEntity { get; set; }
+    public DateTime DateFrom { get; set; }
+    public DateTime DateTo { get; set; }
+    public DateTime CreateTime { get; set; } = DateTime.Now;
+    public DateTime UpdateTime { get; set; } = DateTime.Now;
 }
