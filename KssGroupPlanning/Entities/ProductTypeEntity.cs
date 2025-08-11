@@ -9,7 +9,7 @@ namespace KssGroupPlanning.Entities;
 
 public class ProductTypeEntity
 {
-    public int Guid { get; set; }
+    public Guid Id { get; set; }
     public string Name { get; set; }
     public List<ProductSubTypeEntity> ProductSubTypeEntities { get; set; } = [];
 }
