@@ -1,4 +1,5 @@
 ﻿using CsvHelper.Configuration.Attributes;
+using KssGroupPlanning.Models;
 namespace KssGroupPlanning.Entities;
 
 public class SrcOrderEntity
@@ -32,7 +33,7 @@ public class SrcOrderEntity
     [Name("payment_current")]
     public decimal PaymentCurrent { get; set; }
     [Name("qty")]
-    public int qty { get; set; }
+    public int Qty { get; set; }
     //public DateTime? UploadTime { get; set; } = DateTime.Now;
-
+    
 }
