@@ -1,8 +1,25 @@
 ﻿using CsvHelper.Configuration.Attributes;
+using Microsoft.AspNetCore.Identity;
 namespace KssGroupPlanning.Models;
 
 public class SrcOrder
 {
+    private SrcOrder(string orderName, string status, string contragent, string dogovor, string manager, string orderNumber, DateOnly orderDate, DateOnly schemeDate, DateOnly logisticDate, DateOnly createDate, decimal paymentAmount, decimal paymentCurrent, int qty)
+    {
+        OrderName = orderName;
+        Status = status;
+        Contragent = contragent;
+        Dogovor = dogovor;
+        Manager = manager;
+        OrderNumber = orderNumber;
+        OrderDate = orderDate;
+        SchemeDate = schemeDate;
+        LogisticDate = logisticDate;
+        CreateDate = createDate;
+        PaymentAmount = paymentAmount;
+        PaymentCurrent = paymentCurrent;
+        Qty = qty;
+    }
     [Name("order_name")]
     public string OrderName { get; set; }
     [Name("status")]
@@ -32,7 +49,10 @@ public class SrcOrder
     [Name("payment_current")]
     public decimal PaymentCurrent { get; set; }
     [Name("qty")]
-    public int qty { get; set; }
+    public int Qty { get; set; }
     //public DateTime? UploadTime { get; set; } = DateTime.Now;
-
+    public static SrcOrder Create(string orderName, string status, string contragent, string dogovor, string manager, string orderNumber, DateOnly orderDate, DateOnly schemeDate, DateOnly logisticDate, DateOnly createDate, decimal paymentAmount, decimal paymentCurrent, int qty)
+    {
+        return new SrcOrder(orderName, status, contragent, dogovor, manager, orderNumber, orderDate, schemeDate, logisticDate, createDate, paymentAmount, paymentCurrent, qty);
+    }
 }
