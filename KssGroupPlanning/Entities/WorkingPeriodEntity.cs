@@ -2,10 +2,10 @@
 
 public class WorkingPeriodEntity
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Name { get; set; }
     public string Status { get; set; }
-    public int ProductId { get; set; }
+    public Guid ProductId { get; set; }
     public ProductEntity? ProductEntity { get; set; }
     public DateTime DateFrom { get; set; }
     public DateTime DateTo { get; set; }

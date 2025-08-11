@@ -2,8 +2,8 @@
 
 public class ProductSubTypeStagesSample
 {
-    public int Id { get; set; }
-    public int ProductSubTypeId { get; set; }
+    public Guid Id { get; set; }
+    public Guid ProductSubTypeId { get; set; }
     public ProductSubType? ProductSubType { get; set; } = null;
     public int RowNumber { get; set; }
     public string StageName { get; set; }
