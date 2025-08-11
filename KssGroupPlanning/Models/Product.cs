@@ -2,13 +2,13 @@
 
 public class Product
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string? Number { get; set; } = null; // ????
-    public int ProductSubTypeId { get; set; }
+    public Guid ProductSubTypeId { get; set; }
     public ProductSubType? ProductSubType { get; set; }
-    public int FactoryId { get; set; }
+    public Guid FactoryId { get; set; }
     public Factory? Factory { get; set; } = null;
-    public int OrderId { get; set; }
+    public Guid OrderId { get; set; }
     public Order? Order { get; set; } = null;
     public string Status { get; set; }
     public DateOnly? Start_date { get; set; } = null;

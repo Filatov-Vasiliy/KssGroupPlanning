@@ -2,7 +2,7 @@
 
 public class OrderEntity
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Number { get; set; }
     public string Manager { get; set; }
     public string Contragent { get; set; }
