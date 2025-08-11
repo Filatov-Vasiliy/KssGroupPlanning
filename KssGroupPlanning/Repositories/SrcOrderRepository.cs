@@ -46,7 +46,7 @@ public class SrcOrderRepository(ProjectDbContext context) : ISrcOrderRepository
         List<SrcOrder> srcOrders = new List<SrcOrder>();
         foreach (var srcOrderEntity in srcOrderEntities) 
         {
-            srcOrders.Add(SrcOrder.Create(srcOrderEntity.OrderName, srcOrderEntity.Status, srcOrderEntity.Contragent, srcOrderEntity.Dogovor, srcOrderEntity.Manager, srcOrderEntity.OrderNumber, srcOrderEntity.OrderDate, srcOrderEntity.SchemeDate, srcOrderEntity.LogisticDate, srcOrderEntity.CreateDate, srcOrderEntity.PaymentAmount, srcOrderEntity.PaymentCurrent, srcOrderEntity.Qty))
+            srcOrders.Add(SrcOrder.Create(srcOrderEntity.OrderName, srcOrderEntity.Status, srcOrderEntity.Contragent, srcOrderEntity.Dogovor, srcOrderEntity.Manager, srcOrderEntity.OrderNumber, srcOrderEntity.OrderDate, srcOrderEntity.SchemeDate, srcOrderEntity.LogisticDate, srcOrderEntity.CreateDate, srcOrderEntity.PaymentAmount, srcOrderEntity.PaymentCurrent, srcOrderEntity.Qty));
         }
         return srcOrders;
     }
