@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20250806101031_newentities")]
-    partial class newentities
+    [Migration("20250812072956_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.FactoryEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -44,11 +42,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.MaterialSampleEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateOnly?>("DeliveryDate")
                         .HasColumnType("date");
@@ -64,11 +60,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.OrderEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Contragent")
                         .IsRequired()
@@ -105,11 +99,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
                         .HasColumnType("timestamp with time zone");
@@ -117,20 +109,26 @@ namespace KssGroupPlanning.Migrations
                     b.Property<DateOnly?>("End_date")
                         .HasColumnType("date");
 
-                    b.Property<int>("FactoryId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("FactoryEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FactoryId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Number")
                         .HasColumnType("text");
 
-                    b.Property<int>("OrderId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("OrderEntityId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int?>("ProductSubTypeEntityId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("ProductSubTypeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("ProductSubTypeEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductSubTypeId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateOnly?>("Start_date")
                         .HasColumnType("date");
@@ -144,9 +142,9 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FactoryId");
+                    b.HasIndex("FactoryEntityId");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderEntityId");
 
                     b.HasIndex("ProductSubTypeEntityId");
 
@@ -155,21 +153,19 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("ProductTypeEntityId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("ProductTypeEntityId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("ProductTypeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductTypeId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -180,17 +176,15 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeStagesSampleEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("uuid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<Guid?>("ProductSubTypeEntityId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int?>("ProductSubTypeEntityId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ProductSubTypeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductSubTypeId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("RowNumber")
                         .HasColumnType("integer");
@@ -212,26 +206,24 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodsSampleEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("uuid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<Guid?>("ProductSubTypeEntityId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int?>("ProductSubTypeEntityId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ProductSubTypeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductSubTypeId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("RowNumber")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("StageTypeEntityId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("StageTypeEntityId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("StageTypeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("StageTypeId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("StandartEmployee")
                         .HasColumnType("integer");
@@ -255,11 +247,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductTypeEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -306,15 +296,15 @@ namespace KssGroupPlanning.Migrations
                     b.Property<decimal>("PaymentCurrent")
                         .HasColumnType("numeric");
 
+                    b.Property<int>("Qty")
+                        .HasColumnType("integer");
+
                     b.Property<DateOnly>("SchemeDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int>("qty")
-                        .HasColumnType("integer");
 
                     b.HasKey("OrderName");
 
@@ -323,11 +313,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.StageEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
                         .HasColumnType("timestamp with time zone");
@@ -339,8 +327,8 @@ namespace KssGroupPlanning.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -358,11 +346,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.StageTypeEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -398,11 +384,9 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
                         .HasColumnType("timestamp with time zone");
@@ -417,8 +401,11 @@ namespace KssGroupPlanning.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("ProductEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -429,18 +416,16 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("ProductEntityId");
 
                     b.ToTable("WorkingPeriods");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
                         .HasColumnType("timestamp with time zone");
@@ -448,8 +433,8 @@ namespace KssGroupPlanning.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("ProductSubTypeWorkingPeriodsSampleId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductSubTypeWorkingPeriodsSampleId")
+                        .HasColumnType("uuid");
 
                     b.Property<TimeOnly?>("Recycling")
                         .HasColumnType("time without time zone");
@@ -464,8 +449,8 @@ namespace KssGroupPlanning.Migrations
                     b.Property<DateTime>("UpdateTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("WorkingPeriodId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("WorkingPeriodId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -478,25 +463,21 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductEntity", b =>
                 {
-                    b.HasOne("KssGroupPlanning.Entities.FactoryEntity", "Factory")
+                    b.HasOne("KssGroupPlanning.Entities.FactoryEntity", "FactoryEntity")
                         .WithMany("Products")
-                        .HasForeignKey("FactoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("FactoryEntityId");
 
-                    b.HasOne("KssGroupPlanning.Entities.OrderEntity", "Order")
+                    b.HasOne("KssGroupPlanning.Entities.OrderEntity", "OrderEntity")
                         .WithMany("Products")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrderEntityId");
 
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeEntity", "ProductSubTypeEntity")
                         .WithMany()
                         .HasForeignKey("ProductSubTypeEntityId");
 
-                    b.Navigation("Factory");
+                    b.Navigation("FactoryEntity");
 
-                    b.Navigation("Order");
+                    b.Navigation("OrderEntity");
 
                     b.Navigation("ProductSubTypeEntity");
                 });
@@ -547,13 +528,11 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodEntity", b =>
                 {
-                    b.HasOne("KssGroupPlanning.Entities.ProductEntity", "Product")
+                    b.HasOne("KssGroupPlanning.Entities.ProductEntity", "ProductEntity")
                         .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductEntityId");
 
-                    b.Navigation("Product");
+                    b.Navigation("ProductEntity");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageEntity", b =>

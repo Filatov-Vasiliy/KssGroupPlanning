@@ -8,7 +8,7 @@ public class ProductTypeConfiguration : IEntityTypeConfiguration<ProductTypeEnti
 {
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ProductTypeEntity> builder)
     {
-        builder.HasKey(pt => pt.Guid);
+        builder.HasKey(pt => pt.Id);
 
     }
 }
