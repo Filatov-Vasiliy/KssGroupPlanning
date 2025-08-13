@@ -33,8 +33,9 @@ orderScvReader();
 //services.AddTransient<ExceptionHandlerMiddleware>();
 
 services.AddScoped<UserService>();
+services.AddScoped<ProductTypeService>();
 
-
+services.AddScoped<IProductTypeRepository,ProductTypeRepository>();
 services.AddScoped<IUsersRepository, UsersRepository>();
 services.AddScoped<IJwtProvider, JwtProvider>();
 services.AddScoped<IPasswordHasher, PasswordHasher>();
