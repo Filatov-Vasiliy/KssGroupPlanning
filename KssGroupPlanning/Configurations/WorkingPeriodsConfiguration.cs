@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KssGroupPlanning.Configurations;
 
-public class WorkingPeriodConfiguration : IEntityTypeConfiguration<WorkingPeriodEntity>
+public class WorkingPeriodsConfiguration : IEntityTypeConfiguration<WorkingPeriodEntity>
 {
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<WorkingPeriodEntity> builder)
     {

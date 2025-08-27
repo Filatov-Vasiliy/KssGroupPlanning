@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250827101859_new_entities")]
+    partial class new_entities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -450,57 +453,6 @@ namespace KssGroupPlanning.Migrations
                     b.ToTable("WorkingPeriodStages");
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodsRelationsEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ChildProductSubTypeWokingPeriodsSampleEntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ChildProductSubTypeWokingPeriodsSampleId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ParentProductSubTypeWokingPeriodsSampleEntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ParentProductSubTypeWokingPeriodsSampleId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChildProductSubTypeWokingPeriodsSampleEntityId");
-
-                    b.HasIndex("ParentProductSubTypeWokingPeriodsSampleEntityId");
-
-                    b.ToTable("WorkingPeriodsRelations");
-                });
-
-            modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodsStageTypesEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ProductSubTypeWokingPeriodsSampleEntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ProductSubTypeWokingPeriodsSampleId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StageTypeId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductSubTypeWokingPeriodsSampleEntityId");
-
-                    b.HasIndex("StageTypeId");
-
-                    b.ToTable("WorkingPeriodStageTypes");
-                });
-
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductEntity", b =>
                 {
                     b.HasOne("KssGroupPlanning.Entities.FactoryEntity", "FactoryEntity")
@@ -586,39 +538,6 @@ namespace KssGroupPlanning.Migrations
                     b.Navigation("ProductSubTypeWorkingPeriodsSample");
 
                     b.Navigation("WorkingPeriod");
-                });
-
-            modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodsRelationsEntity", b =>
-                {
-                    b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodsSampleEntity", "ChildProductSubTypeWokingPeriodsSampleEntity")
-                        .WithMany()
-                        .HasForeignKey("ChildProductSubTypeWokingPeriodsSampleEntityId");
-
-                    b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodsSampleEntity", "ParentProductSubTypeWokingPeriodsSampleEntity")
-                        .WithMany()
-                        .HasForeignKey("ParentProductSubTypeWokingPeriodsSampleEntityId")
-                        .HasConstraintName("FK_WorkingPeriodsRelations_ProductSubTypeWorkingPeriodsSample~1");
-
-                    b.Navigation("ChildProductSubTypeWokingPeriodsSampleEntity");
-
-                    b.Navigation("ParentProductSubTypeWokingPeriodsSampleEntity");
-                });
-
-            modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodsStageTypesEntity", b =>
-                {
-                    b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodsSampleEntity", "ProductSubTypeWokingPeriodsSampleEntity")
-                        .WithMany()
-                        .HasForeignKey("ProductSubTypeWokingPeriodsSampleEntityId");
-
-                    b.HasOne("KssGroupPlanning.Entities.StageTypeEntity", "StageType")
-                        .WithMany()
-                        .HasForeignKey("StageTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProductSubTypeWokingPeriodsSampleEntity");
-
-                    b.Navigation("StageType");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.FactoryEntity", b =>
