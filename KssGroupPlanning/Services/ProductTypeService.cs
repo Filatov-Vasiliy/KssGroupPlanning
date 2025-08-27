@@ -44,4 +44,6 @@ public class ProductTypeService
         await _productTypeRepository.Delete(id);
     }
 
+    //Git для лохов
+
 }
