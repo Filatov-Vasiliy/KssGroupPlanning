@@ -11,7 +11,10 @@
         public TimeOnly? Recycling { get; set; }
         public ProductSubTypeWorkingPeriodsSampleEntity ProductSubTypeWorkingPeriodsSample { get; set; }
         public Guid ProductSubTypeWorkingPeriodsSampleId { get; set; }
+        public Guid BrigadeId { get; set; }
+        public BrigadeEntity Brigade { get; set; }
         public DateTime CreateTime { get; set; } = DateTime.Now;
         public DateTime UpdateTime { get; set; } = DateTime.Now;
+        public List<WorkingPeriodStageMaterialEntity> workingPeriodStageMaterialEntities { get; set; }
     }
 }
