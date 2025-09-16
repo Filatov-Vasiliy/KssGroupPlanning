@@ -10,6 +10,9 @@ public class ProductEntity
     public FactoryEntity? FactoryEntity { get; set; } = null;
     public Guid OrderId { get; set; }
     public OrderEntity? OrderEntity { get; set; } = null;
+    public Guid? ParentProductId { get; set; }
+    public ProductEntity? ParentProductEntity { get; set; } 
+    public List<ProductEntity>? ChildProductEntities { get; set; } = new List<ProductEntity>();
     public string Status { get; set; }
     public DateOnly? Start_date { get; set; } = null;
     public DateOnly? End_date { get; set; } = null;
