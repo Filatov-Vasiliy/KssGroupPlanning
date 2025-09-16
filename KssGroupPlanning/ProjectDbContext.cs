@@ -28,8 +28,6 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<WorkingPeriodsStageTypesEntity> WorkingPeriodStageTypes { get; set; }
     public DbSet<BrigadeEntity> Brigades { get; set; }
     public DbSet<WorkingPeriodStageMaterialEntity> WorkingPeriodStageMaterials { get; set; }
-    public DbSet<GroupMaterialEntity> GroupMaterials { get; set; }
-    public DbSet<ProductSubTypeGroupMaterialRelationEntity> ProductSubTypeGroupMaterialRelations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,9 +48,8 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new WorkingPeriodsRelationsConfiguration());
         modelBuilder.ApplyConfiguration(new WorkingPeriodsStageTypesConfiguration());
         modelBuilder.ApplyConfiguration(new BrigadeConfiguration());
-        modelBuilder.ApplyConfiguration(new WorkingPeriodStageMaterialConfiguration());
         modelBuilder.ApplyConfiguration(new GroupMaterialConfiguration());
-        modelBuilder.ApplyConfiguration(new ProductSubTypeGroupMaterialRelationConfiguration());
+        modelBuilder.ApplyConfiguration(new WorkingPeriodStageMaterialConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }
