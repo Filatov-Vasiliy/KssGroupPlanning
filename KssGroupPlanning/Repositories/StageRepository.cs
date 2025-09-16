@@ -20,7 +20,7 @@ public class StageRepository : IStageRepository
 		List<Stage> stages = new List<Stage>();
 		foreach (var stageEntity in stageEntities)
 		{
-			Stages.Add(Stage.Create(stageEntity.Id, stageEntity.Name, stageEntity.ProductId, stageEntity.Status, stageEntity.Date, stageEntity.CreateTime, stageEntity.UpdateTime));
+			stages.Add(Stage.Create(stageEntity.Id, stageEntity.Name, stageEntity.ProductId, stageEntity.Status, stageEntity.Date, stageEntity.CreateTime, stageEntity.UpdateTime));
 		}
 		return stages;
 	}
@@ -39,7 +39,7 @@ public class StageRepository : IStageRepository
 	
 	public async Task Add(Stage stage)
 	{
-		var StageEntity = new StageEntity
+		var stageEntity = new StageEntity
 		{
 			Id = stage.Id,
 			Name = stage.Name,
@@ -71,6 +71,6 @@ public class StageRepository : IStageRepository
 		await _dbcontext.Stages
 			.Where(s => s.Id == id)
 			.ExecuteDeleteAsync();
-		await _dbcontext.SaveChangesAsync(s);
+		await _dbcontext.SaveChangesAsync();
 	}
 }

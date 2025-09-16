@@ -30,7 +30,7 @@ public class ProductRepository : IProductRepository
         var productEntity = await _dbcontext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
         return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.Status, productEntity.Start_date, productEntity.End_date, productEntity.CreateTime, productEntity.UpdateTime);
     }
-    public async Task<Product?> GetByNumber(int number)
+    public async Task<Product?> GetByNumber(string number)
     {
         var productEntity = await _dbcontext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Number == number);
         return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.Status,productEntity.Start_date, productEntity.End_date, productEntity.CreateTime, productEntity.UpdateTime);
@@ -58,7 +58,7 @@ public class ProductRepository : IProductRepository
         var productEntity = await _dbcontext.Products.FirstOrDefaultAsync(p => p.Id == product.Id)
             ?? throw new Exception();
 
-        productEntity.Name = product.Name;
+        productEntity.Number = product.Number;
 
         await _dbcontext.SaveChangesAsync();
     }
