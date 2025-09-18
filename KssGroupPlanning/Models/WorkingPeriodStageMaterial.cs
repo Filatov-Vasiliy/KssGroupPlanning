@@ -6,7 +6,7 @@
         { 
             Id = id;
             WorkingPeriodStageId = workingPeriodStageId;
-            groupMaterialId = groupMaterialId;
+            GroupMaterialId = groupMaterialId;
             DateDelivery = dateDelivery;
         }
         public Guid Id { get; set; }
@@ -14,7 +14,6 @@
         public Guid WorkingPeriodStageId { get; set; }
         public Guid GroupMaterialId { get; set; }
         public GroupMaterial GroupMaterials { get; set; }
-        public Guid MaterialSampleId { get; set; }
         public DateOnly DateDelivery { get; set; }
         public static WorkingPeriodStageMaterial Create(Guid id, Guid workingPeriodStageId, Guid groupMaterialId, DateOnly dateDelivery)
         {
