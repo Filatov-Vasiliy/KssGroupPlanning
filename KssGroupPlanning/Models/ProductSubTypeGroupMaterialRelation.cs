@@ -12,7 +12,7 @@ public class ProductSubTypeGroupMaterialRelation
     public Guid GroupMaterialId { get; set; }
     public GroupMaterial? GroupMaterial { get; set; }
     public Guid ProductSubTypeWorkingPeriodSampleId { get; set; }
-    public ProductSubTypeWorkingPeriodsSample? ProductSubTypeWorkingPeriodsSample { get; set; }
+    public ProductSubTypeWorkingPeriodSample? ProductSubTypeWorkingPeriodSample { get; set; }
 
     public static ProductSubTypeGroupMaterialRelation Create(Guid id, Guid groupMaterialId, Guid productSubTypeWorkingPeriodSampleId)
     {

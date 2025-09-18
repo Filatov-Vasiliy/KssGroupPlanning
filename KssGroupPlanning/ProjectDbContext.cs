@@ -14,8 +14,8 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<ProductTypeEntity> ProductTypes { get; set; }
     public DbSet<ProductSubTypeEntity> ProductSubTypes { get; set; }
-    public DbSet<ProductSubTypeStagesSampleEntity> ProductSubTypeStagesSamples { get; set; }
-    public DbSet<ProductSubTypeWorkingPeriodsSampleEntity> ProductSubTypeWorkingPeriodsSamples { get; set; }
+    public DbSet<ProductSubTypeStageSampleEntity> ProductSubTypeStageSamples { get; set; }
+    public DbSet<ProductSubTypeWorkingPeriodSampleEntity> ProductSubTypeWorkingPeriodSamples { get; set; }
     public DbSet<OrderEntity> Orders { get; set; }
     public DbSet<FactoryEntity> Factories { get; set; }
     public DbSet<MaterialSampleEntity> MaterialSamples { get; set; }
@@ -24,8 +24,8 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<StageTypeEntity> StageTypes { get; set; }
     public DbSet<WorkingPeriodEntity> WorkingPeriods { get; set; }
     public DbSet<WorkingPeriodStageEntity> WorkingPeriodStages { get; set; }
-    public DbSet<WorkingPeriodsRelationsEntity> WorkingPeriodsRelations { get; set; }
-    public DbSet<WorkingPeriodsStageTypesEntity> WorkingPeriodStageTypes { get; set; }
+    public DbSet<WorkingPeriodRelationEntity> WorkingPeriodRelations { get; set; }
+    public DbSet<WorkingPeriodStageTypeRelationEntity> WorkingPeriodStageTypeRelations { get; set; }
     public DbSet<BrigadeEntity> Brigades { get; set; }
     public DbSet<WorkingPeriodStageMaterialEntity> WorkingPeriodStageMaterials { get; set; }
     public DbSet<GroupMaterialEntity> GroupMaterials { get; set; }
@@ -37,18 +37,18 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new ProductTypeConfiguration());
         modelBuilder.ApplyConfiguration(new ProductSubTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ProductSubTypeStagesSampleConfiguration());
-        modelBuilder.ApplyConfiguration(new ProductSubTypeWorkingPeriodsSampleConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductSubTypeStageSampleConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductSubTypeWorkingPeriodSampleConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
         modelBuilder.ApplyConfiguration(new FactoryConfiguration());
         modelBuilder.ApplyConfiguration(new MaterialSampleConfiguration());
         modelBuilder.ApplyConfiguration(new SrcOrderConfiguration());
         modelBuilder.ApplyConfiguration(new StageConfiguration());
         modelBuilder.ApplyConfiguration(new StageTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new WorkingPeriodsConfiguration());
+        modelBuilder.ApplyConfiguration(new WorkingPeriodConfiguration());
         modelBuilder.ApplyConfiguration(new WorkingPeriodStageConfiguration());
-        modelBuilder.ApplyConfiguration(new WorkingPeriodsRelationsConfiguration());
-        modelBuilder.ApplyConfiguration(new WorkingPeriodsStageTypesConfiguration());
+        modelBuilder.ApplyConfiguration(new WorkingPeriodRelationConfiguration());
+        modelBuilder.ApplyConfiguration(new WorkingPeriodStageTypeRelationConfiguration());
         modelBuilder.ApplyConfiguration(new BrigadeConfiguration());
         modelBuilder.ApplyConfiguration(new GroupMaterialConfiguration());
         modelBuilder.ApplyConfiguration(new ProductSubTypeGroupMaterialRelationConfiguration());

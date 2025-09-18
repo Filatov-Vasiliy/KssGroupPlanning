@@ -9,7 +9,7 @@ public class GroupMaterial
     }
     public Guid Id { get; set; }
     public string Name { get; set; }
-    public List<WorkingPeriodStageMaterial>? workingPeriodStageMaterials { get; set; } = new List<WorkingPeriodStageMaterial>();
+    public List<WorkingPeriodStageMaterial>? WorkingPeriodStageMaterials { get; set; } = new List<WorkingPeriodStageMaterial>();
     public static GroupMaterial Create(Guid id, string name)
     {
         return new GroupMaterial(id, name);
