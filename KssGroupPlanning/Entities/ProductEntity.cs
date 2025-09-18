@@ -14,8 +14,8 @@ public class ProductEntity
     public ProductEntity? ParentProductEntity { get; set; } 
     public List<ProductEntity>? ChildProductEntities { get; set; } = new List<ProductEntity>();
     public string Status { get; set; }
-    public DateOnly? Start_date { get; set; } = null;
-    public DateOnly? End_date { get; set; } = null;
+    public DateOnly? StartDate { get; set; } = null;
+    public DateOnly? EndDate { get; set; } = null;
     public DateTime CreateTime { get; set; } = DateTime.Now;
     public DateTime UpdateTime { get; set; } = DateTime.Now;
 }

@@ -6,5 +6,5 @@ public class ProductSubTypeGroupMaterialRelationEntity
     public Guid GroupMaterialId { get; set; }
     public GroupMaterialEntity? GroupMaterial { get; set; }
     public Guid ProductSubTypeWorkingPeriodSampleId { get; set; }
-    public ProductSubTypeWorkingPeriodsSampleEntity? ProductSubTypeWorkingPeriodsSample { get; set; }
+    public ProductSubTypeWorkingPeriodSampleEntity? ProductSubTypeWorkingPeriodSample { get; set; }
 }

@@ -1,6 +1,6 @@
 ﻿namespace KssGroupPlanning.Entities;
 
-public class ProductSubTypeStagesSampleEntity
+public class ProductSubTypeStageSampleEntity
 {
     public Guid Id { get; set; }
     public Guid ProductSubTypeId { get; set; }

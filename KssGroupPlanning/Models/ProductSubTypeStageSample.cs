@@ -1,8 +1,8 @@
 ﻿namespace KssGroupPlanning.Models;
 
-public class ProductSubTypeStagesSample
+public class ProductSubTypeStageSample
 {
-    private ProductSubTypeStagesSample(Guid id, Guid productSubTypeId, int rowNumber, string stageName, string standartTime)
+    private ProductSubTypeStageSample(Guid id, Guid productSubTypeId, int rowNumber, string stageName, string standartTime)
     { 
         Id = id;
         ProductSubTypeId = productSubTypeId;
@@ -16,8 +16,8 @@ public class ProductSubTypeStagesSample
     public int RowNumber { get; set; }
     public string StageName { get; set; }
     public string StandartTime { get; set; } // string??
-    public static ProductSubTypeStagesSample Create(Guid id, Guid productSubTypeId, int rowNumber, string stageName, string standartTime)
+    public static ProductSubTypeStageSample Create(Guid id, Guid productSubTypeId, int rowNumber, string stageName, string standartTime)
     { 
-        return new ProductSubTypeStagesSample(id, productSubTypeId, rowNumber, stageName, standartTime);
+        return new ProductSubTypeStageSample(id, productSubTypeId, rowNumber, stageName, standartTime);
     }
 }
