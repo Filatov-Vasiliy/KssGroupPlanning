@@ -29,20 +29,20 @@ public class SrcOrderRepository(ProjectDbContext context) : ISrcOrderRepository
                 PaymentCurrent = srcOrder.PaymentCurrent,
                 Qty = srcOrder.Qty
             };
-            await _dbcontext.SrcOrders.AddAsync(srcOrderEntity);
+            await _dbcontext.SrcOrder.AddAsync(srcOrderEntity);
         }
         await _dbcontext.SaveChangesAsync();
     }
 
     public async Task<User> GetByEmail(string email)
     {
-        var userEntity = await _dbcontext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email) ?? throw new Exception();
+        var userEntity = await _dbcontext.User.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email) ?? throw new Exception();
         return User.Create(userEntity.Id, userEntity.UserName, userEntity.PasswordHash, userEntity.Email);
     }
 
     public async Task<List<SrcOrder>> GetSrcOrders()
     {
-        var srcOrderEntities = await _dbcontext.SrcOrders.AsNoTracking().ToListAsync();
+        var srcOrderEntities = await _dbcontext.SrcOrder.AsNoTracking().ToListAsync();
         List<SrcOrder> srcOrders = new List<SrcOrder>();
         foreach (var srcOrderEntity in srcOrderEntities) 
         {

@@ -16,7 +16,7 @@ public class ProductTypeRepository : IProductTypeRepository
     }
     public async Task<List<ProductType>> GetAll()
     {
-        var productTypeEntities = await _dbcontext.ProductTypes.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
+        var productTypeEntities = await _dbcontext.ProductType.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
         List<ProductType> productTypes = new List<ProductType>();
         foreach (var productTypeEntity in productTypeEntities) 
         {
@@ -28,18 +28,18 @@ public class ProductTypeRepository : IProductTypeRepository
     public async Task<ProductType?> GetById(Guid id)
     {
         
-        var productTypeEntity = await _dbcontext.ProductTypes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        var productTypeEntity = await _dbcontext.ProductType.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         return ProductType.Create(productTypeEntity.Id, productTypeEntity.Name);
     }
     public async Task<ProductType?> GetByName(string name)
     {
 
-        var productTypeEntity = await _dbcontext.ProductTypes.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
+        var productTypeEntity = await _dbcontext.ProductType.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
         return ProductType.Create(productTypeEntity.Id, productTypeEntity.Name);
     }
     public async Task<List<ProductType>> GetByPage(int page, int pageSize)
     {
-        var productTypeEntities = await _dbcontext.ProductTypes
+        var productTypeEntities = await _dbcontext.ProductType
             .AsNoTracking()
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -63,7 +63,7 @@ public class ProductTypeRepository : IProductTypeRepository
     }
     public async Task Update(ProductType productType)
     {
-        var productTypeEntity = await _dbcontext.ProductTypes.FirstOrDefaultAsync(c => c.Id == productType.Id)
+        var productTypeEntity = await _dbcontext.ProductType.FirstOrDefaultAsync(c => c.Id == productType.Id)
             ?? throw new Exception();
 
         productTypeEntity.Name = productType.Name;
@@ -71,7 +71,7 @@ public class ProductTypeRepository : IProductTypeRepository
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.ProductTypes
+        await _dbcontext.ProductType
             .Where(c => c.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();
