@@ -3,9 +3,9 @@
     public class WorkingPeriodRelationEntity
     {
         public Guid Id { get; set; }
-        public Guid ParentProductSubTypeWokingPeriodsSampleId { get; set; }
+        public Guid ParentProductSubTypeWorkingPeriodSampleId { get; set; }
         public ProductSubTypeWorkingPeriodSampleEntity? ParentProductSubTypeWorkingPeriodSampleEntity { get; set; } = null;
-        public Guid ChildProductSubTypeWokingPeriodsSampleId { get; set; }
+        public Guid ChildProductSubTypeWorkingPeriodSampleId { get; set; }
         public ProductSubTypeWorkingPeriodSampleEntity? ChildProductSubTypeWorkingPeriodSampleEntity { get; set; } = null;
     }
 }

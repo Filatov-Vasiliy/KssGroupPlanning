@@ -10,27 +10,26 @@ namespace KssGroupPlanning;
 public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbContext(options)
 {
 
-    public DbSet<UserEntity> Users { get; set; }
-    public DbSet<ProductEntity> Products { get; set; }
-    public DbSet<ProductTypeEntity> ProductTypes { get; set; }
-    public DbSet<ProductSubTypeEntity> ProductSubTypes { get; set; }
-    public DbSet<ProductSubTypeStageSampleEntity> ProductSubTypeStageSamples { get; set; }
-    public DbSet<ProductSubTypeWorkingPeriodSampleEntity> ProductSubTypeWorkingPeriodSamples { get; set; }
-    public DbSet<OrderEntity> Orders { get; set; }
-    public DbSet<FactoryEntity> Factories { get; set; }
-    public DbSet<SrcOrderEntity> SrcOrders { get; set; }
-    public DbSet<StageEntity> Stages { get; set; }
-    public DbSet<StageTypeEntity> StageTypes { get; set; }
-    public DbSet<WorkingPeriodEntity> WorkingPeriods { get; set; }
-    public DbSet<WorkingPeriodStageEntity> WorkingPeriodStages { get; set; }
-    public DbSet<WorkingPeriodRelationEntity> WorkingPeriodRelations { get; set; }
-    public DbSet<WorkingPeriodStageTypeRelationEntity> WorkingPeriodStageTypeRelations { get; set; }
-    public DbSet<BrigadeEntity> Brigades { get; set; }
-    public DbSet<WorkingPeriodStageMaterialEntity> WorkingPeriodStageMaterials { get; set; }
-    public DbSet<GroupMaterialEntity> GroupMaterials { get; set; }
-    public DbSet<ProductSubTypeGroupMaterialRelationEntity> ProductSubTypeGroupMaterialRelations { get; set; }
-
-    public DbSet<WorkingPeriodStageBrigadeRelationEntity> WorkingPeriodStageBrigadeRelations { get; set; }
+    public DbSet<UserEntity> User { get; set; }
+    public DbSet<ProductEntity> Product { get; set; }
+    public DbSet<ProductTypeEntity> ProductType { get; set; }
+    public DbSet<ProductSubTypeEntity> ProductSubType { get; set; }
+    public DbSet<ProductSubTypeStageSampleEntity> ProductSubTypeStageSample { get; set; }
+    public DbSet<ProductSubTypeWorkingPeriodSampleEntity> ProductSubTypeWorkingPeriodSample { get; set; }
+    public DbSet<OrderEntity> Order { get; set; }
+    public DbSet<FactoryEntity> Factory { get; set; }
+    public DbSet<SrcOrderEntity> SrcOrder { get; set; }
+    public DbSet<StageEntity> Stage { get; set; }
+    public DbSet<StageTypeEntity> StageType { get; set; }
+    public DbSet<WorkingPeriodEntity> WorkingPeriod { get; set; }
+    public DbSet<WorkingPeriodStageEntity> WorkingPeriodStage { get; set; }
+    public DbSet<WorkingPeriodRelationEntity> WorkingPeriodRelation { get; set; }
+    public DbSet<WorkingPeriodStageTypeRelationEntity> WorkingPeriodStageTypeRelation { get; set; }
+    public DbSet<BrigadeEntity> Brigade { get; set; }
+    public DbSet<WorkingPeriodStageMaterialEntity> WorkingPeriodStageMaterial { get; set; }
+    public DbSet<GroupMaterialEntity> GroupMaterial { get; set; }
+    public DbSet<ProductSubTypeGroupMaterialRelationEntity> ProductSubTypeGroupMaterialRelation { get; set; }
+    public DbSet<WorkingPeriodStageBrigadeRelationEntity> WorkingPeriodStageBrigadeRelation { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
