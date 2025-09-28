@@ -4,14 +4,14 @@ namespace KssGroupPlanning.Interfaces.Repository
 {
     public interface IWorkingPeriodRelationRepository
     {
-        Task<List<WorkingPeriodsRelations>> GetAll();
-        Task<WorkingPeriodsRelations?> GetById(Guid id);
-        Task<List<WorkingPeriodsRelations?>> GetByParentProductSubTypeWorkingPeriodSampleId(Guid parentProductSubTypeWorkingPeriodSampleId);
+        Task<List<WorkingPeriodRelation>> GetAll();
+        Task<WorkingPeriodRelation?> GetById(Guid id);
+        Task<List<WorkingPeriodRelation?>> GetByParentProductSubTypeWorkingPeriodSampleId(Guid parentProductSubTypeWorkingPeriodSampleId);
 
-        Task<List<WorkingPeriodsRelations?>> GetByChildProductSubTypeWorkingPeriodSampleId(Guid childProductSubTypeWorkingPeriodSampleId);
+        Task<List<WorkingPeriodRelation?>> GetByChildProductSubTypeWorkingPeriodSampleId(Guid childProductSubTypeWorkingPeriodSampleId);
 
-        Task Add(WorkingPeriodsRelations workingPeriodsRelations);
-        Task Update(WorkingPeriodsRelations workingPeriodsRelations);
+        Task Add(WorkingPeriodRelation workingPeriodsRelations);
+        Task Update(WorkingPeriodRelation workingPeriodsRelations);
         Task Delete(Guid id);
     }
 }

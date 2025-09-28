@@ -19,7 +19,7 @@ public class StageTypeRepository : IStageTypeRepository
     }
     public async Task<List<StageType>> GetAll()
     {
-        var stageTypeEntities = await _dbcontext.StageTypes.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
+        var stageTypeEntities = await _dbcontext.StageType.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
         List<StageType> stageTypes = new List<StageType>();
         foreach (var stageTypeEntity in stageTypeEntities)
         {
@@ -31,13 +31,13 @@ public class StageTypeRepository : IStageTypeRepository
     public async Task<StageType?> GetById(Guid id)
     {
 
-        var stageTypeEntity = await _dbcontext.StageTypes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        var stageTypeEntity = await _dbcontext.StageType.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         return StageType.Create(stageTypeEntity.Id, stageTypeEntity.Name);
     }
     public async Task<StageType?> GetByName(string name)
     {
 
-        var stageTypeEntity = await _dbcontext.StageTypes.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
+        var stageTypeEntity = await _dbcontext.StageType.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
         return StageType.Create(stageTypeEntity.Id, stageTypeEntity.Name);
     }
     public async Task Add(StageType stageType)
@@ -52,7 +52,7 @@ public class StageTypeRepository : IStageTypeRepository
     }
     public async Task Update(StageType stageType)
     {
-        var stageTypeEntity = await _dbcontext.StageTypes.FirstOrDefaultAsync(c => c.Id == stageType.Id)
+        var stageTypeEntity = await _dbcontext.StageType.FirstOrDefaultAsync(c => c.Id == stageType.Id)
             ?? throw new Exception();
         stageTypeEntity.Id = stageType.Id;
         stageTypeEntity.Name = stageType.Name;
@@ -60,7 +60,7 @@ public class StageTypeRepository : IStageTypeRepository
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.StageTypes
+        await _dbcontext.StageType
             .Where(c => c.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();

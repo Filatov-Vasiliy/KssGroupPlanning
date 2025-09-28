@@ -16,7 +16,7 @@ public class FactoryRepository : IFactoryRepository
     }
     public async Task<List<Factory>> GetAll()
     {
-        var factoryEntities = await _dbcontext.Factories.AsNoTracking().OrderBy(f => f.Name).ToListAsync();
+        var factoryEntities = await _dbcontext.Factory.AsNoTracking().OrderBy(f => f.Name).ToListAsync();
         List<Factory> factories = new List<Factory>();
         foreach (var factoryEntity in factoryEntities)
         {
@@ -27,12 +27,12 @@ public class FactoryRepository : IFactoryRepository
 
     public async Task<Factory?> GetById(Guid id)
     {
-        var factoryEntity = await _dbcontext.Factories.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
+        var factoryEntity = await _dbcontext.Factory.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
         return Factory.Create(factoryEntity.Id, factoryEntity.Name);
     }
     public async Task<Factory?> GetByName(string name)
     {
-        var factoryEntity = await _dbcontext.Factories.AsNoTracking().FirstOrDefaultAsync(f => f.Name == name);
+        var factoryEntity = await _dbcontext.Factory.AsNoTracking().FirstOrDefaultAsync(f => f.Name == name);
         return Factory.Create(factoryEntity.Id, factoryEntity.Name);
     }
     public async Task Add(Factory factory)
@@ -47,7 +47,7 @@ public class FactoryRepository : IFactoryRepository
     }
     public async Task Update(Factory factory)
     {
-        var factoryEntity = await _dbcontext.Factories.FirstOrDefaultAsync(f => f.Id == factory.Id)
+        var factoryEntity = await _dbcontext.Factory.FirstOrDefaultAsync(f => f.Id == factory.Id)
             ?? throw new Exception();
 
         factoryEntity.Name = factory.Name;
@@ -56,7 +56,7 @@ public class FactoryRepository : IFactoryRepository
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.Factories
+        await _dbcontext.Factory
             .Where(f => f.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();

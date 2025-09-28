@@ -19,7 +19,7 @@ public class OrderRepository : IOrderRepository
     }
     public async Task<List<Order>> GetAll()
     {
-        var orderEntities = await _dbcontext.Orders.AsNoTracking().OrderBy(c => c.Number).ToListAsync();
+        var orderEntities = await _dbcontext.Order.AsNoTracking().OrderBy(c => c.Number).ToListAsync();
         List<Order> orders = new List<Order>();
         foreach (var orderEntity in orderEntities)
         {
@@ -31,13 +31,13 @@ public class OrderRepository : IOrderRepository
     public async Task<Order?> GetById(Guid id)
     {
 
-        var orderEntity = await _dbcontext.Orders.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        var orderEntity = await _dbcontext.Order.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         return Order.Create(orderEntity.Id, orderEntity.Number, orderEntity.Manager, orderEntity.Contragent, orderEntity.PaymentAmount,orderEntity.PaymentCurrent,orderEntity.Status,orderEntity.CreateTime,orderEntity.UpdateTime);
     }
     public async Task<Order?> GetByNumber(string number)
     {
 
-        var orderEntity = await _dbcontext.Orders.AsNoTracking().FirstOrDefaultAsync(c => c.Number == number);
+        var orderEntity = await _dbcontext.Order.AsNoTracking().FirstOrDefaultAsync(c => c.Number == number);
         return Order.Create(orderEntity.Id, orderEntity.Number, orderEntity.Manager, orderEntity.Contragent, orderEntity.PaymentAmount, orderEntity.PaymentCurrent, orderEntity.Status, orderEntity.CreateTime, orderEntity.UpdateTime);
     }
     public async Task Add(Order order)
@@ -58,7 +58,7 @@ public class OrderRepository : IOrderRepository
     }
     public async Task Update(Order order)
     {
-        var orderEntity = await _dbcontext.Orders.FirstOrDefaultAsync(c => c.Id == order.Id)
+        var orderEntity = await _dbcontext.Order.FirstOrDefaultAsync(c => c.Id == order.Id)
             ?? throw new Exception();
         orderEntity.Id = order.Id;
         orderEntity.Number = order.Number;
@@ -72,7 +72,7 @@ public class OrderRepository : IOrderRepository
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.Orders
+        await _dbcontext.Order
             .Where(c => c.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();

@@ -16,24 +16,24 @@ public class ProductRepository : IProductRepository
     }
     public async Task<List<Product>> GetAll()
     {
-        var productEntities = await _dbcontext.Products.AsNoTracking().OrderBy(f => f.Number).ToListAsync();
+        var productEntities = await _dbcontext.Product.AsNoTracking().OrderBy(f => f.Number).ToListAsync();
         List<Product> products = new List<Product>();
         foreach (var productEntity in productEntities)
         {
-            products.Add(Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.Status, productEntity.Start_date, productEntity.End_date, productEntity.CreateTime, productEntity.UpdateTime));
+            products.Add(Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.ParentProductId, productEntity.Status, productEntity.StartDate, productEntity.EndDate, productEntity.CreateTime, productEntity.UpdateTime));
         }
         return products;
     }
 
     public async Task<Product?> GetById(Guid id)
     {
-        var productEntity = await _dbcontext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
-        return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.Status, productEntity.Start_date, productEntity.End_date, productEntity.CreateTime, productEntity.UpdateTime);
+        var productEntity = await _dbcontext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+        return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.ParentProductId, productEntity.Status, productEntity.StartDate, productEntity.EndDate, productEntity.CreateTime, productEntity.UpdateTime);
     }
     public async Task<Product?> GetByNumber(string number)
     {
-        var productEntity = await _dbcontext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Number == number);
-        return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.Status,productEntity.Start_date, productEntity.End_date, productEntity.CreateTime, productEntity.UpdateTime);
+        var productEntity = await _dbcontext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Number == number);
+        return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId,productEntity.ParentProductId, productEntity.Status,productEntity.StartDate, productEntity.EndDate, productEntity.CreateTime, productEntity.UpdateTime);
     }
     public async Task Add(Product product)
     {
@@ -44,9 +44,10 @@ public class ProductRepository : IProductRepository
             ProductSubTypeId = product.ProductSubTypeId,
             FactoryId = product.FactoryId,
             OrderId = product.OrderId,
+            ParentProductId = product.ParentProductId,
             Status = product.Status,
-            Start_date  = product.Start_date,
-            End_date = product.End_date,
+            StartDate  = product.StartDate,
+            EndDate = product.EndDate,
             CreateTime = product.CreateTime,
             UpdateTime = product.UpdateTime
         };
@@ -55,16 +56,24 @@ public class ProductRepository : IProductRepository
     }
     public async Task Update(Product product)
     {
-        var productEntity = await _dbcontext.Products.FirstOrDefaultAsync(p => p.Id == product.Id)
+        var productEntity = await _dbcontext.Product.FirstOrDefaultAsync(p => p.Id == product.Id)
             ?? throw new Exception();
 
         productEntity.Number = product.Number;
-
+        productEntity.ProductSubTypeId = product.ProductSubTypeId;
+        productEntity.FactoryId = product.FactoryId;
+        productEntity.OrderId = product.OrderId;
+        productEntity.ParentProductId = product.ParentProductId;
+        productEntity.Status = product.Status;
+        productEntity.StartDate = product.StartDate;
+        productEntity.EndDate = product.EndDate;
+        productEntity.CreateTime = product.CreateTime;
+        productEntity.UpdateTime = product.UpdateTime;
         await _dbcontext.SaveChangesAsync();
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.Products
+        await _dbcontext.Product
             .Where(p => p.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();

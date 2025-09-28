@@ -20,7 +20,7 @@ public class BrigadeRepository : IBrigadeRepository
     }
     public async Task<List<Brigade>> GetAll()
     {
-        var brigadeEntities = await _dbcontext.Brigades.AsNoTracking().OrderBy(c => c.CountEmployee).ToListAsync();
+        var brigadeEntities = await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).ToListAsync();
         List<Brigade> brigades = new List<Brigade>();
         foreach (var brigadeEntity in brigadeEntities)
         {
@@ -32,7 +32,7 @@ public class BrigadeRepository : IBrigadeRepository
     public async Task<List<Brigade?>> GetByFactoryId(Guid factoryId)
     {
 
-        var brigadeEntities = await _dbcontext.Brigades.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == factoryId).ToListAsync();
+        var brigadeEntities = await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == factoryId).ToListAsync();
         List<Brigade> brigades = new List<Brigade>();
         foreach (var brigadeEntity in brigadeEntities)
         {
@@ -43,7 +43,7 @@ public class BrigadeRepository : IBrigadeRepository
     public async Task<List<Brigade?>> GetByStageTypeId(Guid stageTypeId)
     {
 
-        var brigadeEntities = await _dbcontext.Brigades.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == stageTypeId).ToListAsync();
+        var brigadeEntities = await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == stageTypeId).ToListAsync();
         List<Brigade> brigades = new List<Brigade>();
         foreach (var brigadeEntity in brigadeEntities)
         {
@@ -53,7 +53,7 @@ public class BrigadeRepository : IBrigadeRepository
     }
     public async Task<Brigade?> GetById(Guid id)
     {
-        var brigadeEntity = await _dbcontext.Brigades.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        var brigadeEntity = await _dbcontext.Brigade.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         return Brigade.Create(brigadeEntity.Id, brigadeEntity.StageTypeId, brigadeEntity.FactoryId, brigadeEntity.CountEmployee);
     }
     public async Task Add(Brigade brigade)
@@ -70,7 +70,7 @@ public class BrigadeRepository : IBrigadeRepository
     }
     public async Task Update(Brigade brigade)
     {
-        var brigadeEntity = await _dbcontext.Brigades.FirstOrDefaultAsync(c => c.Id == brigade.Id)
+        var brigadeEntity = await _dbcontext.Brigade.FirstOrDefaultAsync(c => c.Id == brigade.Id)
             ?? throw new Exception();
         brigadeEntity.Id = brigade.Id;
         brigadeEntity.FactoryId = brigade.FactoryId;
@@ -80,7 +80,7 @@ public class BrigadeRepository : IBrigadeRepository
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.Brigades
+        await _dbcontext.Brigade
             .Where(c => c.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();

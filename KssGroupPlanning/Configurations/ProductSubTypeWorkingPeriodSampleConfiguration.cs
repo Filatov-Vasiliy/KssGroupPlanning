@@ -13,6 +13,6 @@ public class ProductSubTypeWorkingPeriodSampleConfiguration : IEntityTypeConfigu
         builder.HasOne(pstwps => pstwps.ProductSubType).WithMany(pst => pst.ProductSubTypeWorkingPeriodSamples).HasForeignKey(pstwps => pstwps.ProductSubTypeId);
         builder.HasMany(pstwps => pstwps.StageTypes).WithMany(st => st.ProductSubTypeWorkingPeriodSamples);
         builder.HasMany(pstwps => pstwps.GroupMaterials).WithMany(gm => gm.ProductSubTypeWorkingPeriodSamples);
-        builder.HasMany(pstwps => pstwps.ChildProductSubTypeWorkingPeriodSamples).WithMany(ParentProductSubTypeWorkingPeriodSamples);
+        builder.HasMany(pstwps => pstwps.ChildProductSubTypeWorkingPeriodSamples).WithMany(pstwps => pstwps.ParentProductSubTypeWorkingPeriodSamples);
     }
 }

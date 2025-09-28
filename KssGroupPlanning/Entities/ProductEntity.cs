@@ -10,7 +10,7 @@ public class ProductEntity
     public FactoryEntity? Factory { get; set; } = null;
     public Guid OrderId { get; set; }
     public OrderEntity? Order { get; set; } = null;
-    public Guid? ParentProductId { get; set; }
+    public Guid ParentProductId { get; set; }
     public ProductEntity? ParentProduct { get; set; } = null;
     public List<ProductEntity>? ChildProducts { get; set; } = new List<ProductEntity>();
     public string Status { get; set; }

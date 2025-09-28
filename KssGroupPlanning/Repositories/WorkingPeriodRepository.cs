@@ -19,7 +19,7 @@ public class WorkingPeriodRepository : IWorkingPeriodRepository
     }
     public async Task<List<WorkingPeriod>> GetAll()
     {
-        var workingPeriodEntities = await _dbcontext.WorkingPeriods.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
+        var workingPeriodEntities = await _dbcontext.WorkingPeriod.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
         List<WorkingPeriod> workingPeriods = new List<WorkingPeriod>();
         foreach (var workingPeriodEntity in workingPeriodEntities)
         {
@@ -31,18 +31,18 @@ public class WorkingPeriodRepository : IWorkingPeriodRepository
     public async Task<WorkingPeriod?> GetById(Guid id)
     {
 
-        var workingPeriodEntity = await _dbcontext.WorkingPeriods.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        var workingPeriodEntity = await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         return WorkingPeriod.Create(workingPeriodEntity.Id, workingPeriodEntity.Name, workingPeriodEntity.Status, workingPeriodEntity.ProductId, workingPeriodEntity.DateFrom, workingPeriodEntity.DateTo, workingPeriodEntity.CreateTime, workingPeriodEntity.UpdateTime);
     }
     public async Task<WorkingPeriod?> GetByName(string name)
     {
 
-        var workingPeriodEntity = await _dbcontext.WorkingPeriods.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
+        var workingPeriodEntity = await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
         return WorkingPeriod.Create(workingPeriodEntity.Id, workingPeriodEntity.Name, workingPeriodEntity.Status, workingPeriodEntity.ProductId, workingPeriodEntity.DateFrom, workingPeriodEntity.DateTo, workingPeriodEntity.CreateTime, workingPeriodEntity.UpdateTime);
     }
     public async Task<WorkingPeriod?> GetByProductId(Guid productId)
     {
-        var workingPeriodEntity = await _dbcontext.WorkingPeriods.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
+        var workingPeriodEntity = await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
         return WorkingPeriod.Create(workingPeriodEntity.Id, workingPeriodEntity.Name, workingPeriodEntity.Status, workingPeriodEntity.ProductId, workingPeriodEntity.DateFrom, workingPeriodEntity.DateTo, workingPeriodEntity.CreateTime, workingPeriodEntity.UpdateTime);
     }
     public async Task Add(WorkingPeriod workingPeriod)
@@ -63,7 +63,7 @@ public class WorkingPeriodRepository : IWorkingPeriodRepository
     }
     public async Task Update(WorkingPeriod workingPeriod)
     {
-        var workingPeriodEntity = await _dbcontext.WorkingPeriods.FirstOrDefaultAsync(c => c.Id == workingPeriod.Id)
+        var workingPeriodEntity = await _dbcontext.WorkingPeriod.FirstOrDefaultAsync(c => c.Id == workingPeriod.Id)
             ?? throw new Exception();
         workingPeriodEntity.Id = workingPeriod.Id;
         workingPeriodEntity.Name = workingPeriod.Name;
@@ -77,7 +77,7 @@ public class WorkingPeriodRepository : IWorkingPeriodRepository
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.WorkingPeriods
+        await _dbcontext.WorkingPeriod
             .Where(c => c.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();

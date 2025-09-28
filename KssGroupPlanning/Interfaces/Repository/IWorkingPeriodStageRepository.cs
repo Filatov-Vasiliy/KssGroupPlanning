@@ -8,9 +8,6 @@ namespace KssGroupPlanning.Interfaces.Repository
         Task<WorkingPeriodStage?> GetById(Guid id);
         Task<List<WorkingPeriodStage?>> GetByWorkingPeriodId(Guid workingPeriodId);
         Task<List<WorkingPeriodStage?>> GetByProductSubTypeWorkingPeriodSampleId(Guid productSubTypeWorkingPeriodSampleId);
-
-        Task<List<WorkingPeriodStage?>> GetByBrigadeId(Guid BrigadeId);
-
         Task Add(WorkingPeriodStage workingPeriodStage);
         Task Update(WorkingPeriodStage workingPeriodStage);
         Task Delete(Guid id);

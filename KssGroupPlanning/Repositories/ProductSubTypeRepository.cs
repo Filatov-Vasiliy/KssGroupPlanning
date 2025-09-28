@@ -17,7 +17,7 @@ public class ProductSubTypeRepository : IProductSubTypeRepository
     }
     public async Task<List<ProductSubType>> GetAll()
     {
-        var productSubTypeEntities = await _dbcontext.ProductSubTypes.AsNoTracking().OrderBy(f => f.Name).ToListAsync();
+        var productSubTypeEntities = await _dbcontext.ProductSubType.AsNoTracking().OrderBy(f => f.Name).ToListAsync();
         List<ProductSubType> productSubTypes = new List<ProductSubType>();
         foreach (var productSubTypeEntity in productSubTypeEntities)
         {
@@ -28,17 +28,17 @@ public class ProductSubTypeRepository : IProductSubTypeRepository
 
     public async Task<ProductSubType?> GetById(Guid id)
     {
-        var productSubTypeEntity = await _dbcontext.ProductSubTypes.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+        var productSubTypeEntity = await _dbcontext.ProductSubType.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
         return ProductSubType.Create(productSubTypeEntity.Id, productSubTypeEntity.Name, productSubTypeEntity.ProductTypeId);
     }
     public async Task<ProductSubType?> GetByName(string name)
     {
-        var productSubTypeEntity = await _dbcontext.ProductSubTypes.AsNoTracking().FirstOrDefaultAsync(p => p.Name == name);
+        var productSubTypeEntity = await _dbcontext.ProductSubType.AsNoTracking().FirstOrDefaultAsync(p => p.Name == name);
         return ProductSubType.Create(productSubTypeEntity.Id, productSubTypeEntity.Name, productSubTypeEntity.ProductTypeId);
     }
     public async Task<ProductSubType?> GetByProductTypeId(Guid productTypeId)
     {
-        var productSubTypeEntity = await _dbcontext.ProductSubTypes.AsNoTracking().FirstOrDefaultAsync(p => p.ProductTypeId == productTypeId);
+        var productSubTypeEntity = await _dbcontext.ProductSubType.AsNoTracking().FirstOrDefaultAsync(p => p.ProductTypeId == productTypeId);
         return ProductSubType.Create(productSubTypeEntity.Id, productSubTypeEntity.Name, productSubTypeEntity.ProductTypeId);
     }
     public async Task Add(ProductSubType productSubType)
@@ -54,7 +54,7 @@ public class ProductSubTypeRepository : IProductSubTypeRepository
     }
     public async Task Update(ProductSubType productSubType)
     {
-        var productSubTypeEntity = await _dbcontext.ProductSubTypes.FirstOrDefaultAsync(p => p.Id == productSubType.Id)
+        var productSubTypeEntity = await _dbcontext.ProductSubType.FirstOrDefaultAsync(p => p.Id == productSubType.Id)
             ?? throw new Exception();
 
         productSubTypeEntity.Name = productSubType.Name;
@@ -63,7 +63,7 @@ public class ProductSubTypeRepository : IProductSubTypeRepository
     }
     public async Task Delete(Guid id)
     {
-        await _dbcontext.ProductSubTypes
+        await _dbcontext.ProductSubType
             .Where(pst => pst.Id == id)
             .ExecuteDeleteAsync();
         await _dbcontext.SaveChangesAsync();

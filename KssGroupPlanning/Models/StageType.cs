@@ -1,6 +1,6 @@
-
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Interfaces.Repository;
+using KssGroupPlanning.Entities;
 
 namespace KssGroupPlanning.Models;
 
