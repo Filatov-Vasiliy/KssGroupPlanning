@@ -9,6 +9,6 @@ public class ProductTypeConfiguration : IEntityTypeConfiguration<ProductTypeEnti
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ProductTypeEntity> builder)
     {
         builder.HasKey(pt => pt.Id);
-
+        builder.HasMany(pt => pt.ProductSubTypes).WithOne(pst => pst.ProductType);
     }
 }

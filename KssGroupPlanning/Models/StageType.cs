@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Entities;
+
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Interfaces.Repository;
 
@@ -13,8 +13,8 @@ public class StageType
     }
     public Guid Id { get; set; }
     public string Name { get; set; }
-    public List<Brigade>? Brigades { get; set; } = new List<Brigade>();
-    public List<ProductSubTypeWorkingPeriodSample>? ProductSubTypeWorkingPeriodSamples { get; set; } = new List<ProductSubTypeWorkingPeriodSample>();
+    public List<Brigade> Brigades { get; set; } = new List<Brigade>();
+    public List<ProductSubTypeWorkingPeriodSample> ProductSubTypeWorkingPeriodSamples { get; set; } = new List<ProductSubTypeWorkingPeriodSample>();
     public static StageType Create(Guid id, string name)
     { 
         return new StageType(id, name); 

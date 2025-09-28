@@ -9,6 +9,7 @@ public class FactoryConfiguration : IEntityTypeConfiguration<FactoryEntity>
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<FactoryEntity> builder)
     {
         builder.HasKey(f => f.Id);
-
+        builder.HasMany(f => f.Products).WithOne(p => p.Factory);
+        builder.HasMany(f => f.Brigades).WithOne(b => b.Factory);
     }
 }

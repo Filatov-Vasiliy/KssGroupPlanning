@@ -11,5 +11,5 @@ public class ProductTypeEntity
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
-    public List<ProductSubTypeEntity> ProductSubTypeEntities { get; set; } = [];
+    public List<ProductSubTypeEntity> ProductSubTypes { get; set; } = new List<ProductSubTypeEntity>();
 }

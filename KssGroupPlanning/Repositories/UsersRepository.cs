@@ -20,13 +20,13 @@ public class UsersRepository(ProjectDbContext context) : IUsersRepository
             PasswordHash = user.PasswordHash,
             Email = user.Email
         };
-        await _dbcontext.Users.AddAsync(userEntity);
+        await _dbcontext.User.AddAsync(userEntity);
         await _dbcontext.SaveChangesAsync();
     }
 
     public async Task<User> GetByEmail(string email) 
     {
-        var userEntity = await _dbcontext.Users.AsNoTracking().FirstOrDefaultAsync(u=>u.Email == email)??throw new Exception();
+        var userEntity = await _dbcontext.User.AsNoTracking().FirstOrDefaultAsync(u=>u.Email == email)??throw new Exception();
         return User.Create(userEntity.Id, userEntity.UserName, userEntity.PasswordHash, userEntity.Email);
     }
 }

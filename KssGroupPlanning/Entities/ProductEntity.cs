@@ -5,14 +5,19 @@ public class ProductEntity
     public Guid Id { get; set; }
     public string? Number { get; set; } = null; // ????
     public Guid ProductSubTypeId { get; set; }
-    public ProductSubTypeEntity? ProductSubTypeEntity { get; set; }
+    public ProductSubTypeEntity? ProductSubType { get; set; }
     public Guid FactoryId { get; set; }
-    public FactoryEntity? FactoryEntity { get; set; } = null;
+    public FactoryEntity? Factory { get; set; } = null;
     public Guid OrderId { get; set; }
-    public OrderEntity? OrderEntity { get; set; } = null;
+    public OrderEntity? Order { get; set; } = null;
+    public Guid? ParentProductId { get; set; }
+    public ProductEntity? ParentProduct { get; set; } = null;
+    public List<ProductEntity>? ChildProducts { get; set; } = new List<ProductEntity>();
     public string Status { get; set; }
-    public DateOnly? Start_date { get; set; } = null;
-    public DateOnly? End_date { get; set; } = null;
+    public List<StageEntity>? Stages { get; set; } =  new List<StageEntity>();
+    public List<WorkingPeriodEntity>? WorkingPeriods{ get; set; } = new List<WorkingPeriodEntity>();
+    public DateOnly? StartDate { get; set; } = null;
+    public DateOnly? EndDate { get; set; } = null;
     public DateTime CreateTime { get; set; } = DateTime.Now;
     public DateTime UpdateTime { get; set; } = DateTime.Now;
 }

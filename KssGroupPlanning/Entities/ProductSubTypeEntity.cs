@@ -5,5 +5,8 @@ public class ProductSubTypeEntity
     public Guid Id { get; set; }
     public string Name { get; set; }
     public Guid ProductTypeId { get; set; }
-    public ProductTypeEntity? ProductTypeEntity { get; set; } = null;
+    public ProductTypeEntity? ProductType { get; set; } = null;
+    public List<ProductEntity>? Products { get; set; } = new List<ProductEntity>();
+    public List<ProductSubTypeWorkingPeriodSampleEntity>? ProductSubTypeWorkingPeriodSamples { get; set; } = new List<ProductSubTypeWorkingPeriodSampleEntity>();
+    public List<ProductSubTypeStageSampleEntity>? ProductSubTypeStageSamples { get; set; } = new List<ProductSubTypeStageSampleEntity>();
 }

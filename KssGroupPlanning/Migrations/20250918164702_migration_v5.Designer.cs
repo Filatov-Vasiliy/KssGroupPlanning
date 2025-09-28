@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250918164702_migration_v5")]
+    partial class migration_v5
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace KssGroupPlanning.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("BrigadeEntityWorkingPeriodStageEntity", b =>
-                {
-                    b.Property<Guid>("BrigadeEntitiesId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("WorkingPeriodStageEntitiesId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("BrigadeEntitiesId", "WorkingPeriodStageEntitiesId");
-
-                    b.HasIndex("WorkingPeriodStageEntitiesId");
-
-                    b.ToTable("BrigadeEntityWorkingPeriodStageEntity");
-                });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
                 {
@@ -58,7 +46,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("StageTypeId");
 
-                    b.ToTable("Brigade");
+                    b.ToTable("Brigades");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.FactoryEntity", b =>
@@ -73,7 +61,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Factory");
+                    b.ToTable("Factories");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.GroupMaterialEntity", b =>
@@ -88,7 +76,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GroupMaterial");
+                    b.ToTable("GroupMaterials");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.OrderEntity", b =>
@@ -127,7 +115,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Order");
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductEntity", b =>
@@ -150,6 +138,9 @@ namespace KssGroupPlanning.Migrations
 
                     b.Property<string>("Number")
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("OrderEntityId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
@@ -180,13 +171,13 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("FactoryEntityId");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderEntityId");
 
                     b.HasIndex("ParentProductEntityId");
 
                     b.HasIndex("ProductSubTypeEntityId");
 
-                    b.ToTable("Product");
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeEntity", b =>
@@ -209,7 +200,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("ProductTypeEntityId");
 
-                    b.ToTable("ProductSubType");
+                    b.ToTable("ProductSubTypes");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeGroupMaterialRelationEntity", b =>
@@ -230,7 +221,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("ProductSubTypeWorkingPeriodSampleId");
 
-                    b.ToTable("ProductSubTypeGroupMaterialRelation");
+                    b.ToTable("ProductSubTypeGroupMaterialRelations");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeStageSampleEntity", b =>
@@ -260,7 +251,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("ProductSubTypeEntityId");
 
-                    b.ToTable("ProductSubTypeStageSample");
+                    b.ToTable("ProductSubTypeStageSamples");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", b =>
@@ -293,7 +284,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("ProductSubTypeEntityId");
 
-                    b.ToTable("ProductSubTypeWorkingPeriodSample");
+                    b.ToTable("ProductSubTypeWorkingPeriodSamples");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductTypeEntity", b =>
@@ -308,7 +299,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProductType");
+                    b.ToTable("ProductTypes");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.SrcOrderEntity", b =>
@@ -359,7 +350,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("OrderName");
 
-                    b.ToTable("SrcOrder");
+                    b.ToTable("SrcOrders");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.StageEntity", b =>
@@ -392,7 +383,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("Stage");
+                    b.ToTable("Stages");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.StageTypeEntity", b =>
@@ -407,7 +398,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StageType");
+                    b.ToTable("StageTypes");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.UserEntity", b =>
@@ -430,7 +421,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodEntity", b =>
@@ -469,7 +460,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("ProductEntityId");
 
-                    b.ToTable("WorkingPeriod");
+                    b.ToTable("WorkingPeriods");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodRelationEntity", b =>
@@ -478,16 +469,16 @@ namespace KssGroupPlanning.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ChildProductSubTypeWokingPeriodsSampleId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("ChildProductSubTypeWorkingPeriodSampleEntityId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ChildProductSubTypeWorkingPeriodSampleId")
+                    b.Property<Guid>("ParentProductSubTypeWokingPeriodsSampleId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("ParentProductSubTypeWorkingPeriodSampleEntityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ParentProductSubTypeWorkingPeriodSampleId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -496,7 +487,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("ParentProductSubTypeWorkingPeriodSampleEntityId");
 
-                    b.ToTable("WorkingPeriodRelation");
+                    b.ToTable("WorkingPeriodRelations");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageBrigadeRelationEntity", b =>
@@ -523,7 +514,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("WorkingPeriodStageEntityId");
 
-                    b.ToTable("WorkingPeriodStageBrigadeRelation");
+                    b.ToTable("WorkingPeriodStageBrigadeRelations");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageEntity", b =>
@@ -563,7 +554,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("WorkingPeriodId");
 
-                    b.ToTable("WorkingPeriodStage");
+                    b.ToTable("WorkingPeriodStages");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageMaterialEntity", b =>
@@ -593,7 +584,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("WorkingPeriodStageEntityId");
 
-                    b.ToTable("WorkingPeriodStageMaterial");
+                    b.ToTable("WorkingPeriodStageMaterials");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageTypeRelationEntity", b =>
@@ -617,22 +608,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("StageTypeId");
 
-                    b.ToTable("WorkingPeriodStageTypeRelation");
-                });
-
-            modelBuilder.Entity("BrigadeEntityWorkingPeriodStageEntity", b =>
-                {
-                    b.HasOne("KssGroupPlanning.Entities.BrigadeEntity", null)
-                        .WithMany()
-                        .HasForeignKey("BrigadeEntitiesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("KssGroupPlanning.Entities.WorkingPeriodStageEntity", null)
-                        .WithMany()
-                        .HasForeignKey("WorkingPeriodStageEntitiesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.ToTable("WorkingPeriodStageTypeRelations");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
@@ -661,10 +637,8 @@ namespace KssGroupPlanning.Migrations
                         .HasForeignKey("FactoryEntityId");
 
                     b.HasOne("KssGroupPlanning.Entities.OrderEntity", "OrderEntity")
-                        .WithMany("ProductEntities")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("Products")
+                        .HasForeignKey("OrderEntityId");
 
                     b.HasOne("KssGroupPlanning.Entities.ProductEntity", "ParentProductEntity")
                         .WithMany("ChildProductEntities")
@@ -846,7 +820,7 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.OrderEntity", b =>
                 {
-                    b.Navigation("ProductEntities");
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductEntity", b =>

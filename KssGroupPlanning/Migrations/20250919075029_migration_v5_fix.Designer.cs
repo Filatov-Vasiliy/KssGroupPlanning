@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250919075029_migration_v5_fix")]
+    partial class migration_v5_fix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace KssGroupPlanning.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("BrigadeEntityWorkingPeriodStageEntity", b =>
-                {
-                    b.Property<Guid>("BrigadeEntitiesId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("WorkingPeriodStageEntitiesId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("BrigadeEntitiesId", "WorkingPeriodStageEntitiesId");
-
-                    b.HasIndex("WorkingPeriodStageEntitiesId");
-
-                    b.ToTable("BrigadeEntityWorkingPeriodStageEntity");
-                });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
                 {
@@ -151,6 +139,9 @@ namespace KssGroupPlanning.Migrations
                     b.Property<string>("Number")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("OrderEntityId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
@@ -180,7 +171,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasIndex("FactoryEntityId");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderEntityId");
 
                     b.HasIndex("ParentProductEntityId");
 
@@ -620,21 +611,6 @@ namespace KssGroupPlanning.Migrations
                     b.ToTable("WorkingPeriodStageTypeRelation");
                 });
 
-            modelBuilder.Entity("BrigadeEntityWorkingPeriodStageEntity", b =>
-                {
-                    b.HasOne("KssGroupPlanning.Entities.BrigadeEntity", null)
-                        .WithMany()
-                        .HasForeignKey("BrigadeEntitiesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("KssGroupPlanning.Entities.WorkingPeriodStageEntity", null)
-                        .WithMany()
-                        .HasForeignKey("WorkingPeriodStageEntitiesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
                 {
                     b.HasOne("KssGroupPlanning.Entities.FactoryEntity", "Factory")
@@ -661,10 +637,8 @@ namespace KssGroupPlanning.Migrations
                         .HasForeignKey("FactoryEntityId");
 
                     b.HasOne("KssGroupPlanning.Entities.OrderEntity", "OrderEntity")
-                        .WithMany("ProductEntities")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("Products")
+                        .HasForeignKey("OrderEntityId");
 
                     b.HasOne("KssGroupPlanning.Entities.ProductEntity", "ParentProductEntity")
                         .WithMany("ChildProductEntities")
@@ -846,7 +820,7 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.OrderEntity", b =>
                 {
-                    b.Navigation("ProductEntities");
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductEntity", b =>
