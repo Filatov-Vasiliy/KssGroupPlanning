@@ -1,8 +1,8 @@
 ﻿namespace KssGroupPlanning.Models;
 
-public class WorkingPeriodStageType
+public class WorkingPeriodStageTypeRelation
 {
-    private WorkingPeriodStageType(Guid id, Guid stageTypeId, Guid productSubTypeWorkingPeriodSampleId) 
+    private WorkingPeriodStageTypeRelation(Guid id, Guid stageTypeId, Guid productSubTypeWorkingPeriodSampleId) 
     {
         Id = id;
         StageTypeId = stageTypeId;
@@ -13,8 +13,8 @@ public class WorkingPeriodStageType
     public StageType? StageType { get; set; } = null;
     public Guid ProductSubTypeWorkingPeriodSampleId { get; set; }
     public ProductSubTypeWorkingPeriodSample? ProductSubTypeWorkingPeriodSample { get; set; } = null;
-    public static WorkingPeriodStageType Create(Guid id, Guid stageTypeId, Guid productSubTypeWorkingPeriodSampleId) 
+    public static WorkingPeriodStageTypeRelation Create(Guid id, Guid stageTypeId, Guid productSubTypeWorkingPeriodSampleId) 
     {
-        return new WorkingPeriodStageType(id, stageTypeId, productSubTypeWorkingPeriodSampleId);
+        return new WorkingPeriodStageTypeRelation(id, stageTypeId, productSubTypeWorkingPeriodSampleId);
     }
 }

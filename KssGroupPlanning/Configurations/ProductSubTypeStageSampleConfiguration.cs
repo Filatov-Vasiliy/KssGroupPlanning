@@ -9,6 +9,6 @@ public class ProductSubTypeStageSampleConfiguration : IEntityTypeConfiguration<P
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ProductSubTypeStageSampleEntity> builder)
     {
         builder.HasKey(pstss => pstss.Id);
-
+        builder.HasOne(pstss => pstss.ProductSubType).WithMany(pst => pst.ProductSubTypeStageSamples).HasForeignKey(pstss => pstss.ProductSubTypeId);
     }
 }

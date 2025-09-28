@@ -22,7 +22,7 @@ public class Order
     public decimal PaymentAmount { get; set; }
     public decimal PaymentCurrent { get; set; }
     public string Status { get; set; }
-    public List<Product> Products { get; set; } = [];
+    public List<Product>? Products { get; set; } = new List<Product>();
     public DateTime CreateTime { get; set; } = DateTime.Now;
     public DateTime UpdateTime { get; set; } = DateTime.Now;
 

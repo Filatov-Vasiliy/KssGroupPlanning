@@ -9,10 +9,11 @@
         public DateTime DateTo { get; set; }
         public string Status { get; set; }
         public TimeOnly? Recycling { get; set; }
-        public ProductSubTypeWorkingPeriodSampleEntity? ProductSubTypeWorkingPeriodSample { get; set; }
+        public ProductSubTypeWorkingPeriodSampleEntity? ProductSubTypeWorkingPeriodSample { get; set; } = null;
         public Guid ProductSubTypeWorkingPeriodSampleId { get; set; }
+        public List<WorkingPeriodStageMaterialEntity>? WorkingPeriodStageMaterials { get; set; } = new List<WorkingPeriodStageMaterialEntity>();
         public DateTime CreateTime { get; set; } = DateTime.Now;
         public DateTime UpdateTime { get; set; } = DateTime.Now;
-        public List<WorkingPeriodStageMaterialEntity>? workingPeriodStageMaterialEntities { get; set; }
+        public List<BrigadeEntity>? Brigades { get; set; }
     }
 }

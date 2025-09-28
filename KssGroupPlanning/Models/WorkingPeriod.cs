@@ -1,4 +1,6 @@
-﻿namespace KssGroupPlanning.Models;
+﻿using KssGroupPlanning.Entities;
+
+namespace KssGroupPlanning.Models;
     public class WorkingPeriod
     {
     private WorkingPeriod(Guid id, string name, string status, Guid productId, DateTime dateFrom, DateTime dateTo, DateTime createTime, DateTime updateTime)
@@ -23,6 +25,8 @@
         public DateTime DateTo { get; set; }
         public DateTime CreateTime { get; set; } = DateTime.Now;
         public DateTime UpdateTime { get; set; } = DateTime.Now;
+        public List<WorkingPeriodStage>? WorkingPeriodStages { get; set; } = new List<WorkingPeriodStage>();
+
     public static WorkingPeriod Create(Guid id, string name, string status, Guid productId, DateTime dateFrom, DateTime dateTo, DateTime createTime, DateTime updateTime)
         { 
             return new WorkingPeriod(id, name, status, productId, dateFrom, dateTo, createTime, updateTime);
