@@ -9,6 +9,7 @@ public class WorkingPeriodStageMaterialConfiguration : IEntityTypeConfiguration<
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<WorkingPeriodStageMaterialEntity> builder)
     {
         builder.HasKey(wpsm => wpsm.Id);
-
+        builder.HasOne(wpsm => wpsm.WorkingPeriodStage).WithMany(wps => wps.WorkingPeriodStageMaterials).HasForeignKey(wpsm => wpsm.WorkingPeriodStageId);
+        builder.HasOne(wpsm => wpsm.GroupMaterial).WithMany(gm => gm.WorkingPeriodStageMaterials).HasForeignKey(wpsm => wpsm.GroupMaterialId);
     }
 }

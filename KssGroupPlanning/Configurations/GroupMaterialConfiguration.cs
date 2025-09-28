@@ -9,6 +9,7 @@ public class GroupMaterialConfiguration : IEntityTypeConfiguration<GroupMaterial
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<GroupMaterialEntity> builder)
     {
         builder.HasKey(gm => gm.Id);
-
+        builder.HasMany(gm => gm.WorkingPeriodStageMaterials).WithOne(wpsm => wpsm.GroupMaterial);
+        builder.HasMany(gm => gm.ProductSubTypeWorkingPeriodSamples).WithMany(pstwps => pstwps.GroupMaterials);
     }
 }

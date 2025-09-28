@@ -28,9 +28,11 @@ public class Product
     public Guid OrderId { get; set; }
     public Order? Order { get; set; } = null;
     public Guid? ParentProductId { get; set; }
-    public Product? ParentProduct { get; set; }
+    public Product? ParentProduct { get; set; } = null;
     public List<Product>? ChildProducts { get; set; } = new List<Product>();
+    public List<Stage> Stages { get; set; } = new List<Stage>();
     public string Status { get; set; }
+    public List<WorkingPeriod>? WorkingPeriods { get; set; } = new List<WorkingPeriod>();
     public DateOnly? Start_date { get; set; } = null;
     public DateOnly? End_date { get; set; } = null;
     public DateTime CreateTime { get; set; } = DateTime.Now;

@@ -9,7 +9,7 @@ public class OrderEntity
     public decimal PaymentAmount { get; set; }
     public decimal PaymentCurrent { get; set; }
     public string Status { get; set; }
-    public List<ProductEntity> Products { get; set; } = [];
+    public List<ProductEntity>? Products { get; set; } = new List<ProductEntity>();
     public DateTime CreateTime { get; set; } = DateTime.Now;
     public DateTime UpdateTime { get; set; } = DateTime.Now;
 }

@@ -9,7 +9,7 @@ public class ProductType
     }
     public Guid Id { get; set; }
     public string Name { get; set; }
-    public List<ProductSubType> ProductSubTypes { get; set; } = [];
+    public List<ProductSubType>? ProductSubTypes { get; set; } = new List<ProductSubType>();
     public static ProductType Create(Guid id, string name) 
     { 
         return new ProductType(id, name);

@@ -10,10 +10,10 @@
             DateDelivery = dateDelivery;
         }
         public Guid Id { get; set; }
-        public WorkingPeriodStage WorkingPeriodStage { get; set; }
+        public WorkingPeriodStage? WorkingPeriodStage { get; set; } = null;
         public Guid WorkingPeriodStageId { get; set; }
         public Guid GroupMaterialId { get; set; }
-        public GroupMaterial GroupMaterials { get; set; }
+        public GroupMaterial? GroupMaterials { get; set; } = null;
         public DateOnly DateDelivery { get; set; }
         public static WorkingPeriodStageMaterial Create(Guid id, Guid workingPeriodStageId, Guid groupMaterialId, DateOnly dateDelivery)
         {
