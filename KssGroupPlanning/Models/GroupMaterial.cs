@@ -13,6 +13,7 @@ public class GroupMaterial
     public string Name { get; set; }
     public List<WorkingPeriodStageMaterial>? WorkingPeriodStageMaterials { get; set; } = new List<WorkingPeriodStageMaterial>();
     public List<ProductSubTypeWorkingPeriodSample>? ProductSubTypeWorkingPeriodSamples { get; set; } = new List<ProductSubTypeWorkingPeriodSample>();
+    public List<ProductSubTypeGroupMaterialRelation> ProductSubTypeGroupMaterialRelations { get; set; } = new List<ProductSubTypeGroupMaterialRelation>();
 
     public static GroupMaterial Create(Guid id, string name)
     {

@@ -10,6 +10,6 @@ public class GroupMaterialConfiguration : IEntityTypeConfiguration<GroupMaterial
     {
         builder.HasKey(gm => gm.Id);
         builder.HasMany(gm => gm.WorkingPeriodStageMaterials).WithOne(wpsm => wpsm.GroupMaterial);
-        builder.HasMany(gm => gm.ProductSubTypeWorkingPeriodSamples).WithMany(pstwps => pstwps.GroupMaterials);
+        builder.HasMany(gm => gm.ProductSubTypeWorkingPeriodSamples).WithMany(pstwps => pstwps.GroupMaterials).UsingEntity<ProductSubTypeGroupMaterialRelationEntity>();
     }
 }

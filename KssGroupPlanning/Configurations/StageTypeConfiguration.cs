@@ -10,6 +10,6 @@ public class StageTypeConfiguration : IEntityTypeConfiguration<StageTypeEntity>
     {
         builder.HasKey(st => st.Id);
         builder.HasMany(st => st.Brigades).WithOne(b => b.StageType);
-        builder.HasMany(st => st.ProductSubTypeWorkingPeriodSamples).WithMany(pstwps => pstwps.StageTypes);
+        builder.HasMany(st => st.ProductSubTypeWorkingPeriodSamples).WithMany(pstwps => pstwps.StageTypes).UsingEntity<WorkingPeriodStageTypeRelationEntity>();
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace KssGroupPlanning.Entities
+﻿using KssGroupPlanning.Models;
+
+namespace KssGroupPlanning.Entities
 {
     public class WorkingPeriodStageEntity
     {
@@ -15,5 +17,7 @@
         public DateTime CreateTime { get; set; } = DateTime.Now;
         public DateTime UpdateTime { get; set; } = DateTime.Now;
         public List<BrigadeEntity>? Brigades { get; set; }
+        public List<WorkingPeriodStageBrigadeRelationEntity> WorkingPeriodStageBrigadeRelations { get; set; } = new List<WorkingPeriodStageBrigadeRelationEntity>();
+
     }
 }
