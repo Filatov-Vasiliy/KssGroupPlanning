@@ -25,6 +25,8 @@ public class ProductSubTypeWorkingPeriodSample
     public List<GroupMaterial>? GroupMaterials { get; set; } = new List<GroupMaterial>();
     public List<ProductSubTypeWorkingPeriodSample>? ChildProductSubTypeWorkingPeriodSamples { get; set; } = new List<ProductSubTypeWorkingPeriodSample>();
     public List<ProductSubTypeWorkingPeriodSample>? ParentProductSubTypeWorkingPeriodSamples { get; set; } = new List<ProductSubTypeWorkingPeriodSample>();
+    public List<WorkingPeriodStageTypeRelation> WorkingPeriodStageTypeRelations { get; set; } = new List<WorkingPeriodStageTypeRelation>();
+    public List<ProductSubTypeGroupMaterialRelation> ProductSubTypeGroupMaterialRelations { get; set; } = new List<ProductSubTypeGroupMaterialRelation>();
 
     public static ProductSubTypeWorkingPeriodSample Create(Guid id, Guid productSubTypeId, int rowNumber, string workingPeriodName, string standartTime, int standartEmployee)
     { 

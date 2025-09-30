@@ -29,6 +29,7 @@ namespace KssGroupPlanning.Models
         public DateTime CreateTime { get; set; } = DateTime.Now;
         public DateTime UpdateTime { get; set; } = DateTime.Now;
         public List<Brigade>? Brigades { get; set; } = new List<Brigade>();
+        public List<WorkingPeriodStageBrigadeRelation> WorkingPeriodStageBrigadeRelations { get; set; } = new List<WorkingPeriodStageBrigadeRelation>();
 
         public static WorkingPeriodStage Create(Guid id, Guid workingPeriodId, DateTime dateFrom, DateTime dateTo, string status, TimeOnly? recycling, Guid productSubTypeWorkingPeriodSampleId, DateTime createTime, DateTime updateTime)
         { 
