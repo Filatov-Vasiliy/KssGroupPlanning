@@ -9,11 +9,11 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace KssGroupPlanning.Repositories;
 
-public class WorkingPeriodStageTypeRepository : IWorkingPeriodStageTypeRelationRepository
+public class WorkingPeriodStageTypeRelationRepository : IWorkingPeriodStageTypeRelationRepository
 {
     private readonly ProjectDbContext _dbcontext;
 
-    public WorkingPeriodStageTypeRepository(ProjectDbContext context)
+    public WorkingPeriodStageTypeRelationRepository(ProjectDbContext context)
     {
         _dbcontext = context;
     }
@@ -65,13 +65,13 @@ public class WorkingPeriodStageTypeRepository : IWorkingPeriodStageTypeRelationR
         await _dbcontext.AddAsync(workingPeriodStageTypeRelation);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(WorkingPeriodStageTypeRelation WorkingPeriodsStageTypes)
+    public async Task Update(WorkingPeriodStageTypeRelation workingPeriodStageTypeRelation)
     {
-        var WorkingPeriodsStageTypesEntity = await _dbcontext.WorkingPeriodStageTypeRelation.FirstOrDefaultAsync(c => c.Id == WorkingPeriodsStageTypes.Id)
+        var WorkingPeriodStageTypeRelationEntity = await _dbcontext.WorkingPeriodStageTypeRelation.FirstOrDefaultAsync(c => c.Id == workingPeriodStageTypeRelation.Id)
             ?? throw new Exception();
-        WorkingPeriodsStageTypesEntity.Id = WorkingPeriodsStageTypes.Id;
-        WorkingPeriodsStageTypesEntity.StageTypeId = WorkingPeriodsStageTypes.StageTypeId;
-        WorkingPeriodsStageTypesEntity.ProductSubTypeWorkingPeriodSampleId = WorkingPeriodsStageTypes.ProductSubTypeWorkingPeriodSampleId;
+        WorkingPeriodStageTypeRelationEntity.Id = workingPeriodStageTypeRelation.Id;
+        WorkingPeriodStageTypeRelationEntity.StageTypeId = workingPeriodStageTypeRelation.StageTypeId;
+        WorkingPeriodStageTypeRelationEntity.ProductSubTypeWorkingPeriodSampleId = workingPeriodStageTypeRelation.ProductSubTypeWorkingPeriodSampleId;
 
         await _dbcontext.SaveChangesAsync();
     }

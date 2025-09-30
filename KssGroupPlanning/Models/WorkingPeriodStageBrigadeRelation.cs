@@ -1,4 +1,5 @@
 ﻿using KssGroupPlanning.Entities;
+using KssGroupPlanning.Interfaces.Repository;
 
 namespace KssGroupPlanning.Models;
 
