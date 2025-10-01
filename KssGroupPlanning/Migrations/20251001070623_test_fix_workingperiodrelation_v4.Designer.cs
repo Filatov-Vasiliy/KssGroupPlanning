@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251001070623_test_fix_workingperiodrelation_v4")]
+    partial class test_fix_workingperiodrelation_v4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -448,11 +451,17 @@ namespace KssGroupPlanning.Migrations
                     b.Property<Guid>("ParentProductSubTypeWorkingPeriodSampleId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ParentProductSubTypeWorkingPeriodSamplesId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ChildProductSubTypeWorkingPeriodSampleId");
 
                     b.HasIndex("ParentProductSubTypeWorkingPeriodSampleId");
+
+                    b.HasIndex("ParentProductSubTypeWorkingPeriodSamplesId")
+                        .HasDatabaseName("IX_WorkingPeriodRelation_ParentProductSubTypeWorkingPeriodSam~1");
 
                     b.ToTable("WorkingPeriodRelation");
                 });
@@ -694,16 +703,23 @@ namespace KssGroupPlanning.Migrations
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodRelationEntity", b =>
                 {
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", "ChildProductSubTypeWorkingPeriodSample")
-                        .WithMany("ParentWorkingPeriodRelations")
+                        .WithMany("ChildWorkingPeriodRelations")
                         .HasForeignKey("ChildProductSubTypeWorkingPeriodSampleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", "ParentProductSubTypeWorkingPeriodSample")
-                        .WithMany("ChildWorkingPeriodRelations")
+                        .WithMany("ParentWorkingPeriodRelations")
                         .HasForeignKey("ParentProductSubTypeWorkingPeriodSampleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ParentProductSubTypeWorkingPeriodSamplesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_WorkingPeriodRelation_ProductSubTypeWorkingPeriodSample_Pa~1");
 
                     b.Navigation("ChildProductSubTypeWorkingPeriodSample");
 

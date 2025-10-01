@@ -15,8 +15,6 @@ public class WorkingPeriodRelation
     public ProductSubTypeWorkingPeriodSample? ParentProductSubTypeWorkingPeriodSample { get; set; } = null;
     public Guid ChildProductSubTypeWorkingPeriodSampleId { get; set; }
     public ProductSubTypeWorkingPeriodSample? ChildProductSubTypeWorkingPeriodSample { get; set; } = null;
-    public List<WorkingPeriodRelation> ChildWorkingPeriodRelations { get; set; } = new List<WorkingPeriodRelation>();
-    public List<WorkingPeriodRelation> ParentWorkingPeriodRelations { get; set; } = new List<WorkingPeriodRelation>();
 
     public static WorkingPeriodRelation Create (Guid id, Guid parentProductSubTypeWorkingPeriodSampleId, Guid childProductSubTypeWorkingPeriodSampleId)
     {
