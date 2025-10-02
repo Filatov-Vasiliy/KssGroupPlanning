@@ -4,7 +4,7 @@ namespace KssGroupPlanning.Models;
 
 public class Product
 {
-    private Product(Guid id, string? number, Guid productSubTypeId, Guid factoryId, Guid orderId,Guid parentProductId, string status, DateOnly? startDate, DateOnly? endDate, DateTime createTime, DateTime updateTime)
+    private Product(Guid id, string? number, Guid productSubTypeId, Guid factoryId, Guid orderId,Guid? parentProductId, string status, DateOnly? startDate, DateOnly? endDate, DateTime createTime, DateTime updateTime)
     {
         Id = id;
         Number = number;
@@ -27,7 +27,7 @@ public class Product
     public Factory? Factory { get; set; } = null;
     public Guid OrderId { get; set; }
     public Order? Order { get; set; } = null;
-    public Guid ParentProductId { get; set; }
+    public Guid? ParentProductId { get; set; }
     public Product? ParentProduct { get; set; } = null;
     public List<Product>? ChildProducts { get; set; } = new List<Product>();
     public List<Stage> Stages { get; set; } = new List<Stage>();
@@ -38,8 +38,8 @@ public class Product
     public DateTime CreateTime { get; set; } = DateTime.Now;
     public DateTime UpdateTime { get; set; } = DateTime.Now;
 
-    public static Product Create(Guid id, string? number, Guid productSubTypeId, Guid factoryId, Guid orderId,Guid parentProductId, string status, DateOnly? startDate, DateOnly? endDate, DateTime createTime, DateTime updateTime)
-    { 
-        return new Product(id,number, productSubTypeId,factoryId,orderId,parentProductId, status,startDate,endDate,createTime,updateTime);
+    public static Product Create(Guid id, string? number, Guid productSubTypeId, Guid factoryId, Guid orderId,Guid? parentProductId, string status, DateOnly? startDate, DateOnly? endDate, DateTime createTime, DateTime updateTime)
+    {
+        return new Product(id, number, productSubTypeId, factoryId, orderId, parentProductId: (Guid)parentProductId, status, startDate, endDate, createTime, updateTime);
     }
 }
