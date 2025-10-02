@@ -136,7 +136,7 @@ namespace KssGroupPlanning.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ParentProductId")
+                    b.Property<Guid?>("ParentProductId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ProductSubTypeId")
@@ -925,9 +925,7 @@ namespace KssGroupPlanning.Migrations
 
                     b.HasOne("KssGroupPlanning.Entities.ProductEntity", "ParentProduct")
                         .WithMany("ChildProducts")
-                        .HasForeignKey("ParentProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ParentProductId");
 
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeEntity", "ProductSubType")
                         .WithMany("Products")
