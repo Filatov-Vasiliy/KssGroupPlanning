@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20250930192517_test_configurations_many")]
-    partial class test_configurations_many
+    [Migration("20251002150633_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -186,6 +186,236 @@ namespace KssGroupPlanning.Migrations
                     b.HasIndex("ProductTypeId");
 
                     b.ToTable("ProductSubType");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("41bfadaa-08ee-4a09-ab66-4c53d72c9959"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("0cb6cef3-948e-426e-b655-a481772a84ca")
+                        },
+                        new
+                        {
+                            Id = new Guid("eaeda842-4989-4a5d-9755-0090f45db54f"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("0cb6cef3-948e-426e-b655-a481772a84ca")
+                        },
+                        new
+                        {
+                            Id = new Guid("0a283d26-f089-410e-8fdd-08135ba9b999"),
+                            Name = "Подтип В",
+                            ProductTypeId = new Guid("0cb6cef3-948e-426e-b655-a481772a84ca")
+                        },
+                        new
+                        {
+                            Id = new Guid("3762494e-93a2-458b-8030-10397640cf4b"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("11f6dadc-53d7-4ba3-90d4-8e9bfc0e4bca")
+                        },
+                        new
+                        {
+                            Id = new Guid("212d7ed0-547a-4611-a514-b47f5eb5e7ac"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("11f6dadc-53d7-4ba3-90d4-8e9bfc0e4bca")
+                        },
+                        new
+                        {
+                            Id = new Guid("af05f00d-070e-494c-a734-84cf1ae27c84"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("3d747667-d70c-436c-8856-4f56a38a19ea")
+                        },
+                        new
+                        {
+                            Id = new Guid("c04349f0-de53-4c71-a700-a74acb81fae2"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("3d747667-d70c-436c-8856-4f56a38a19ea")
+                        },
+                        new
+                        {
+                            Id = new Guid("37f914f9-3463-4a46-919d-850ab0438593"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("42a52c7e-1fcd-46bf-bf78-34a89f642cd3")
+                        },
+                        new
+                        {
+                            Id = new Guid("b574504f-1e86-42da-b016-48a92df3a22f"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("42a52c7e-1fcd-46bf-bf78-34a89f642cd3")
+                        },
+                        new
+                        {
+                            Id = new Guid("cca39ec7-4ad5-4f4d-aaf0-7fcf30f6ed8e"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("56938081-7b16-4bb4-a002-38bea806f87c")
+                        },
+                        new
+                        {
+                            Id = new Guid("65310518-d75f-44f7-bc26-20ec63245b19"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("56938081-7b16-4bb4-a002-38bea806f87c")
+                        },
+                        new
+                        {
+                            Id = new Guid("4791ac18-2d8e-4d63-bf4e-eefbee5eb204"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("898d6acb-7ad6-4ca6-982c-d297af815a64")
+                        },
+                        new
+                        {
+                            Id = new Guid("dd235869-87fa-492a-9896-810b2d69261b"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("898d6acb-7ad6-4ca6-982c-d297af815a64")
+                        },
+                        new
+                        {
+                            Id = new Guid("b7ef5558-ba1c-4a3d-bd53-ebb961d189c4"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("8b12a5b4-5905-4eb9-8927-1b31eb9e960d")
+                        },
+                        new
+                        {
+                            Id = new Guid("f8402906-63fa-4781-9240-2cf192133da0"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("8b12a5b4-5905-4eb9-8927-1b31eb9e960d")
+                        },
+                        new
+                        {
+                            Id = new Guid("3fbc3814-6bce-4046-a0b2-1bd279b1d295"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("96197298-d396-424a-8ed8-0f97bd038ba0")
+                        },
+                        new
+                        {
+                            Id = new Guid("4e4c686b-1698-4718-af84-2ccd154b7475"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("96197298-d396-424a-8ed8-0f97bd038ba0")
+                        },
+                        new
+                        {
+                            Id = new Guid("05b9823b-c2d4-49c9-bf70-20cd1d1ddbbc"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("993548ea-fde7-4614-ac09-6c12bbfbfd9d")
+                        },
+                        new
+                        {
+                            Id = new Guid("fba229fd-dd29-4e80-bb79-09991987c4b4"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("993548ea-fde7-4614-ac09-6c12bbfbfd9d")
+                        },
+                        new
+                        {
+                            Id = new Guid("7865463d-4417-4adc-910a-9f14ba709c7b"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("aef1f8a9-9fa9-4696-abcf-228129da8ad1")
+                        },
+                        new
+                        {
+                            Id = new Guid("2ae54ed5-c1bf-4c3a-a21f-ffc9cc7b2c50"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("aef1f8a9-9fa9-4696-abcf-228129da8ad1")
+                        },
+                        new
+                        {
+                            Id = new Guid("b853406e-78d8-4d2c-bfb6-1827da7e301b"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("b19d093d-2deb-4b33-a69b-f1583aa27ab6")
+                        },
+                        new
+                        {
+                            Id = new Guid("dcb0b6e8-1a86-435a-b2a9-28dfd2deb699"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("b19d093d-2deb-4b33-a69b-f1583aa27ab6")
+                        },
+                        new
+                        {
+                            Id = new Guid("86a6d038-d6f0-41b5-b372-37cd66e0ff0a"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("bf5381ed-4534-4ec5-87f7-8b28eaa22f9d")
+                        },
+                        new
+                        {
+                            Id = new Guid("b63d4462-6380-4f35-a746-56702ae9e1e8"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("bf5381ed-4534-4ec5-87f7-8b28eaa22f9d")
+                        },
+                        new
+                        {
+                            Id = new Guid("d8fe2c6f-d3ad-428e-8536-79d8f3298da8"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("c871d38b-21c7-4429-bdce-3c70c379ae4b")
+                        },
+                        new
+                        {
+                            Id = new Guid("5daed2ae-ca02-4ea7-a7fa-f2ad68ba5f16"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("c871d38b-21c7-4429-bdce-3c70c379ae4b")
+                        },
+                        new
+                        {
+                            Id = new Guid("91b34819-6e7a-45dd-9b6f-3e35665fded3"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("d64ac138-b11f-44ef-b75a-48c338bc8157")
+                        },
+                        new
+                        {
+                            Id = new Guid("1d0fca15-a4b0-4878-85b8-40ce384a7777"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("d64ac138-b11f-44ef-b75a-48c338bc8157")
+                        },
+                        new
+                        {
+                            Id = new Guid("57f44c4b-8bb9-41d6-9199-1bd8b52bef34"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("def39874-75ce-4a53-8c1e-6a6bc88f92b9")
+                        },
+                        new
+                        {
+                            Id = new Guid("e86fec9c-55b8-4740-b396-1aea0e964e67"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("def39874-75ce-4a53-8c1e-6a6bc88f92b9")
+                        },
+                        new
+                        {
+                            Id = new Guid("2c891976-9006-4f0a-b493-52f1b8366946"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("e02387d3-03c9-4acf-acca-fad34ac47038")
+                        },
+                        new
+                        {
+                            Id = new Guid("9b812aef-3c14-4b2a-9b3f-e92f84b12f91"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("e02387d3-03c9-4acf-acca-fad34ac47038")
+                        },
+                        new
+                        {
+                            Id = new Guid("e7a65ae3-8290-499c-9226-fde4efc80914"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("e7d8c946-0a0e-4556-9cbb-2e1e3e6d1561")
+                        },
+                        new
+                        {
+                            Id = new Guid("dee59352-bf5e-4901-8912-88a7afa0aea8"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("e7d8c946-0a0e-4556-9cbb-2e1e3e6d1561")
+                        },
+                        new
+                        {
+                            Id = new Guid("e0a9c3e6-3102-4892-a44b-8bec8bfcdf1c"),
+                            Name = "Подтип А",
+                            ProductTypeId = new Guid("edf5834b-a1a0-42a7-8b55-84de08280fd7")
+                        },
+                        new
+                        {
+                            Id = new Guid("32fed513-1b3c-49cb-9e06-ddfaaa82a488"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("edf5834b-a1a0-42a7-8b55-84de08280fd7")
+                        },
+                        new
+                        {
+                            Id = new Guid("f2a48405-4728-4e50-b99e-54ee9f9235ac"),
+                            Name = "Подтип Б",
+                            ProductTypeId = new Guid("f102fb2a-b3af-462f-9989-9d1f3169d44b")
+                        });
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeGroupMaterialRelationEntity", b =>
@@ -279,6 +509,103 @@ namespace KssGroupPlanning.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProductType");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("898d6acb-7ad6-4ca6-982c-d297af815a64"),
+                            Name = "ПНС"
+                        },
+                        new
+                        {
+                            Id = new Guid("c871d38b-21c7-4429-bdce-3c70c379ae4b"),
+                            Name = "КНС"
+                        },
+                        new
+                        {
+                            Id = new Guid("993548ea-fde7-4614-ac09-6c12bbfbfd9d"),
+                            Name = "ВНС в корпусе"
+                        },
+                        new
+                        {
+                            Id = new Guid("56938081-7b16-4bb4-a002-38bea806f87c"),
+                            Name = "ПНС в корпусе"
+                        },
+                        new
+                        {
+                            Id = new Guid("e02387d3-03c9-4acf-acca-fad34ac47038"),
+                            Name = "КНС в корпусе"
+                        },
+                        new
+                        {
+                            Id = new Guid("42a52c7e-1fcd-46bf-bf78-34a89f642cd3"),
+                            Name = "Водомерный узел"
+                        },
+                        new
+                        {
+                            Id = new Guid("d64ac138-b11f-44ef-b75a-48c338bc8157"),
+                            Name = "ЛОС"
+                        },
+                        new
+                        {
+                            Id = new Guid("e7d8c946-0a0e-4556-9cbb-2e1e3e6d1561"),
+                            Name = "ЕН"
+                        },
+                        new
+                        {
+                            Id = new Guid("11f6dadc-53d7-4ba3-90d4-8e9bfc0e4bca"),
+                            Name = "ЖУВ"
+                        },
+                        new
+                        {
+                            Id = new Guid("0cb6cef3-948e-426e-b655-a481772a84ca"),
+                            Name = "Ш/У"
+                        },
+                        new
+                        {
+                            Id = new Guid("def39874-75ce-4a53-8c1e-6a6bc88f92b9"),
+                            Name = "Автомойка"
+                        },
+                        new
+                        {
+                            Id = new Guid("aef1f8a9-9fa9-4696-abcf-228129da8ad1"),
+                            Name = "Блок-контейнер"
+                        },
+                        new
+                        {
+                            Id = new Guid("b19d093d-2deb-4b33-a69b-f1583aa27ab6"),
+                            Name = "ПНС в блок-контейнере"
+                        },
+                        new
+                        {
+                            Id = new Guid("96197298-d396-424a-8ed8-0f97bd038ba0"),
+                            Name = "ВНС в блок-контейнере"
+                        },
+                        new
+                        {
+                            Id = new Guid("8b12a5b4-5905-4eb9-8927-1b31eb9e960d"),
+                            Name = "КР"
+                        },
+                        new
+                        {
+                            Id = new Guid("3d747667-d70c-436c-8856-4f56a38a19ea"),
+                            Name = "КГН"
+                        },
+                        new
+                        {
+                            Id = new Guid("edf5834b-a1a0-42a7-8b55-84de08280fd7"),
+                            Name = "КП"
+                        },
+                        new
+                        {
+                            Id = new Guid("bf5381ed-4534-4ec5-87f7-8b28eaa22f9d"),
+                            Name = "КГН"
+                        },
+                        new
+                        {
+                            Id = new Guid("f102fb2a-b3af-462f-9989-9d1f3169d44b"),
+                            Name = "ВНС"
+                        });
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.SrcOrderEntity", b =>
@@ -451,17 +778,11 @@ namespace KssGroupPlanning.Migrations
                     b.Property<Guid>("ParentProductSubTypeWorkingPeriodSampleId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ParentProductSubTypeWorkingPeriodSamplesId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ChildProductSubTypeWorkingPeriodSampleId");
 
                     b.HasIndex("ParentProductSubTypeWorkingPeriodSampleId");
-
-                    b.HasIndex("ParentProductSubTypeWorkingPeriodSamplesId")
-                        .HasDatabaseName("IX_WorkingPeriodRelation_ParentProductSubTypeWorkingPeriodSam~1");
 
                     b.ToTable("WorkingPeriodRelation");
                 });
@@ -703,23 +1024,16 @@ namespace KssGroupPlanning.Migrations
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodRelationEntity", b =>
                 {
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", "ChildProductSubTypeWorkingPeriodSample")
-                        .WithMany("ChildWorkingPeriodRelations")
+                        .WithMany("ParentWorkingPeriodRelations")
                         .HasForeignKey("ChildProductSubTypeWorkingPeriodSampleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", "ParentProductSubTypeWorkingPeriodSample")
-                        .WithMany("ParentWorkingPeriodRelations")
+                        .WithMany("ChildWorkingPeriodRelations")
                         .HasForeignKey("ParentProductSubTypeWorkingPeriodSampleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ParentProductSubTypeWorkingPeriodSamplesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_WorkingPeriodRelation_ProductSubTypeWorkingPeriodSample_Pa~1");
 
                     b.Navigation("ChildProductSubTypeWorkingPeriodSample");
 
