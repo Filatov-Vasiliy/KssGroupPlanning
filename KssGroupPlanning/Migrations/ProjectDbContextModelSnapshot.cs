@@ -775,17 +775,11 @@ namespace KssGroupPlanning.Migrations
                     b.Property<Guid>("ParentProductSubTypeWorkingPeriodSampleId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ParentProductSubTypeWorkingPeriodSamplesId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ChildProductSubTypeWorkingPeriodSampleId");
 
                     b.HasIndex("ParentProductSubTypeWorkingPeriodSampleId");
-
-                    b.HasIndex("ParentProductSubTypeWorkingPeriodSamplesId")
-                        .HasDatabaseName("IX_WorkingPeriodRelation_ParentProductSubTypeWorkingPeriodSam~1");
 
                     b.ToTable("WorkingPeriodRelation");
                 });
@@ -1027,23 +1021,16 @@ namespace KssGroupPlanning.Migrations
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodRelationEntity", b =>
                 {
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", "ChildProductSubTypeWorkingPeriodSample")
-                        .WithMany("ChildWorkingPeriodRelations")
+                        .WithMany("ParentWorkingPeriodRelations")
                         .HasForeignKey("ChildProductSubTypeWorkingPeriodSampleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", "ParentProductSubTypeWorkingPeriodSample")
-                        .WithMany("ParentWorkingPeriodRelations")
+                        .WithMany("ChildWorkingPeriodRelations")
                         .HasForeignKey("ParentProductSubTypeWorkingPeriodSampleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ParentProductSubTypeWorkingPeriodSamplesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_WorkingPeriodRelation_ProductSubTypeWorkingPeriodSample_Pa~1");
 
                     b.Navigation("ChildProductSubTypeWorkingPeriodSample");
 
