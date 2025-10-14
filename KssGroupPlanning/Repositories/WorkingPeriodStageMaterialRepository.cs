@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces;
 using KssGroupPlanning.Interfaces.Repository;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Models.Help;

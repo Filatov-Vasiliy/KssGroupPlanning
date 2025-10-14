@@ -56,13 +56,13 @@ public class WorkingPeriodStageTypeRelationRepository : IWorkingPeriodStageTypeR
     }
     public async Task Add(WorkingPeriodStageTypeRelation workingPeriodStageTypeRelation)
     {
-        var workingPeriodStageTypeEntity = new WorkingPeriodStageTypeRelationEntity
+        var workingPeriodStageTypeRelationEntity = new WorkingPeriodStageTypeRelationEntity
         {
             Id = workingPeriodStageTypeRelation.Id,
             StageTypeId = workingPeriodStageTypeRelation.StageTypeId,
             ProductSubTypeWorkingPeriodSampleId = workingPeriodStageTypeRelation.ProductSubTypeWorkingPeriodSampleId,
         };
-        await _dbcontext.AddAsync(workingPeriodStageTypeRelation);
+        await _dbcontext.AddAsync(workingPeriodStageTypeRelationEntity);
         await _dbcontext.SaveChangesAsync();
     }
     public async Task Update(WorkingPeriodStageTypeRelation workingPeriodStageTypeRelation)

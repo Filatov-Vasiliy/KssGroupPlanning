@@ -1,6 +1,6 @@
 ﻿using KssGroupPlanning.Models;
 
-namespace KssGroupPlanning.Interfaces
+namespace KssGroupPlanning.Interfaces.Repository
 {
     public interface IWorkingPeriodStageMaterialRepository
     {
