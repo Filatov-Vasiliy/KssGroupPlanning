@@ -67,11 +67,11 @@ public class WorkingPeriodStageBrigadeRelationRepository : IWorkingPeriodStageBr
     }
     public async Task Update(WorkingPeriodStageBrigadeRelation workingPeriodStageBrigadeRelation)
     {
-        var WorkingPeriodStageBrigadeEntity = await _dbcontext.WorkingPeriodStageBrigadeRelation.FirstOrDefaultAsync(c => c.Id == workingPeriodStageBrigadeRelation.Id)
+        var WorkingPeriodStageMaterialStageEntity = await _dbcontext.WorkingPeriodStageBrigadeRelation.FirstOrDefaultAsync(c => c.Id == workingPeriodStageBrigadeRelation.Id)
             ?? throw new Exception();
-        WorkingPeriodStageBrigadeEntity.Id = workingPeriodStageBrigadeRelation.Id;
-        WorkingPeriodStageBrigadeEntity.WorkingPeriodStageId = workingPeriodStageBrigadeRelation.WorkingPeriodStageId;
-        WorkingPeriodStageBrigadeEntity.BrigadeId = workingPeriodStageBrigadeRelation.BrigadeId;
+        WorkingPeriodStageMaterialStageEntity.Id = workingPeriodStageBrigadeRelation.Id;
+        WorkingPeriodStageMaterialStageEntity.WorkingPeriodStageId = workingPeriodStageBrigadeRelation.WorkingPeriodStageId;
+        WorkingPeriodStageMaterialStageEntity.BrigadeId = workingPeriodStageBrigadeRelation.BrigadeId;
 
         await _dbcontext.SaveChangesAsync();
     }

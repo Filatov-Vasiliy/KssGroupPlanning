@@ -3,7 +3,6 @@
 public class BrigadeEntity
 {
     public Guid Id { get; set; }
-
     public StageTypeEntity? StageType { get; set; }
     public Guid StageTypeId { get; set; }
     public FactoryEntity? Factory { get; set; }

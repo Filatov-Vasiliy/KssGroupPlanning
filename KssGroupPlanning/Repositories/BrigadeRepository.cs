@@ -24,7 +24,7 @@ public class BrigadeRepository : IBrigadeRepository
         List<Brigade> brigades = new List<Brigade>();
         foreach (var brigadeEntity in brigadeEntities)
         {
-            brigades.Add(Brigade.Create(brigadeEntity.Id, brigadeEntity.StageTypeId,brigadeEntity.FactoryId,brigadeEntity.CountEmployee));
+            brigades.Add(Brigade.Create(brigadeEntity.Id, brigadeEntity.StageTypeId, brigadeEntity.FactoryId, brigadeEntity.CountEmployee));
         }
         return brigades;
     }

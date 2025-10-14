@@ -22,7 +22,7 @@ namespace KssGroupPlanning.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.MaterialStageEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -916,7 +916,7 @@ namespace KssGroupPlanning.Migrations
                     b.ToTable("WorkingPeriodStageTypeRelation");
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.MaterialStageEntity", b =>
                 {
                     b.HasOne("KssGroupPlanning.Entities.FactoryEntity", "Factory")
                         .WithMany("Brigades")
@@ -1080,7 +1080,7 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageBrigadeRelationEntity", b =>
                 {
-                    b.HasOne("KssGroupPlanning.Entities.BrigadeEntity", "Brigade")
+                    b.HasOne("KssGroupPlanning.Entities.MaterialStageEntity", "Brigade")
                         .WithMany("WorkingPeriodStageBrigadeRelations")
                         .HasForeignKey("BrigadeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1154,7 +1154,7 @@ namespace KssGroupPlanning.Migrations
                     b.Navigation("StageType");
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.MaterialStageEntity", b =>
                 {
                     b.Navigation("WorkingPeriodStageBrigadeRelations");
                 });
