@@ -20,7 +20,7 @@ public class ProductSubTypeStageSampleRepository : IProductSubTypeStageSampleRep
         List<ProductSubTypeStageSample> productSubTypeStageSamples = new List<ProductSubTypeStageSample>();
         foreach (var productSubTypeStageSampleEntity in productSubTypeStageSampleEntities)
         {
-            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.StageName, productSubTypeStageSampleEntity.StandartTime));
+            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime));
         }
         return productSubTypeStageSamples;
     }
@@ -28,7 +28,7 @@ public class ProductSubTypeStageSampleRepository : IProductSubTypeStageSampleRep
     public async Task<ProductSubTypeStageSample?> GetById(Guid id)
     {
         var productSubTypeStageSampleEntity = await _dbcontext.ProductSubTypeStageSample.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
-        return ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.StageName, productSubTypeStageSampleEntity.StandartTime);
+        return ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime);
     }
     public async Task<List<ProductSubTypeStageSample?>> GetByProductSubTypeId(Guid productSubTypeId)
     {
@@ -36,10 +36,20 @@ public class ProductSubTypeStageSampleRepository : IProductSubTypeStageSampleRep
         List<ProductSubTypeStageSample> productSubTypeStageSamples = new List<ProductSubTypeStageSample>();
         foreach (var productSubTypeStageSampleEntity in productSubTypeStageSampleEntities)
         {
-            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.StageName, productSubTypeStageSampleEntity.StandartTime));
+            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime));
         }
         return productSubTypeStageSamples;
         }
+    public async Task<List<ProductSubTypeStageSample?>> GetByMaterialStageId(Guid materialStageId)
+    {
+        var productSubTypeStageSampleEntities = await _dbcontext.ProductSubTypeStageSample.AsNoTracking().Where(p => p.MaterialStageId == materialStageId).ToListAsync();
+        List<ProductSubTypeStageSample> productSubTypeStageSamples = new List<ProductSubTypeStageSample>();
+        foreach (var productSubTypeStageSampleEntity in productSubTypeStageSampleEntities)
+        {
+            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime));
+        }
+        return productSubTypeStageSamples;
+    }
     public async Task Add(ProductSubTypeStageSample productSubTypeStagesSample)
     {
         var productSubTypeStagesSampleEntity = new ProductSubTypeStageSampleEntity
@@ -48,7 +58,7 @@ public class ProductSubTypeStageSampleRepository : IProductSubTypeStageSampleRep
             RowNumber = productSubTypeStagesSample.RowNumber,
             ProductSubTypeId = productSubTypeStagesSample.ProductSubTypeId,
             StandartTime = productSubTypeStagesSample.StandartTime,
-            StageName = productSubTypeStagesSample.StageName
+            MaterialStageId = productSubTypeStagesSample.MaterialStageId,
         };
         await _dbcontext.AddAsync(productSubTypeStagesSampleEntity);
         await _dbcontext.SaveChangesAsync();
@@ -59,7 +69,7 @@ public class ProductSubTypeStageSampleRepository : IProductSubTypeStageSampleRep
             ?? throw new Exception();
 
         productSubTypeStageSampleEntity.RowNumber = productSubTypeStageSample.RowNumber;
-        productSubTypeStageSampleEntity.StageName = productSubTypeStageSample.StageName;
+        productSubTypeStageSampleEntity.MaterialStageId = productSubTypeStageSample.MaterialStageId;
         productSubTypeStageSampleEntity.StandartTime = productSubTypeStageSample.StandartTime;
         await _dbcontext.SaveChangesAsync();
     }

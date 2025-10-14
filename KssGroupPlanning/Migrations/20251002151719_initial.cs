@@ -171,7 +171,7 @@ namespace KssGroupPlanning.Migrations
                     ProductSubTypeId = table.Column<Guid>(type: "uuid", nullable: false),
                     FactoryId = table.Column<Guid>(type: "uuid", nullable: false),
                     OrderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ParentProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ParentProductId = table.Column<Guid>(type: "uuid", nullable: true),
                     Status = table.Column<string>(type: "text", nullable: false),
                     StartDate = table.Column<DateOnly>(type: "date", nullable: true),
                     EndDate = table.Column<DateOnly>(type: "date", nullable: true),
@@ -203,8 +203,7 @@ namespace KssGroupPlanning.Migrations
                         name: "FK_Product_Product_ParentProductId",
                         column: x => x.ParentProductId,
                         principalTable: "Product",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(

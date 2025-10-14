@@ -30,7 +30,7 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<GroupMaterialEntity> GroupMaterial { get; set; }
     public DbSet<ProductSubTypeGroupMaterialRelationEntity> ProductSubTypeGroupMaterialRelation { get; set; }
     public DbSet<WorkingPeriodStageBrigadeRelationEntity> WorkingPeriodStageBrigadeRelation { get; set; }
-
+    public DbSet<MaterialStageEntity> MaterialStage { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         
@@ -54,6 +54,8 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new ProductSubTypeGroupMaterialRelationConfiguration());
         modelBuilder.ApplyConfiguration(new WorkingPeriodStageMaterialConfiguration());
         modelBuilder.ApplyConfiguration(new WorkingPeriodStageBrigadeRelationConfiguration());
+        modelBuilder.ApplyConfiguration(new MaterialStageConfiguration());
+
 
         modelBuilder.Entity<ProductTypeEntity>().HasData(
             new ProductTypeEntity[]
