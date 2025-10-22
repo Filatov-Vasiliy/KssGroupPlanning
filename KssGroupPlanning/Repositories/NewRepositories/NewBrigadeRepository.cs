@@ -26,7 +26,7 @@ public class NewBrigadeRepository : INewBrigadeRepository
     public async Task<List<BrigadeEntity?>> GetByFactoryId(Guid factoryId)
     {
 
-        return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == factoryId).ToListAsync();
+        return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.FactoryId == factoryId).ToListAsync();
 
     }
     public async Task<List<BrigadeEntity?>> GetByStageTypeId(Guid stageTypeId)

@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -6,46 +6,52 @@ namespace KssGroupPlanning.Endpoints;
 
 public static class ProductSubTypeStageSampleEndpoints
 {
-    public static IEndpointRouteBuilder MapProductTypesEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapProductSubTypeStageSampleEndpoints(this IEndpointRouteBuilder app)
     {
         //app.MapPost("register", Register);
         //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("productSubTypeStageSample/", GetAll);
+        app.MapGet("productSubTypeStageSample/{id::guid}", GetById);
+        app.MapGet("productSubTypeStageSampleByProductSubTypeId/{id::guid}", GetByProductSubTypeId);
+        app.MapGet("productSubTypeStageSampleByMaterialStageId/{id::guid}", GetByMaterialStageId);
+        app.MapPost("productSubTypeStageSample/", Create);
+        app.MapPut("productSubTypeStageSample/{id::guid}", Update);
+        app.MapDelete("productSubTypeStageSample/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewProductSubTypeStageSampleService productSubTypeStageSampleService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var productSubTypeStageSamples = await productSubTypeStageSampleService.GetAll();
+        return Results.Ok(productSubTypeStageSamples);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewProductSubTypeStageSampleService productSubTypeStageSampleService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var productSubTypeStageSample = await productSubTypeStageSampleService.GetById(id);
+        return Results.Ok(productSubTypeStageSample);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByMaterialStageId(Guid id, NewProductSubTypeStageSampleService productSubTypeStageSampleService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var productSubTypeStageSample = await productSubTypeStageSampleService.GetByMaterialStageId(id);
+        return Results.Ok(productSubTypeStageSample);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByProductSubTypeId(Guid id, NewProductSubTypeStageSampleService productSubTypeStageSampleService)
     {
-        await productTypeService.Add(request.Name);
+        var productSubTypeStageSample = await productSubTypeStageSampleService.GetByProductSubTypeId(id);
+        return Results.Ok(productSubTypeStageSample);
+    }
+    private static async Task<IResult> Create(ProductSubTypeStageSampleEntity request, NewProductSubTypeStageSampleService productSubTypeStageSampleService)
+    {
+        await productSubTypeStageSampleService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, ProductSubTypeStageSampleEntity request, NewProductSubTypeStageSampleService productSubTypeStageSampleService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await productSubTypeStageSampleService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewProductSubTypeStageSampleService productSubTypeStageSampleService)
     {
-        await productTypeService.Delete(id);
+        await productSubTypeStageSampleService.Delete(id);
         return Results.Ok();
     }
 }

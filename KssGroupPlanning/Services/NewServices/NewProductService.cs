@@ -27,6 +27,18 @@ public class NewProductService
     {
         return await _productRepository.GetByNumber(number);
     }
+    public async Task<List<ProductEntity>> GetByProductSubTypeId(Guid id)
+    {
+        return await _productRepository.GetByProductSubTypeId(id);
+    }
+    public async Task<List<ProductEntity>> GetByOrderId(Guid id)
+    {
+        return await _productRepository.GetByOrderId(id);
+    }
+    public async Task<List<ProductEntity>> GetByFactoryId(Guid id)
+    {
+        return await _productRepository.GetByFactoryId(id);
+    }
     public async Task Add(ProductEntity product)
     {
         var productEntity = new ProductEntity

@@ -28,6 +28,10 @@ public class NewProductSubTypeStageSampleService
     {
         return await _productSubTypeStageSampleRepository.GetByProductSubTypeId(productSubTypeId);
     }
+    public async Task<List<ProductSubTypeStageSampleEntity?>> GetByMaterialStageId(Guid materialStageId)
+    {
+        return await _productSubTypeStageSampleRepository.GetByMaterialStageId(materialStageId);
+    }
     public async Task Add(ProductSubTypeStageSampleEntity productSubTypeStageSample)
     {
         var productSubTypeStageSampleEntity = new ProductSubTypeStageSampleEntity

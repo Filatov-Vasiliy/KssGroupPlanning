@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -10,42 +10,42 @@ public static class GroupMaterialEndpoints
     {
         //app.MapPost("register", Register);
         //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("groupMaterial/", GetAll);
+        app.MapGet("groupMaterial/{id::guid}", GetById);
+        app.MapGet("groupMaterialByName/{name}", GetByName);
+        app.MapPost("groupMaterial/", Create);
+        app.MapPut("groupMaterial/{id::guid}", Update);
+        app.MapDelete("groupMaterial/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewGroupMaterialService groupMaterialService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var groupMaterials = await groupMaterialService.GetAll();
+        return Results.Ok(groupMaterials);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewGroupMaterialService groupMaterialService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var groupMaterial = await groupMaterialService.GetById(id);
+        return Results.Ok(groupMaterial);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByName(string name, NewGroupMaterialService groupMaterialService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var groupMaterial = await groupMaterialService.GetByName(name);
+        return Results.Ok(groupMaterial);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Create(GroupMaterialEntity request, NewGroupMaterialService groupMaterialService)
     {
-        await productTypeService.Add(request.Name);
+        await groupMaterialService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, GroupMaterialEntity request, NewGroupMaterialService groupMaterialService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await groupMaterialService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewGroupMaterialService groupMaterialService)
     {
-        await productTypeService.Delete(id);
+        await groupMaterialService.Delete(id);
         return Results.Ok();
     }
 }

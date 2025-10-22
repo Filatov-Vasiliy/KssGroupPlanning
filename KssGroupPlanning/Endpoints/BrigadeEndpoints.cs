@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -10,42 +10,48 @@ public static class BrigadeEndpoints
     {
         //app.MapPost("register", Register);
         //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("brigade/", GetAll);
+        app.MapGet("brigade/{id::guid}", GetById);
+        app.MapGet("brigadeByStageTypeId/{id::guid}", GetByStageTypeId);
+        app.MapGet("brigadeByFactoryId/{id::guid}", GetByFactoryId);
+        app.MapPost("brigade/", Create);
+        app.MapPut("brigade/{id::guid}", Update);
+        app.MapDelete("brigade/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewBrigadeService brigadeService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var Brigades = await brigadeService.GetAll();
+        return Results.Ok(Brigades);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewBrigadeService brigadeService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var Brigade = await brigadeService.GetById(id);
+        return Results.Ok(Brigade);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByStageTypeId(Guid id, NewBrigadeService brigadeService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var Brigade = await brigadeService.GetByStageTypeId(id);
+        return Results.Ok(Brigade);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByFactoryId(Guid id, NewBrigadeService brigadeService)
     {
-        await productTypeService.Add(request.Name);
+        var Brigade = await brigadeService.GetByFactoryId(id);
+        return Results.Ok(Brigade);
+    }
+    private static async Task<IResult> Create(BrigadeEntity request, NewBrigadeService brigadeService)
+    {
+        await brigadeService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, BrigadeEntity request, NewBrigadeService brigadeService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await brigadeService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewBrigadeService brigadeService)
     {
-        await productTypeService.Delete(id);
+        await brigadeService.Delete(id);
         return Results.Ok();
     }
 }

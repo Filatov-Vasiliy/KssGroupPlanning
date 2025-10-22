@@ -25,7 +25,6 @@ public class NewMaterialStageRepository : INewMaterialStageRepository
 
     public async Task<List<MaterialStageEntity?>> GetByGroupMaterialId(Guid groupMaterialId)
     {
-
         return await _dbcontext.MaterialStage.AsNoTracking().OrderBy(c => c.StageName).Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
     }
     public async Task<MaterialStageEntity?> GetById(Guid id)

@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -6,46 +6,52 @@ namespace KssGroupPlanning.Endpoints;
 
 public static class WorkingPeriodStageEndpoints
 {
-    public static IEndpointRouteBuilder MapProductTypesEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapWorkingPeriodStageEndpoints(this IEndpointRouteBuilder app)
     {
         //app.MapPost("register", Register);
         //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("workingPeriodStage/", GetAll);
+        app.MapGet("workingPeriodStage/{id::guid}", GetById);
+        app.MapGet("workingPeriodStageByWorkingPeriodId/{id::guid}", GetByWorkingPeriodId);
+        app.MapGet("workingPeriodStageByProductSubTypeWorkingPeriodSampleId/{id::guid}", GetByProductSubTypeWorkingPeriodSampleId);
+        app.MapPost("workingPeriodStage/", Create);
+        app.MapPut("workingPeriodStage/{id::guid}", Update);
+        app.MapDelete("workingPeriodStage/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewWorkingPeriodStageService workingPeriodStageService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var workingPeriodStages = await workingPeriodStageService.GetAll();
+        return Results.Ok(workingPeriodStages);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var workingPeriodStage = await workingPeriodStageService.GetById(id);
+        return Results.Ok(workingPeriodStage);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByWorkingPeriodId(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var workingPeriodStage = await workingPeriodStageService.GetByWorkingPeriodId(id);
+        return Results.Ok(workingPeriodStage);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByProductSubTypeWorkingPeriodSampleId(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
     {
-        await productTypeService.Add(request.Name);
+        var workingPeriodStage = await workingPeriodStageService.GetByProductSubTypeWorkingPeriodSampleId(id);
+        return Results.Ok(workingPeriodStage);
+    }
+    private static async Task<IResult> Create(WorkingPeriodStageEntity request, NewWorkingPeriodStageService workingPeriodStageService)
+    {
+        await workingPeriodStageService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, WorkingPeriodStageEntity request, NewWorkingPeriodStageService workingPeriodStageService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await workingPeriodStageService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
     {
-        await productTypeService.Delete(id);
+        await workingPeriodStageService.Delete(id);
         return Results.Ok();
     }
 }

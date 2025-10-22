@@ -10,5 +10,4 @@ public class BrigadeEntity
     public int CountEmployee { get; set; }
     public List<WorkingPeriodStageEntity>? WorkingPeriodStages { get; set; } = new List<WorkingPeriodStageEntity>();
     public List<WorkingPeriodStageBrigadeRelationEntity> WorkingPeriodStageBrigadeRelations { get; set; } = new List<WorkingPeriodStageBrigadeRelationEntity>();
-
 }

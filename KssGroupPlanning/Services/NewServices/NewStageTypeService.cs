@@ -27,7 +27,7 @@ public class NewStageTypeService
     {
         return await _StageTypeRepository.GetByName(name);
     }
-    public async Task Add(StageType stageType)
+    public async Task Add(StageTypeEntity stageType)
     {
         var StageTypeEntity = new StageTypeEntity
         {

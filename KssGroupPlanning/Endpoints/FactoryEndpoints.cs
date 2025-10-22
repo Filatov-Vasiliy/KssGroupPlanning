@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -10,42 +10,42 @@ public static class FactoryEndpoints
     {
         //app.MapPost("register", Register);
         //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("factory/", GetAll);
+        app.MapGet("factory/{id::guid}", GetById);
+        app.MapGet("factoryByName/{name}", GetByName);
+        app.MapPost("factory/", Create);
+        app.MapPut("factory/{id::guid}", Update);
+        app.MapDelete("factory/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewFactoryService factoryService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var factorys = await factoryService.GetAll();
+        return Results.Ok(factorys);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewFactoryService factoryService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var factory = await factoryService.GetById(id);
+        return Results.Ok(factory);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByName(string name, NewFactoryService factoryService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var factory = await factoryService.GetByName(name);
+        return Results.Ok(factory);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Create(FactoryEntity request, NewFactoryService factoryService)
     {
-        await productTypeService.Add(request.Name);
+        await factoryService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, FactoryEntity request, NewFactoryService factoryService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await factoryService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewFactoryService factoryService)
     {
-        await productTypeService.Delete(id);
+        await factoryService.Delete(id);
         return Results.Ok();
     }
 }

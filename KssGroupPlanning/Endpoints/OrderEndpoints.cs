@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -6,46 +6,44 @@ namespace KssGroupPlanning.Endpoints;
 
 public static class OrderEndpoints
 {
-    public static IEndpointRouteBuilder MapProductTypesEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapOrderEndpoints(this IEndpointRouteBuilder app)
     {
-        //app.MapPost("register", Register);
-        //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("order/", GetAll);
+        app.MapGet("order/{id::guid}", GetById);
+        app.MapGet("orderByNumber/{number}", GetByNumber);
+        app.MapPost("order/", Create);
+        app.MapPut("order/{id::guid}", Update);
+        app.MapDelete("order/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewOrderService orderService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var orders = await orderService.GetAll();
+        return Results.Ok(orders);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewOrderService orderService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var order = await orderService.GetById(id);
+        return Results.Ok(order);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByNumber(string number, NewOrderService orderService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var order = await orderService.GetByNumber(number);
+        return Results.Ok(order);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Create(OrderEntity request, NewOrderService orderService)
     {
-        await productTypeService.Add(request.Name);
+        await orderService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, OrderEntity request, NewOrderService orderService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await orderService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewOrderService orderService)
     {
-        await productTypeService.Delete(id);
+        await orderService.Delete(id);
         return Results.Ok();
     }
 }

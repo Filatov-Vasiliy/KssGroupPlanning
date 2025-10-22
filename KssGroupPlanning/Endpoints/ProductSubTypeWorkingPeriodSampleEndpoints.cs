@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -6,46 +6,46 @@ namespace KssGroupPlanning.Endpoints;
 
 public static class ProductSubTypeWorkingPeriodSampleEndpoints
 {
-    public static IEndpointRouteBuilder MapProductTypesEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapProductSubTypeWorkingPeriodSampleEndpoints(this IEndpointRouteBuilder app)
     {
         //app.MapPost("register", Register);
         //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("productSubTypeWorkingPeriodSample/", GetAll);
+        app.MapGet("productSubTypeWorkingPeriodSample/{id::guid}", GetById);
+        app.MapGet("productSubTypeWorkingPeriodSampleByProductSubTypeId/{id::guid}", GetByProductSubTypeId);
+        app.MapPost("productSubTypeWorkingPeriodSample/", Create);
+        app.MapPut("productSubTypeWorkingPeriodSample/{id::guid}", Update);
+        app.MapDelete("productSubTypeWorkingPeriodSample/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewProductSubTypeWorkingPeriodSampleService productSubTypeWorkingPeriodSampleService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var productSubTypeWorkingPeriodSamples = await productSubTypeWorkingPeriodSampleService.GetAll();
+        return Results.Ok(productSubTypeWorkingPeriodSamples);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewProductSubTypeWorkingPeriodSampleService productSubTypeWorkingPeriodSampleService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var productSubTypeWorkingPeriodSample = await productSubTypeWorkingPeriodSampleService.GetById(id);
+        return Results.Ok(productSubTypeWorkingPeriodSample);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByProductSubTypeId(Guid id, NewProductSubTypeWorkingPeriodSampleService productSubTypeWorkingPeriodSampleService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var productSubTypeWorkingPeriodSample = await productSubTypeWorkingPeriodSampleService.GetByProductSubTypeId(id);
+        return Results.Ok(productSubTypeWorkingPeriodSample);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Create(ProductSubTypeWorkingPeriodSampleEntity request, NewProductSubTypeWorkingPeriodSampleService productSubTypeWorkingPeriodSampleService)
     {
-        await productTypeService.Add(request.Name);
+        await productSubTypeWorkingPeriodSampleService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, ProductSubTypeWorkingPeriodSampleEntity request, NewProductSubTypeWorkingPeriodSampleService productSubTypeWorkingPeriodSampleService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await productSubTypeWorkingPeriodSampleService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewProductSubTypeWorkingPeriodSampleService productSubTypeWorkingPeriodSampleService)
     {
-        await productTypeService.Delete(id);
+        await productSubTypeWorkingPeriodSampleService.Delete(id);
         return Results.Ok();
     }
 }

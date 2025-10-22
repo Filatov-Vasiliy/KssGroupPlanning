@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Contracts.ProductTypes;
+﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Models;
 using KssGroupPlanning.Services;
 
@@ -6,46 +6,46 @@ namespace KssGroupPlanning.Endpoints;
 
 public static class StageEndpoints
 {
-    public static IEndpointRouteBuilder MapProductTypesEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapStageEndpoints(this IEndpointRouteBuilder app)
     {
         //app.MapPost("register", Register);
         //app.MapPost("login", Login);
-        app.MapGet("productType/", GetAll);
-        app.MapGet("productType/{id::guid}", GetById);
-        app.MapGet("productTypeByName/{name}", GetByName);
-        app.MapPost("productType/", Create);
-        app.MapPut("productType/{id::guid}", Update);
-        app.MapDelete("productType/{id:guid}", Delete);
+        app.MapGet("stage/", GetAll);
+        app.MapGet("stage/{id::guid}", GetById);
+        app.MapGet("stageByProductId/{id::guid}", GetByProductId);
+        app.MapPost("stage/", Create);
+        app.MapPut("stage/{id::guid}", Update);
+        app.MapDelete("stage/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(ProductTypeService productTypeService)
+    private static async Task<IResult> GetAll(NewStageService stageService)
     {
-        var productTypes = await productTypeService.GetAll();
-        return Results.Ok(productTypes);
+        var stages = await stageService.GetAll();
+        return Results.Ok(stages);
     }
-    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, NewStageService stageService)
     {
-        var productType = await productTypeService.GetById(id);
-        return Results.Ok(productType);
+        var stage = await stageService.GetById(id);
+        return Results.Ok(stage);
     }
-    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
+    private static async Task<IResult> GetByProductId(Guid id, NewStageService stageService)
     {
-        var productType = await productTypeService.GetByName(name);
-        return Results.Ok(productType);
+        var stage = await stageService.GetByProductId(id);
+        return Results.Ok(stage);
     }
-    private static async Task<IResult> Create(CreateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Create(StageEntity request, NewStageService stageService)
     {
-        await productTypeService.Add(request.Name);
+        await stageService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, StageEntity request, NewStageService stageService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await stageService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, NewStageService stageService)
     {
-        await productTypeService.Delete(id);
+        await stageService.Delete(id);
         return Results.Ok();
     }
 }
