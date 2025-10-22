@@ -27,6 +27,21 @@ public class NewProductRepository : INewProductRepository
     {
         return await _dbcontext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Number == number);
     }
+    public async Task<List<ProductEntity?>> GetByOrderId(Guid orderId)
+    {
+
+        return await _dbcontext.Product.AsNoTracking().Where(c => c.OrderId == orderId).ToListAsync();
+    }
+    public async Task<List<ProductEntity?>> GetByProductSubTypeId(Guid productSubTypeId)
+    {
+
+        return await _dbcontext.Product.AsNoTracking().Where(c => c.ProductSubTypeId == productSubTypeId).ToListAsync();
+    }
+    public async Task<List<ProductEntity?>> GetByFactoryId(Guid factoryId)
+    {
+
+        return await _dbcontext.Product.AsNoTracking().Where(c => c.FactoryId == factoryId).ToListAsync();
+    }
     public async Task Add(ProductEntity product)
     {
         await _dbcontext.AddAsync(product);
