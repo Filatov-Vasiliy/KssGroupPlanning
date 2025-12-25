@@ -54,6 +54,8 @@ services.AddScoped<NewWorkingPeriodStageMaterialService>();
 services.AddScoped<NewWorkingPeriodStageService>();
 services.AddScoped<NewWorkingPeriodStageTypeRelationService>();
 
+services.AddScoped<CoreService>(); //?!?!?!?!
+
 services.AddScoped<IProductTypeRepository,ProductTypeRepository>();
 services.AddScoped<IUsersRepository, UsersRepository>();
 services.AddScoped<IJwtProvider, JwtProvider>();
