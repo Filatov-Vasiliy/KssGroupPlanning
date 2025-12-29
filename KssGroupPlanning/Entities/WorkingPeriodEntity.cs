@@ -1,7 +1,10 @@
-﻿namespace KssGroupPlanning.Entities;
+﻿using KssGroupPlanning.Models;
+
+namespace KssGroupPlanning.Entities;
 
 public class WorkingPeriodEntity
 {
+
     public Guid Id { get; set; }
     public string Name { get; set; }
     public string Status { get; set; }

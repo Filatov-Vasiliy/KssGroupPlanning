@@ -9,4 +9,5 @@ public class WorkingPeriodStageBrigadeRelationEntity
     public WorkingPeriodStageEntity? WorkingPeriodStage { get; set; }
     public Guid BrigadeId { get; set; }
     public BrigadeEntity? Brigade { get; set; }
+
 }

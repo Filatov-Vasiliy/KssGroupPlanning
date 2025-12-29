@@ -18,6 +18,5 @@ namespace KssGroupPlanning.Entities
         public DateTime UpdateTime { get; set; } = DateTime.Now;
         public List<BrigadeEntity>? Brigades { get; set; }
         public List<WorkingPeriodStageBrigadeRelationEntity> WorkingPeriodStageBrigadeRelations { get; set; } = new List<WorkingPeriodStageBrigadeRelationEntity>();
-
     }
 }

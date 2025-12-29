@@ -1,26 +1,26 @@
 ﻿using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
+using KssGroupPlanning.Entities;
 using KssGroupPlanning.Repositories;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
 public class CoreService
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IWorkingPeriodRepository _workingPeriodRepository;
-    private readonly IWorkingPeriodStageRepository _workingPeriodStageRepository;
-    private readonly IProductSubTypeWorkingPeriodSampleRepository _productSubTypeWorkingPeriodSampleRepository;
-    private readonly IFactoryRepository _factoryRepository;
-    private readonly IBrigadeRepository _brigadeRepository;
-    private readonly IWorkingPeriodStageBrigadeRelationRepository _workingPeriodStageBrigadeRelationRepository;
-    private readonly IWorkingPeriodRelationRepository _workingPeriodRelationRepository;
-    private readonly IWorkingPeriodStageTypeRelationRepository _workingPeriodStageTypeRelationRepository;
-    private readonly IStageTypeRepository _stageTypeRepository;
+    private readonly INewProductRepository _productRepository;
+    private readonly INewWorkingPeriodRepository _workingPeriodRepository;
+    private readonly INewWorkingPeriodStageRepository _workingPeriodStageRepository;
+    private readonly INewProductSubTypeWorkingPeriodSampleRepository _productSubTypeWorkingPeriodSampleRepository;
+    private readonly INewFactoryRepository _factoryRepository;
+    private readonly INewBrigadeRepository _brigadeRepository;
+    private readonly INewWorkingPeriodStageBrigadeRelationRepository _workingPeriodStageBrigadeRelationRepository;
+    private readonly INewWorkingPeriodRelationRepository _workingPeriodRelationRepository;
+    private readonly INewWorkingPeriodStageTypeRelationRepository _workingPeriodStageTypeRelationRepository;
+    private readonly INewStageTypeRepository _stageTypeRepository;
 
-    private List<Product>? _products;
-    private List<WorkingPeriod> _allWorkingPeriods;
-    private List<WorkingPeriodStage> _allWorkingPeriodStages;
-    private Dictionary<Guid, List<Brigade>> _factoryBrigades;
+    private List<ProductEntity>? _products;
+    private List<WorkingPeriodEntity> _allWorkingPeriods;
+    private List<WorkingPeriodStageEntity> _allWorkingPeriodStages;
+    private Dictionary<Guid, List<BrigadeEntity>> _factoryBrigades;
     private Dictionary<string, Guid> _stageTypeIds;
 
     // Константы для рабочего времени
@@ -30,16 +30,16 @@ public class CoreService
 
     public CoreService
         (
-        IProductRepository productRepository,
-        IWorkingPeriodRepository workingPeriodRepository,
-        IWorkingPeriodStageRepository workingPeriodStageRepository,
-        IProductSubTypeWorkingPeriodSampleRepository productSubTypeWorkingPeriodSampleRepository,
-        IFactoryRepository factoryRepository,
-        IBrigadeRepository brigadeRepository,
-        IWorkingPeriodStageBrigadeRelationRepository workingPeriodStageBrigadeRelationRepository,
-        IWorkingPeriodRelationRepository workingPeriodRelationRepository,
-        IWorkingPeriodStageTypeRelationRepository workingPeriodStageTypeRelationRepository,
-        IStageTypeRepository stageTypeRepository
+        INewProductRepository productRepository,
+        INewWorkingPeriodRepository workingPeriodRepository,
+        INewWorkingPeriodStageRepository workingPeriodStageRepository,
+        INewProductSubTypeWorkingPeriodSampleRepository productSubTypeWorkingPeriodSampleRepository,
+        INewFactoryRepository factoryRepository,
+        INewBrigadeRepository brigadeRepository,
+        INewWorkingPeriodStageBrigadeRelationRepository workingPeriodStageBrigadeRelationRepository,
+        INewWorkingPeriodRelationRepository workingPeriodRelationRepository,
+        INewWorkingPeriodStageTypeRelationRepository workingPeriodStageTypeRelationRepository,
+        INewStageTypeRepository stageTypeRepository
         )
     {
         _productRepository = productRepository;
@@ -103,7 +103,7 @@ public class CoreService
         });
     }
 
-    private async Task PlanProductAsync(Product product)
+    private async Task PlanProductAsync(ProductEntity product)
     {
         // Проверяем, есть ли уже рабочий период
         var existingWorkingPeriod = _allWorkingPeriods
@@ -141,7 +141,7 @@ public class CoreService
     }
 
     private async Task<List<StageNode>> BuildStageDependencyGraphAsync(
-     List<ProductSubTypeWorkingPeriodSample> stages)
+     List<ProductSubTypeWorkingPeriodSampleEntity> stages)
     {
         var nodes = new Dictionary<Guid, StageNode>();
 
@@ -226,7 +226,7 @@ public class CoreService
     }
 
     private async Task<List<PlannedStage>> PlanStagesWithDependenciesAsync(
-        Product product,
+        ProductEntity product,
         List<StageExecutionGroup> executionPlan,
         List<TimeSlot> busyTimeSlots,
         List<StageNode> stageGraph)
@@ -369,8 +369,8 @@ public class CoreService
     }
 
     private async Task<Guid?> GetBrigadeForStageAsync(
-    ProductSubTypeWorkingPeriodSample stage,
-    StageType stageType,
+    ProductSubTypeWorkingPeriodSampleEntity stage,
+    StageTypeEntity stageType,
     Guid productId,
     Dictionary<Guid, Guid> assemblyBrigadeMapping)
     {
@@ -404,9 +404,9 @@ public class CoreService
     }
 
     private async Task TraverseStageTreeAsync(
-        ProductSubTypeWorkingPeriodSample currentStage,
-        Dictionary<Guid, ProductSubTypeWorkingPeriodSample> stageDict,
-        List<ProductSubTypeWorkingPeriodSample> result)
+        ProductSubTypeWorkingPeriodSampleEntity currentStage,
+        Dictionary<Guid, ProductSubTypeWorkingPeriodSampleEntity> stageDict,
+        List<ProductSubTypeWorkingPeriodSampleEntity> result)
     {
         result.Add(currentStage);
 
@@ -496,7 +496,7 @@ public class CoreService
     }
 
     private async Task<Guid?> FindAvailableBrigadeAsync(
-        ProductSubTypeWorkingPeriodSample stageSample,
+        ProductSubTypeWorkingPeriodSampleEntity stageSample,
         DateTime startTime,
         Guid factoryId)
     {
@@ -618,20 +618,22 @@ public class CoreService
         return nextDay.Add(WORKDAY_START);
     }
 
-    private async Task CreateWorkingPeriodAsync(Product product, List<PlannedStage> plannedStages)
+    private async Task CreateWorkingPeriodAsync(ProductEntity product, List<PlannedStage> plannedStages)
     {
         if (!plannedStages.Any()) return;
 
         // Создаем рабочий период
-        var workingPeriod = WorkingPeriod.Create(
-            Guid.NewGuid(),
-            $"Период для продукта {product.Number}",
-            "В работе",
-            product.Id,
-            plannedStages.First().StartTime,
-            plannedStages.Last().EndTime,
-            DateTime.Now,
-            DateTime.Now);
+        var workingPeriod = new WorkingPeriodEntity
+            {
+            Id = Guid.NewGuid(),
+            Name =$"Период для продукта {product.Number}",
+            Status = "В работе",
+            ProductId = product.Id,
+            DateFrom = plannedStages.First().StartTime,
+            DateTo = plannedStages.Last().EndTime,
+            CreateTime = DateTime.Now,
+            UpdateTime = DateTime.Now
+            };
 
         await _workingPeriodRepository.Add(workingPeriod);
         _allWorkingPeriods.Add(workingPeriod);
@@ -639,25 +641,27 @@ public class CoreService
         // Создаем этапы рабочего периода
         foreach (var plannedStage in plannedStages)
         {
-            var workingPeriodStage = WorkingPeriodStage.Create(
-                Guid.NewGuid(),
-                workingPeriod.Id,
-                plannedStage.StartTime,
-                plannedStage.EndTime,
-                "В работе",
-                null, // recycling
-                plannedStage.StageSampleId,
-                DateTime.Now,
-                DateTime.Now);
+            var workingPeriodStage = new WorkingPeriodStageEntity{
+                Id = Guid.NewGuid(),
+                WorkingPeriodId = workingPeriod.Id,
+                DateFrom = plannedStage.StartTime,
+                DateTo = plannedStage.EndTime,
+                Status = "В работе",
+                Recycling = null, // recycling
+                ProductSubTypeWorkingPeriodSampleId = plannedStage.StageSampleId,
+                CreateTime = DateTime.Now,
+                UpdateTime = DateTime.Now
+                    };
 
             await _workingPeriodStageRepository.Add(workingPeriodStage);
             _allWorkingPeriodStages.Add(workingPeriodStage);
 
             // Создаем связь с бригадой
-            var brigadeRelation = WorkingPeriodStageBrigadeRelation.Create(
-                Guid.NewGuid(),
-                workingPeriodStage.Id,
-                plannedStage.BrigadeId);
+            var brigadeRelation = new WorkingPeriodStageBrigadeRelationEntity{
+                Id = Guid.NewGuid(),
+                WorkingPeriodStageId = workingPeriodStage.Id,
+                BrigadeId = plannedStage.BrigadeId
+                };
 
             await _workingPeriodStageBrigadeRelationRepository.Add(brigadeRelation);
         }
@@ -670,7 +674,7 @@ public class CoreService
 
     private async Task LoadFactoryBrigades()
     {
-        _factoryBrigades = new Dictionary<Guid, List<Brigade>>();
+        _factoryBrigades = new Dictionary<Guid, List<BrigadeEntity>>();
         var allFactories = await _factoryRepository.GetAll();
 
         foreach (var factory in allFactories)
@@ -715,7 +719,7 @@ public class CoreService
     private class StageNode
     {
         public Guid Id { get; set; }
-        public ProductSubTypeWorkingPeriodSample Stage { get; set; }
+        public ProductSubTypeWorkingPeriodSampleEntity Stage { get; set; }
         public List<Guid> Parents { get; set; } // Этапы, которые должны быть выполнены до этого
         public List<Guid> Children { get; set; } // Этапы, которые зависят от этого
         public StageStatus Status { get; set; }
@@ -731,7 +735,7 @@ public class CoreService
 
     private class StageExecutionGroup
     {
-        public List<ProductSubTypeWorkingPeriodSample> Stages { get; set; }
+        public List<ProductSubTypeWorkingPeriodSampleEntity> Stages { get; set; }
         public bool CanExecuteInParallel { get; set; }
         public DateTime? EarliestStartTime { get; set; }
     }
