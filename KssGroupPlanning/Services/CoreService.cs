@@ -178,6 +178,16 @@ public class CoreService
             var executionPlan = await GetStageExecutionPlanAsync(stageGraph);
             _logger.LogWarning($"Создан план из {executionPlan.Count} групп выполнения");
 
+            // ВАЖНО: Проверяем, что у нас есть корневые этапы
+            var rootStages = stageGraph.Where(n => !n.Parents.Any()).ToList();
+            _logger.LogWarning($"Корневых этапов (без родителей): {rootStages.Count}");
+
+            if (rootStages.Count == 0)
+            {
+                _logger.LogError("Нет корневых этапов! Возможно, цикличные зависимости.");
+                return false;
+            }
+
             // Получаем занятое время на фабрике
             var busyTimeSlots = await GetBusyTimeSlotsAsync(product.FactoryId);
             _logger.LogWarning($"Получено {busyTimeSlots.Count} занятых слотов времени");
@@ -196,6 +206,9 @@ public class CoreService
             }
 
             _logger.LogWarning($"Успешно запланировано {plannedStages.Count} этапов для продукта {product.Id}");
+
+            // Анализируем незапланированные этапы
+            AnalyzeUnplannedStages(productStages, plannedStages, stageGraph);
 
             // Создаем рабочий период
             await CreateWorkingPeriodAsync(product, plannedStages);
@@ -253,33 +266,48 @@ public class CoreService
     }
 
     private async Task<List<StageExecutionGroup>> GetStageExecutionPlanAsync(
-        List<StageNode> stageGraph)
+    List<StageNode> stageGraph)
     {
         var executionPlan = new List<StageExecutionGroup>();
         var remainingNodes = stageGraph.ToList();
+        int level = 0;
 
-        // Пока есть необработанные узлы
         while (remainingNodes.Any())
         {
-            // Находим узлы, у которых все зависимости удовлетворены
+            level++;
+            _logger.LogWarning($"Построение уровня {level} выполнения");
+
+            // Находим узлы, у которых все родители уже обработаны
             var readyNodes = remainingNodes
-                .Where(node =>
-                    !node.Parents.Any() ||
-                    node.Parents.All(parentId =>
-                        !remainingNodes.Any(n => n.Id == parentId)))
+                .Where(node => !node.Parents.Any() ||
+                              node.Parents.All(parentId =>
+                                  !remainingNodes.Any(n => n.Id == parentId)))
                 .ToList();
 
             if (!readyNodes.Any())
             {
+                // Обнаружен цикл в зависимостях
                 _logger.LogError("Обнаружен цикл в зависимостях этапов");
+
+                // Выводим оставшиеся узлы и их зависимости для отладки
+                foreach (var node in remainingNodes)
+                {
+                    _logger.LogError($"Узел {node.Id} зависит от: {string.Join(", ", node.Parents)}");
+                }
+
                 throw new InvalidOperationException("Обнаружен цикл в зависимостях этапов");
             }
+
+            // Логируем этапы на этом уровне
+            _logger.LogWarning($"Уровень {level}: {readyNodes.Count} этапов: " +
+                             $"{string.Join(", ", readyNodes.Select(n => n.Id))}");
 
             // Группа этапов, которые можно выполнять параллельно
             var executionGroup = new StageExecutionGroup
             {
                 Stages = readyNodes.Select(n => n.Stage).ToList(),
-                CanExecuteInParallel = true
+                CanExecuteInParallel = true,
+                Level = level
             };
 
             executionPlan.Add(executionGroup);
@@ -291,133 +319,440 @@ public class CoreService
             }
         }
 
+        _logger.LogWarning($"Построено {executionPlan.Count} уровней выполнения");
         return executionPlan;
     }
 
     private async Task<List<PlannedStage>> PlanStagesWithDependenciesAsync(
-        ProductEntity product,
-        List<StageExecutionGroup> executionPlan,
-        List<TimeSlot> busyTimeSlots,
-        List<StageNode> stageGraph)
+    ProductEntity product,
+    List<StageExecutionGroup> executionPlan,
+    List<TimeSlot> busyTimeSlots,
+    List<StageNode> stageGraph)
     {
         var plannedStages = new List<PlannedStage>();
         var stageCompletionTimes = new Dictionary<Guid, DateTime>();
         var assemblyBrigadeMapping = new Dictionary<Guid, Guid>();
 
         _logger.LogWarning($"Начало планирования этапов для продукта {product.Id}");
-        _logger.LogWarning($"Всего групп этапов: {executionPlan.Count}");
 
-        foreach (var group in executionPlan)
+        // Отладка графа
+        DebugDependencyGraph(stageGraph, executionPlan);
+
+        // Создаем словарь для быстрого доступа к узлам
+        var nodeDict = stageGraph.ToDictionary(n => n.Id);
+
+        // Сначала запланируем ВСЕ этапы уровня 1 (корневые)
+        _logger.LogWarning("=== ПЛАНИРОВАНИЕ КОРНЕВЫХ ЭТАПОВ (Уровень 1) ===");
+
+        var level1Group = executionPlan.FirstOrDefault(g => g.Level == 1);
+        if (level1Group == null)
         {
-            _logger.LogDebug($"Обработка группы из {group.Stages.Count} этапов");
+            _logger.LogError("Не найден уровень 1 (корневые этапы)");
+            return new List<PlannedStage>();
+        }
 
-            foreach (var stage in group.Stages)
+        _logger.LogWarning($"Корневых этапов: {level1Group.Stages.Count}");
+
+        // Планируем все корневые этапы
+        foreach (var stage in level1Group.Stages)
+        {
+            _logger.LogWarning($"Планирование корневого этапа {stage.Id} ({stage.WorkingPeriodName})");
+
+            var node = nodeDict[stage.Id];
+
+            // У корневых этапов не должно быть родителей
+            if (node.Parents.Any())
             {
-                _logger.LogDebug($"Планирование этапа {stage.Id} ({stage.WorkingPeriodName})");
+                _logger.LogError($"Корневой этап {stage.Id} имеет родителей: {string.Join(", ", node.Parents)}");
+                continue;
+            }
 
-                var node = stageGraph.First(n => n.Id == stage.Id);
-                DateTime stageStartTime = DateTime.Now;
+            var result = await PlanSingleStageAsync(
+                product, stage, node, busyTimeSlots,
+                stageCompletionTimes, assemblyBrigadeMapping,
+                plannedStages, stageGraph);
 
-                // Находим максимальное время завершения всех зависимостей
-                if (node.Parents.Any())
-                {
-                    var parentEndTimes = node.Parents
-                        .Where(parentId => stageCompletionTimes.ContainsKey(parentId))
-                        .Select(parentId => stageCompletionTimes[parentId])
-                        .ToList();
-
-                    if (parentEndTimes.Any())
-                    {
-                        stageStartTime = parentEndTimes.Max();
-                        _logger.LogDebug($"Этап зависит от {node.Parents.Count} родителей, начало после {stageStartTime}");
-                    }
-                }
-
-                // Получаем тип этапа
-                var stageTypeRelation = await _workingPeriodStageTypeRelationRepository
-                    .GetByProductSubTypeWorkingPeriodSampleId(stage.Id);
-                var stageTypeId = stageTypeRelation?.FirstOrDefault()?.StageTypeId;
-                StageTypeEntity stageType = null;
-
-                if (stageTypeId.HasValue)
-                {
-                    stageType = await _stageTypeRepository.GetById(stageTypeId.Value);
-                }
-
-                // Получаем требуемую бригаду
-                Guid? brigadeId = await GetBrigadeForStageAsync(
-                    stage,
-                    stageType,
-                    product.Id,
-                    assemblyBrigadeMapping);
-
-                if (!brigadeId.HasValue)
-                {
-                    _logger.LogError($"Не найдена бригада для этапа {stage.Id}");
-                    return new List<PlannedStage>();
-                }
-
-                _logger.LogDebug($"Назначена бригада {brigadeId.Value}");
-
-                // Парсим длительность этапа из минут
-                TimeSpan duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
-
-                if (duration <= TimeSpan.Zero)
-                {
-                    _logger.LogError($"Некорректная длительность для этапа {stage.Id}: {stage.StandartTime}");
-                    return new List<PlannedStage>();
-                }
-
-                _logger.LogDebug($"Длительность этапа: {duration.TotalMinutes} минут");
-
-                // Для отладки вызываем метод диагностики
-                await DebugTimeSlotSearch(stageStartTime, duration, busyTimeSlots, brigadeId.Value, product.FactoryId);
-
-                // Ищем свободное время с учетом бригады
-                var plannedTime = await FindAvailableTimeSlotAsync(
-                    stageStartTime,
-                    duration,
-                    busyTimeSlots,
-                    brigadeId.Value,
-                    product.FactoryId);
-
-                if (!plannedTime.HasValue)
-                {
-                    _logger.LogError($"Не найдено свободное время для этапа {stage.Id}");
-                    return new List<PlannedStage>();
-                }
-
-                _logger.LogDebug($"Найдено время для этапа: {plannedTime.Value}");
-
-                // Создаем запланированный этап
-                var plannedStage = new PlannedStage
-                {
-                    ProductId = product.Id,
-                    StageSampleId = stage.Id,
-                    BrigadeId = brigadeId.Value,
-                    StartTime = plannedTime.Value,
-                    EndTime = plannedTime.Value.Add(duration),
-                    StageTypeId = stageTypeId
-                };
-
-                plannedStages.Add(plannedStage);
-                stageCompletionTimes[stage.Id] = plannedStage.EndTime;
-
-                // Обновляем занятые слоты
-                busyTimeSlots.Add(new TimeSlot
-                {
-                    Start = plannedStage.StartTime,
-                    End = plannedStage.EndTime,
-                    StageId = stage.Id,
-                    BrigadeId = brigadeId.Value
-                });
-
-                _logger.LogInformation($"Запланирован этап {stage.Id}: {plannedStage.StartTime:yyyy-MM-dd HH:mm} - {plannedStage.EndTime:HH:mm}");
+            if (!result)
+            {
+                _logger.LogError($"Не удалось запланировать корневой этап {stage.Id}");
+                return new List<PlannedStage>();
             }
         }
 
-        _logger.LogInformation($"Успешно запланировано {plannedStages.Count} этапов для продукта {product.Id}");
+        _logger.LogWarning($"Успешно запланировано {plannedStages.Count} корневых этапов");
+
+        // Теперь планируем остальные уровни последовательно
+        for (int level = 2; level <= executionPlan.Max(g => g.Level); level++)
+        {
+            var group = executionPlan.FirstOrDefault(g => g.Level == level);
+            if (group == null)
+            {
+                _logger.LogWarning($"Уровень {level} не найден");
+                continue;
+            }
+
+            _logger.LogWarning($"=== ПЛАНИРОВАНИЕ УРОВНЯ {level} ===");
+            _logger.LogWarning($"Этапов на уровне: {group.Stages.Count}");
+
+            // Проверяем, что все родители этапов этого уровня уже запланированы
+            foreach (var stage in group.Stages)
+            {
+                var node = nodeDict[stage.Id];
+
+                // Находим незапланированных родителей
+                var unplannedParents = node.Parents
+                    .Where(parentId => !plannedStages.Any(p => p.StageSampleId == parentId))
+                    .ToList();
+
+                if (unplannedParents.Any())
+                {
+                    _logger.LogError($"Этап {stage.Id} имеет незапланированных родителей: {string.Join(", ", unplannedParents)}");
+
+                    // Показываем информацию о родителях
+                    foreach (var parentId in unplannedParents)
+                    {
+                        var parentNode = nodeDict[parentId];
+                        _logger.LogError($"  Родитель {parentId}: " +
+                                       $"Родители родителя: {string.Join(", ", parentNode.Parents)}, " +
+                                       $"Запланирован: {plannedStages.Any(p => p.StageSampleId == parentId)}");
+                    }
+                }
+            }
+
+            // Планируем этапы уровня
+            bool levelPlannedSuccessfully = true;
+
+            foreach (var stage in group.Stages)
+            {
+                var node = nodeDict[stage.Id];
+
+                // Пропускаем этапы, чьи родители еще не запланированы
+                var allParentsPlanned = node.Parents.All(parentId =>
+                    plannedStages.Any(p => p.StageSampleId == parentId));
+
+                if (!allParentsPlanned)
+                {
+                    _logger.LogWarning($"Пропускаем этап {stage.Id}: не все родители запланированы");
+                    continue;
+                }
+
+                _logger.LogWarning($"Планирование этапа {stage.Id} ({stage.WorkingPeriodName})");
+
+                var result = await PlanSingleStageAsync(
+                    product, stage, node, busyTimeSlots,
+                    stageCompletionTimes, assemblyBrigadeMapping,
+                    plannedStages, stageGraph);
+
+                if (!result)
+                {
+                    _logger.LogError($"Не удалось запланировать этап {stage.Id} уровня {level}");
+                    levelPlannedSuccessfully = false;
+                    break;
+                }
+            }
+
+            if (!levelPlannedSuccessfully)
+            {
+                _logger.LogError($"Не удалось запланировать все этапы уровня {level}");
+                return new List<PlannedStage>();
+            }
+        }
+
+        _logger.LogWarning($"Успешно запланировано {plannedStages.Count} этапов для продукта {product.Id}");
+
+        // Проверяем, что все этапы запланированы
+        var allStageIds = stageGraph.Select(n => n.Id).ToList();
+        var plannedStageIds = plannedStages.Select(p => p.StageSampleId).ToList();
+        var unplannedStages = allStageIds.Except(plannedStageIds).ToList();
+
+        if (unplannedStages.Any())
+        {
+            _logger.LogError($"Не запланированы этапы: {string.Join(", ", unplannedStages)}");
+        }
+
+        // Проверяем все зависимости
+        ValidateAllDependencies(plannedStages, stageGraph);
+
+        // Логируем порядок выполнения
+        LogExecutionOrder(plannedStages, stageGraph);
+
         return plannedStages;
+    }
+
+    private async Task<bool> PlanSingleStageAsync(
+     ProductEntity product,
+     ProductSubTypeWorkingPeriodSampleEntity stage,
+     StageNode node,
+     List<TimeSlot> busyTimeSlots,
+     Dictionary<Guid, DateTime> stageCompletionTimes,
+     Dictionary<Guid, Guid> assemblyBrigadeMapping,
+     List<PlannedStage> plannedStages,
+     List<StageNode> stageGraph)
+    {
+        try
+        {
+            // Определяем минимальное время начала
+            DateTime earliestStartTime = DateTime.Now;
+
+            if (node.Parents.Any())
+            {
+                // Находим максимальное время завершения всех родителей
+                var parentEndTimes = node.Parents
+                    .Where(parentId => stageCompletionTimes.ContainsKey(parentId))
+                    .Select(parentId => stageCompletionTimes[parentId])
+                    .ToList();
+
+                if (parentEndTimes.Any())
+                {
+                    earliestStartTime = parentEndTimes.Max();
+                    _logger.LogWarning($"Этап {stage.Id} зависит от {node.Parents.Count} родителей. " +
+                                     $"Максимальное время завершения родителей: {earliestStartTime}");
+                }
+                else
+                {
+                    _logger.LogError($"Родители этапа {stage.Id} не запланированы, но должны быть!");
+                    return false;
+                }
+            }
+
+            // Получаем тип этапа
+            var stageTypeRelation = await _workingPeriodStageTypeRelationRepository
+                .GetByProductSubTypeWorkingPeriodSampleId(stage.Id);
+            var stageTypeId = stageTypeRelation?.FirstOrDefault()?.StageTypeId;
+            StageTypeEntity stageType = null;
+
+            if (stageTypeId.HasValue)
+            {
+                stageType = await _stageTypeRepository.GetById(stageTypeId.Value);
+            }
+
+            // Получаем требуемую бригаду
+            Guid? brigadeId = await GetBrigadeForStageAsync(
+                stage,
+                stageType,
+                product.Id,
+                assemblyBrigadeMapping);
+
+            if (!brigadeId.HasValue)
+            {
+                _logger.LogError($"Не найдена бригада для этапа {stage.Id}");
+                return false;
+            }
+
+            // Парсим длительность этапа из минут
+            TimeSpan duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
+
+            if (duration <= TimeSpan.Zero)
+            {
+                _logger.LogError($"Некорректная длительность для этапа {stage.Id}: {stage.StandartTime}");
+                return false;
+            }
+
+            // Ищем свободное время НАЧИНАЯ С earliestStartTime
+            var plannedTime = await FindAvailableTimeSlotAsync(
+                earliestStartTime,
+                duration,
+                busyTimeSlots,
+                brigadeId.Value,
+                product.FactoryId);
+
+            if (!plannedTime.HasValue)
+            {
+                _logger.LogError($"Не найдено свободное время для этапа {stage.Id}");
+                return false;
+            }
+
+            // ГАРАНТИРУЕМ, что этап начинается после ВСЕХ родителей
+            if (node.Parents.Any())
+            {
+                bool needsAdjustment = false;
+                DateTime latestParentEnd = earliestStartTime;
+
+                foreach (var parentId in node.Parents)
+                {
+                    if (stageCompletionTimes.TryGetValue(parentId, out var parentEndTime))
+                    {
+                        if (parentEndTime > latestParentEnd)
+                            latestParentEnd = parentEndTime;
+
+                        if (plannedTime.Value < parentEndTime)
+                        {
+                            needsAdjustment = true;
+                            _logger.LogWarning($"НАРУШЕНИЕ: Этап {stage.Id} запланирован на {plannedTime.Value}, " +
+                                             $"но родитель {parentId} завершается в {parentEndTime}");
+                        }
+                    }
+                }
+
+                // Если нужно корректировать, ищем время ПОСЛЕ самого позднего родителя
+                if (needsAdjustment)
+                {
+                    _logger.LogWarning($"Ищем время для этапа {stage.Id} ПОСЛЕ всех родителей, самый поздний завершается в {latestParentEnd}");
+
+                    // Ищем начиная СРАЗУ ПОСЛЕ завершения самого позднего родителя
+                    var adjustedTime = await FindAvailableTimeSlotAsync(
+                        latestParentEnd.AddMinutes(1), // Начинаем сразу после родителя
+                        duration,
+                        busyTimeSlots,
+                        brigadeId.Value,
+                        product.FactoryId);
+
+                    if (adjustedTime.HasValue)
+                    {
+                        // Проверяем, что новое время действительно после всех родителей
+                        bool allParentsBeforeAdjusted = true;
+                        foreach (var parentId in node.Parents)
+                        {
+                            if (stageCompletionTimes.TryGetValue(parentId, out var parentEndTime))
+                            {
+                                if (adjustedTime.Value < parentEndTime)
+                                {
+                                    allParentsBeforeAdjusted = false;
+                                    _logger.LogError($"Новое время {adjustedTime.Value} все еще раньше родителя {parentId}: {parentEndTime}");
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (allParentsBeforeAdjusted)
+                        {
+                            plannedTime = adjustedTime;
+                            _logger.LogWarning($"Исправлено: этап {stage.Id} теперь начинается в {plannedTime.Value}");
+                        }
+                        else
+                        {
+                            _logger.LogError($"Не удалось найти время для этапа {stage.Id} после всех родителей");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError($"Не удалось найти время для этапа {stage.Id} после {latestParentEnd}");
+                        return false;
+                    }
+                }
+            }
+
+            // Создаем запланированный этап
+            var plannedStage = new PlannedStage
+            {
+                ProductId = product.Id,
+                StageSampleId = stage.Id,
+                BrigadeId = brigadeId.Value,
+                StartTime = plannedTime.Value,
+                EndTime = plannedTime.Value.Add(duration),
+                StageTypeId = stageTypeId
+            };
+
+            plannedStages.Add(plannedStage);
+            stageCompletionTimes[stage.Id] = plannedStage.EndTime;
+
+            // Обновляем занятые слоты
+            busyTimeSlots.Add(new TimeSlot
+            {
+                Start = plannedStage.StartTime,
+                End = plannedStage.EndTime,
+                StageId = stage.Id,
+                BrigadeId = brigadeId.Value
+            });
+
+            _logger.LogWarning($"Успешно запланирован этап {stage.Id}: " +
+                             $"{plannedStage.StartTime:yyyy-MM-dd HH:mm} - {plannedStage.EndTime:HH:mm}");
+
+            // Дополнительная проверка
+            if (node.Parents.Any())
+            {
+                foreach (var parentId in node.Parents)
+                {
+                    if (stageCompletionTimes.TryGetValue(parentId, out var parentEndTime))
+                    {
+                        if (plannedStage.StartTime < parentEndTime)
+                        {
+                            _logger.LogError($"КРИТИЧЕСКАЯ ОШИБКА: Этап {stage.Id} начинается в {plannedStage.StartTime}, " +
+                                           $"но родитель {parentId} завершается только в {parentEndTime}!");
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"OK: Этап {stage.Id} начинается в {plannedStage.StartTime}, " +
+                                             $"после родителя {parentId} (завершился в {parentEndTime})");
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Ошибка при планировании этапа {stage.Id}");
+            return false;
+        }
+    }
+
+    private void ValidateAllDependencies(
+    List<PlannedStage> plannedStages,
+    List<StageNode> stageGraph)
+    {
+        _logger.LogWarning("=== ПРОВЕРКА ВСЕХ ЗАВИСИМОСТЕЙ ===");
+
+        var plannedDict = plannedStages.ToDictionary(p => p.StageSampleId);
+        var nodeDict = stageGraph.ToDictionary(n => n.Id);
+
+        bool allValid = true;
+
+        foreach (var plannedStage in plannedStages)
+        {
+            if (nodeDict.TryGetValue(plannedStage.StageSampleId, out var node))
+            {
+                foreach (var parentId in node.Parents)
+                {
+                    if (plannedDict.TryGetValue(parentId, out var parentStage))
+                    {
+                        if (plannedStage.StartTime < parentStage.EndTime)
+                        {
+                            _logger.LogError($"НАРУШЕНИЕ: Этап {plannedStage.StageSampleId} начинается в {plannedStage.StartTime}, " +
+                                           $"но родитель {parentId} завершается в {parentStage.EndTime}");
+                            allValid = false;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError($"Родитель {parentId} этапа {plannedStage.StageSampleId} не запланирован!");
+                        allValid = false;
+                    }
+                }
+            }
+        }
+
+        if (allValid)
+        {
+            _logger.LogWarning("Все зависимости соблюдены корректно!");
+        }
+        else
+        {
+            _logger.LogError("Обнаружены нарушения в зависимостях!");
+        }
+
+        _logger.LogWarning("=== КОНЕЦ ПРОВЕРКИ ===");
+    }
+
+    private void LogExecutionOrder(List<PlannedStage> plannedStages, List<StageNode> stageGraph)
+    {
+        _logger.LogWarning("=== ПОРЯДОК ВЫПОЛНЕНИЯ ЭТАПОВ ===");
+
+        foreach (var stage in plannedStages.OrderBy(s => s.StartTime))
+        {
+            var node = stageGraph.FirstOrDefault(n => n.Id == stage.StageSampleId);
+            string dependencies = node?.Parents.Any() == true
+                ? $" (зависит от: {string.Join(", ", node.Parents)})"
+                : " (без зависимостей)";
+
+            _logger.LogWarning($"Этап {stage.StageSampleId}: " +
+                             $"{stage.StartTime:yyyy-MM-dd HH:mm} - {stage.EndTime:HH:mm}" +
+                             $"{dependencies}");
+        }
+
+        _logger.LogWarning("=== КОНЕЦ ПОРЯДКА ===");
     }
 
     private async Task<DateTime> AdjustStartTimeForParallelStagesAsync(
@@ -636,83 +971,16 @@ public class CoreService
         }
     }
 
-    private async Task<Guid?> FindAvailableBrigadeAsync(
-        ProductSubTypeWorkingPeriodSampleEntity stageSample,
-        DateTime startTime,
-        Guid factoryId)
-    {
-        try
-        {
-            // Получаем все бригады на фабрике
-            var factoryBrigades = await _brigadeRepository.GetByFactoryId(factoryId);
-
-            if (factoryBrigades == null || !factoryBrigades.Any())
-            {
-                _logger.LogWarning($"На фабрике {factoryId} нет бригад");
-                return null;
-            }
-
-            // Получаем связи типа этапа для образца
-            var stageTypeRelations = await _workingPeriodStageTypeRelationRepository
-                .GetByProductSubTypeWorkingPeriodSampleId(stageSample.Id);
-
-            if (stageTypeRelations == null || !stageTypeRelations.Any())
-            {
-                _logger.LogWarning($"Для образца этапа {stageSample.Id} не найдены связи с типом этапа");
-                return null;
-            }
-
-            var stageTypeId = stageTypeRelations.First().StageTypeId;
-
-            // Ищем бригады для этого типа этапа
-            var suitableBrigades = factoryBrigades
-                .Where(b => b.StageTypeId == stageTypeId)
-                .ToList();
-
-            if (!suitableBrigades.Any())
-            {
-                _logger.LogWarning($"На фабрике {factoryId} нет бригад для типа этапа {stageTypeId}");
-                return null;
-            }
-
-            // Преобразуем минуты в TimeSpan
-            TimeSpan duration = ParseStandartTimeToTimeSpan(stageSample.StandartTime);
-
-            // Проверяем каждую подходящую бригаду на доступность
-            foreach (var brigade in suitableBrigades)
-            {
-                var isAvailable = await CheckBrigadeAvailabilityAsync(
-                    brigade.Id,
-                    startTime,
-                    duration,
-                    factoryId);
-
-                if (isAvailable)
-                {
-                    return brigade.Id;
-                }
-            }
-
-            _logger.LogWarning($"Нет доступных бригад для этапа {stageSample.Id} в время {startTime}");
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при поиске доступной бригады для этапа {stageSample.Id}");
-            return null;
-        }
-    }
-
     private async Task<DateTime?> FindAvailableTimeSlotAsync(
-        DateTime startFrom,
-        TimeSpan duration,
-        List<TimeSlot> busySlots,
-        Guid brigadeId,
-        Guid factoryId)
+     DateTime startFrom,
+     TimeSpan duration,
+     List<TimeSlot> busySlots,
+     Guid brigadeId,
+     Guid factoryId)
     {
         try
         {
-            _logger.LogDebug($"Поиск слота: начало={startFrom}, длительность={duration.TotalMinutes} минут, бригада={brigadeId}");
+            _logger.LogWarning($"Поиск слота: начало с {startFrom}, длительность={duration.TotalMinutes} минут, бригада={brigadeId}");
 
             // Если длительность больше рабочего дня, этап невозможен
             if (duration > WORKDAY_DURATION)
@@ -736,7 +1004,7 @@ public class CoreService
                     continue;
                 }
 
-                _logger.LogDebug($"Проверка дня {currentTime.Date:yyyy-MM-dd} ({currentTime.DayOfWeek})");
+                _logger.LogDebug($"Проверка дня {currentTime.Date:yyyy-MM-dd} ({currentTime.DayOfWeek}) с {currentTime:HH:mm}");
 
                 // Получаем все слоты для этой бригады в этот день
                 var dayBusySlots = busySlots
@@ -745,45 +1013,59 @@ public class CoreService
                     .OrderBy(s => s.Start)
                     .ToList();
 
+                // Начинаем поиск с currentTime или с начала рабочего дня, если currentTime раньше
+                DateTime searchStart = currentTime;
+                if (searchStart.TimeOfDay < WORKDAY_START)
+                {
+                    searchStart = currentTime.Date.Add(WORKDAY_START);
+                }
+
                 // Если день полностью свободен
                 if (!dayBusySlots.Any())
                 {
-                    // Проверяем, помещается ли этап в рабочий день
-                    DateTime candidateStart = currentTime.Date.Add(WORKDAY_START);
+                    // Проверяем, помещается ли этап в рабочий день, начиная с searchStart
+                    DateTime candidateStart = searchStart;
                     DateTime candidateEnd = candidateStart.Add(duration);
 
                     if (candidateEnd.TimeOfDay <= WORKDAY_END)
                     {
                         if (await CheckBrigadeAvailabilityAsync(brigadeId, candidateStart, duration, factoryId))
                         {
-                            _logger.LogDebug($"Найден свободный слот в начале дня: {candidateStart}");
+                            _logger.LogWarning($"Найден свободный слот в начале дня: {candidateStart}");
                             return candidateStart;
                         }
                     }
                 }
                 else
                 {
-                    // Ищем промежутки между занятыми слотами
-                    DateTime lastEnd = currentTime.Date.Add(WORKDAY_START);
+                    // Ищем промежутки между занятыми слотами, начиная с searchStart
+                    DateTime lastEnd = searchStart;
 
                     foreach (var busySlot in dayBusySlots)
                     {
-                        // Проверяем промежуток между lastEnd и началом занятого слота
-                        TimeSpan gap = busySlot.Start - lastEnd;
+                        // Если busySlot.End <= lastEnd, пропускаем (уже пройденный интервал)
+                        if (busySlot.End <= lastEnd)
+                            continue;
 
-                        if (gap >= duration)
+                        // Если busySlot.Start > lastEnd, проверяем промежуток
+                        if (busySlot.Start > lastEnd)
                         {
-                            // Промежуток достаточно большой
-                            DateTime candidateStart = lastEnd;
-                            DateTime candidateEnd = candidateStart.Add(duration);
+                            TimeSpan gap = busySlot.Start - lastEnd;
 
-                            // Проверяем, что этап не выходит за рабочий день
-                            if (candidateEnd.TimeOfDay <= WORKDAY_END)
+                            if (gap >= duration)
                             {
-                                if (await CheckBrigadeAvailabilityAsync(brigadeId, candidateStart, duration, factoryId))
+                                // Промежуток достаточно большой
+                                DateTime candidateStart = lastEnd;
+                                DateTime candidateEnd = candidateStart.Add(duration);
+
+                                // Проверяем, что этап не выходит за рабочий день
+                                if (candidateEnd.TimeOfDay <= WORKDAY_END)
                                 {
-                                    _logger.LogDebug($"Найден слот в промежутке: {candidateStart}");
-                                    return candidateStart;
+                                    if (await CheckBrigadeAvailabilityAsync(brigadeId, candidateStart, duration, factoryId))
+                                    {
+                                        _logger.LogWarning($"Найден слот в промежутке: {candidateStart}");
+                                        return candidateStart;
+                                    }
                                 }
                             }
                         }
@@ -806,7 +1088,7 @@ public class CoreService
                         {
                             if (await CheckBrigadeAvailabilityAsync(brigadeId, candidateStart, duration, factoryId))
                             {
-                                _logger.LogDebug($"Найден слот в конце дня: {candidateStart}");
+                                _logger.LogWarning($"Найден слот в конце дня: {candidateStart}");
                                 return candidateStart;
                             }
                         }
@@ -821,7 +1103,7 @@ public class CoreService
             _logger.LogWarning($"Не удалось найти свободный слот за {daysSearched} дней");
 
             // Дополнительная диагностика
-            await DebugBusySlots(busySlots, brigadeId, duration);
+            await DebugBusySlotsDetailed(busySlots, brigadeId, duration, startFrom);
 
             return null;
         }
@@ -832,9 +1114,13 @@ public class CoreService
         }
     }
 
-    private async Task DebugBusySlots(List<TimeSlot> busySlots, Guid brigadeId, TimeSpan requiredDuration)
+    private async Task DebugBusySlotsDetailed(
+        List<TimeSlot> busySlots,
+        Guid brigadeId,
+        TimeSpan requiredDuration,
+        DateTime searchFrom)
     {
-        _logger.LogWarning("=== ДИАГНОСТИКА ЗАНЯТЫХ СЛОТОВ ===");
+        _logger.LogWarning("=== ПОДРОБНАЯ ДИАГНОСТИКА ПОИСКА ВРЕМЕНИ ===");
 
         var brigadeSlots = busySlots
             .Where(s => s.BrigadeId == brigadeId)
@@ -842,6 +1128,7 @@ public class CoreService
             .ToList();
 
         _logger.LogWarning($"Всего занятых слотов для бригады {brigadeId}: {brigadeSlots.Count}");
+        _logger.LogWarning($"Ищем время с: {searchFrom}");
         _logger.LogWarning($"Требуемая длительность: {requiredDuration.TotalMinutes} минут");
 
         if (!brigadeSlots.Any())
@@ -850,33 +1137,107 @@ public class CoreService
             return;
         }
 
-        // Группируем по дням
-        var slotsByDay = brigadeSlots
-            .GroupBy(s => s.Start.Date)
-            .OrderBy(g => g.Key);
-
-        foreach (var dayGroup in slotsByDay.Take(3))
+        // Проверяем ближайшие 5 дней
+        DateTime checkDate = searchFrom.Date;
+        for (int i = 0; i < 5; i++)
         {
-            _logger.LogWarning($"День {dayGroup.Key:yyyy-MM-dd} ({dayGroup.Key.DayOfWeek}):");
-
-            DateTime workStart = dayGroup.Key.Add(WORKDAY_START);
-            DateTime workEnd = dayGroup.Key.Add(WORKDAY_END);
-
-            var daySlots = dayGroup.OrderBy(s => s.Start).ToList();
-            DateTime lastEnd = workStart;
-
-            foreach (var slot in daySlots)
+            // Пропускаем выходные
+            while (checkDate.DayOfWeek == DayOfWeek.Saturday || checkDate.DayOfWeek == DayOfWeek.Sunday)
             {
-                TimeSpan gap = slot.Start - lastEnd;
-                _logger.LogWarning($"  Свободно: {lastEnd:HH:mm} - {slot.Start:HH:mm} (промежуток: {gap.TotalMinutes} минут)");
-                _logger.LogWarning($"  Занято: {slot.Start:HH:mm} - {slot.End:HH:mm}");
-
-                lastEnd = slot.End > lastEnd ? slot.End : lastEnd;
+                checkDate = checkDate.AddDays(1);
             }
 
-            // Проверяем конец дня
-            TimeSpan endGap = workEnd - lastEnd;
-            _logger.LogWarning($"  Свободно: {lastEnd:HH:mm} - {workEnd:HH:mm} (промежуток: {endGap.TotalMinutes} минут)");
+            DateTime workStart = checkDate.Add(WORKDAY_START);
+            DateTime workEnd = checkDate.Add(WORKDAY_END);
+
+            var daySlots = brigadeSlots
+                .Where(s => s.Start.Date == checkDate)
+                .OrderBy(s => s.Start)
+                .ToList();
+
+            _logger.LogWarning($"День {checkDate:yyyy-MM-dd} ({checkDate.DayOfWeek}): {workStart:HH:mm} - {workEnd:HH:mm}");
+
+            if (!daySlots.Any())
+            {
+                _logger.LogWarning($"  День полностью свободен");
+
+                // Проверяем, поместится ли этап с searchFrom
+                DateTime testStart = searchFrom > workStart ? searchFrom : workStart;
+                if (testStart < searchFrom) testStart = searchFrom;
+
+                DateTime testEnd = testStart.Add(requiredDuration);
+
+                if (testEnd <= workEnd)
+                {
+                    _logger.LogWarning($"  МОЖНО ЗАПЛАНИРОВАТЬ: {testStart:HH:mm} - {testEnd:HH:mm}");
+                }
+                else
+                {
+                    _logger.LogWarning($"  Не помещается: {testStart:HH:mm} - {testEnd:HH:mm} (выходит за {workEnd:HH:mm})");
+                }
+            }
+            else
+            {
+                // Показываем занятые слоты и свободные промежутки
+                DateTime lastEnd = workStart;
+
+                foreach (var slot in daySlots)
+                {
+                    // Показываем свободный промежуток перед этим занятым слотом
+                    if (slot.Start > lastEnd)
+                    {
+                        TimeSpan gap = slot.Start - lastEnd;
+                        _logger.LogWarning($"  Свободно: {lastEnd:HH:mm} - {slot.Start:HH:mm} ({gap.TotalMinutes} минут)");
+
+                        // Проверяем, достаточно ли этого промежутка
+                        if (gap >= requiredDuration)
+                        {
+                            // Проверяем, что начало не раньше searchFrom
+                            DateTime potentialStart = lastEnd;
+                            if (potentialStart < searchFrom)
+                                potentialStart = searchFrom;
+
+                            if (potentialStart < slot.Start)
+                            {
+                                DateTime potentialEnd = potentialStart.Add(requiredDuration);
+                                if (potentialEnd <= slot.Start)
+                                {
+                                    _logger.LogWarning($"    МОЖНО ЗАПЛАНИРОВАТЬ: {potentialStart:HH:mm} - {potentialEnd:HH:mm}");
+                                }
+                            }
+                        }
+                    }
+
+                    _logger.LogWarning($"  Занято: {slot.Start:HH:mm} - {slot.End:HH:mm}");
+
+                    lastEnd = slot.End > lastEnd ? slot.End : lastEnd;
+                }
+
+                // Проверяем конец дня
+                if (workEnd > lastEnd)
+                {
+                    TimeSpan endGap = workEnd - lastEnd;
+                    _logger.LogWarning($"  Свободно: {lastEnd:HH:mm} - {workEnd:HH:mm} ({endGap.TotalMinutes} минут)");
+
+                    if (endGap >= requiredDuration)
+                    {
+                        DateTime potentialStart = lastEnd;
+                        if (potentialStart < searchFrom)
+                            potentialStart = searchFrom;
+
+                        if (potentialStart < workEnd)
+                        {
+                            DateTime potentialEnd = potentialStart.Add(requiredDuration);
+                            if (potentialEnd <= workEnd)
+                            {
+                                _logger.LogWarning($"    МОЖНО ЗАПЛАНИРОВАТЬ: {potentialStart:HH:mm} - {potentialEnd:HH:mm}");
+                            }
+                        }
+                    }
+                }
+            }
+
+            checkDate = checkDate.AddDays(1);
         }
 
         _logger.LogWarning("=== КОНЕЦ ДИАГНОСТИКИ ===");
@@ -913,21 +1274,6 @@ public class CoreService
         }
 
         return dateTime;
-    }
-
-    private bool IsWithinWorkHours(DateTime start, DateTime end)
-    {
-        return start.TimeOfDay >= WORKDAY_START &&
-               end.TimeOfDay <= WORKDAY_END &&
-               start.Date == end.Date &&
-               start.DayOfWeek != DayOfWeek.Saturday &&
-               start.DayOfWeek != DayOfWeek.Sunday;
-    }
-
-    private DateTime MoveToNextWorkPeriod(DateTime dateTime)
-    {
-        var nextDay = dateTime.Date.AddDays(1);
-        return nextDay.Add(WORKDAY_START);
     }
 
     // Исправленный метод CreateWorkingPeriodAsync
@@ -1061,71 +1407,6 @@ public class CoreService
         }
     }
 
-    private async Task DebugTimeSlotSearch(
-        DateTime startFrom,
-        TimeSpan duration,
-        List<TimeSlot> busySlots,
-        Guid brigadeId,
-        Guid factoryId)
-    {
-        _logger.LogWarning("=== ДЕБАГ ПОИСКА ВРЕМЕНИ ===");
-        _logger.LogWarning($"Параметры поиска:");
-        _logger.LogWarning($"- Начало поиска: {startFrom}");
-        _logger.LogWarning($"- Длительность: {duration.TotalMinutes} минут");
-        _logger.LogWarning($"- Бригада: {brigadeId}");
-        _logger.LogWarning($"- Фабрика: {factoryId}");
-
-        // Показываем все занятые слоты для этой бригады
-        var brigadeSlots = busySlots
-            .Where(s => s.BrigadeId == brigadeId)
-            .OrderBy(s => s.Start)
-            .ToList();
-
-        _logger.LogWarning($"Занятые слоты для бригады {brigadeId}: {brigadeSlots.Count}");
-
-        foreach (var slot in brigadeSlots.Take(5))
-        {
-            _logger.LogWarning($"  {slot.Start:yyyy-MM-dd HH:mm} - {slot.End:HH:mm}");
-        }
-
-        if (brigadeSlots.Count > 5)
-        {
-            _logger.LogWarning($"  ... и еще {brigadeSlots.Count - 5} слотов");
-        }
-
-        // Показываем несколько потенциальных слотов
-        _logger.LogWarning("Потенциальные слоты (первые 3 дня):");
-
-        DateTime checkTime = AdjustToWorkHours(startFrom);
-        for (int i = 0; i < 3; i++)
-        {
-            // Пропускаем выходные
-            while (checkTime.DayOfWeek == DayOfWeek.Saturday || checkTime.DayOfWeek == DayOfWeek.Sunday)
-            {
-                checkTime = checkTime.AddDays(1);
-            }
-
-            DateTime workStart = checkTime.Date.Add(WORKDAY_START);
-            DateTime workEnd = checkTime.Date.Add(WORKDAY_END);
-
-            _logger.LogWarning($"День {checkTime.Date:yyyy-MM-dd}: {workStart:HH:mm} - {workEnd:HH:mm}");
-
-            // Показываем занятые слоты в этот день
-            var daySlots = brigadeSlots
-                .Where(s => s.Start.Date == checkTime.Date)
-                .ToList();
-
-            foreach (var slot in daySlots)
-            {
-                _logger.LogWarning($"  Занято: {slot.Start:HH:mm} - {slot.End:HH:mm}");
-            }
-
-            checkTime = checkTime.AddDays(1);
-        }
-
-        _logger.LogWarning("=== КОНЕЦ ДЕБАГА ===");
-    }
-
     private TimeSpan ParseStandartTimeToTimeSpan(string standartTime)
     {
         try
@@ -1238,6 +1519,87 @@ public class CoreService
         }
     }
 
+    private void DebugDependencyGraph(List<StageNode> stageGraph, List<StageExecutionGroup> executionPlan)
+    {
+        _logger.LogWarning("=== ОТЛАДКА ГРАФА ЗАВИСИМОСТЕЙ ===");
+
+        foreach (var group in executionPlan)
+        {
+            _logger.LogWarning($"Уровень {group.Level}: {group.Stages.Count} этапов");
+            foreach (var stage in group.Stages)
+            {
+                var node = stageGraph.FirstOrDefault(n => n.Id == stage.Id);
+                if (node != null)
+                {
+                    string parents = node.Parents.Any()
+                        ? $"Родители: {string.Join(", ", node.Parents)}"
+                        : "Без родителей";
+                    string children = node.Children.Any()
+                        ? $"Дети: {string.Join(", ", node.Children)}"
+                        : "Без детей";
+
+                    _logger.LogWarning($"  Этап {stage.Id} ({stage.WorkingPeriodName}): {parents}, {children}");
+                }
+            }
+        }
+
+        // Проверяем корректность графа
+        foreach (var node in stageGraph)
+        {
+            // Проверяем, что родители существуют в графе
+            foreach (var parentId in node.Parents)
+            {
+                if (!stageGraph.Any(n => n.Id == parentId))
+                {
+                    _logger.LogError($"Этап {node.Id} ссылается на несуществующего родителя {parentId}");
+                }
+            }
+        }
+
+        _logger.LogWarning("=== КОНЕЦ ОТЛАДКИ ГРАФА ===");
+    }
+
+    private void AnalyzeUnplannedStages(
+    List<ProductSubTypeWorkingPeriodSampleEntity> allStages,
+    List<PlannedStage> plannedStages,
+    List<StageNode> stageGraph)
+    {
+        var plannedIds = plannedStages.Select(p => p.StageSampleId).ToList();
+        var unplanned = allStages.Where(s => !plannedIds.Contains(s.Id)).ToList();
+
+        if (!unplanned.Any())
+        {
+            _logger.LogWarning("Все этапы успешно запланированы!");
+            return;
+        }
+
+        _logger.LogError($"Не запланировано {unplanned.Count} этапов из {allStages.Count}");
+
+        foreach (var stage in unplanned)
+        {
+            var node = stageGraph.FirstOrDefault(n => n.Id == stage.Id);
+            if (node != null)
+            {
+                var plannedParents = node.Parents
+                    .Where(p => plannedIds.Contains(p))
+                    .ToList();
+                var unplannedParents = node.Parents
+                    .Where(p => !plannedIds.Contains(p))
+                    .ToList();
+
+                _logger.LogError($"Этап {stage.Id} ({stage.WorkingPeriodName}): " +
+                               $"Родители всего: {node.Parents.Count}, " +
+                               $"Запланировано: {plannedParents.Count}, " +
+                               $"Не запланировано: {unplannedParents.Count}");
+
+                if (unplannedParents.Any())
+                {
+                    _logger.LogError($"  Не запланированные родители: {string.Join(", ", unplannedParents)}");
+                }
+            }
+        }
+    }
+
     private class TimeSlot
     {
         public DateTime Start { get; set; }
@@ -1278,5 +1640,6 @@ public class CoreService
         public List<ProductSubTypeWorkingPeriodSampleEntity> Stages { get; set; }
         public bool CanExecuteInParallel { get; set; }
         public DateTime? EarliestStartTime { get; set; }
+        public int Level { get; set; } // Добавляем уровень для отладки
     }
 }
