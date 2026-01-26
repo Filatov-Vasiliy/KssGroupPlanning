@@ -8,7 +8,7 @@ namespace KssGroupPlanning.Models
         { 
             Id = id;
             WorkingPeriodId = workingPeriodId;
-            DateFrom = DateFrom;
+            DateFrom = dateFrom;
             DateTo = dateTo;
             Status = status;
             Recycling = recycling;
