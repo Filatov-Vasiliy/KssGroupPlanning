@@ -37,6 +37,8 @@ public class CoreService
     private readonly TimeSpan WORKDAY_END = new TimeSpan(20, 0, 0);
     private readonly TimeSpan WORKDAY_DURATION = new TimeSpan(12, 0, 0);
 
+    DateTime _planningStartTime;
+
     public CoreService(
         INewProductRepository productRepository,
         INewWorkingPeriodRepository workingPeriodRepository,
@@ -68,6 +70,10 @@ public class CoreService
         try
         {
             _logger.LogWarning("Начало планирования производства");
+
+            // Сохраняем время старта планирования
+            _planningStartTime = DateTime.Now;
+            _logger.LogWarning($"Время старта планирования: {_planningStartTime:dd.MM.yyyy HH:mm}");
 
             _products = await _productRepository.GetAll();
             _allWorkingPeriods = await _workingPeriodRepository.GetAll();
@@ -208,18 +214,16 @@ public class CoreService
 
     private async Task InitializeBrigadeAvailability(Guid factoryId)
     {
-        _brigadeNextAvailableTime.Clear();
-
-        // Получаем все бригады на фабрике
+        // ВАЖНО: Инициализируем все бригады временем старта планирования
+        // Это гарантирует, что все продукты начнут планирование с одного времени
         if (_factoryBrigades.TryGetValue(factoryId, out var factoryBrigades))
         {
             foreach (var brigade in factoryBrigades)
             {
-                // Инициализируем время доступности как текущее время
-                _brigadeNextAvailableTime[brigade.Id] = DateTime.Now;
+                // Все бригады начинают с _planningStartTime
+                _brigadeNextAvailableTime[brigade.Id] = _planningStartTime;
 
-                // Логируем инициализацию
-                _logger.LogWarning($"Бригада {brigade.Id} инициализирована, доступна с {_brigadeNextAvailableTime[brigade.Id]}");
+                _logger.LogWarning($"Бригада {brigade.Id} инициализирована, доступна с {_brigadeNextAvailableTime[brigade.Id]:dd.MM.yyyy HH:mm}");
             }
         }
     }
@@ -299,11 +303,11 @@ public class CoreService
     }
 
     private async Task<bool> PlanProductWithAssemblyStagesAsync(
-        ProductEntity product,
-        Guid factoryId,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
-        Dictionary<Guid, Guid> stageTypes)
+     ProductEntity product,
+     Guid factoryId,
+     List<StageNode> stageGraph,
+     List<StageExecutionGroup> executionPlan,
+     Dictionary<Guid, Guid> stageTypes)
     {
         try
         {
@@ -338,9 +342,12 @@ public class CoreService
             // Запоминаем назначение бригады сборки для этого продукта
             _productAssemblyBrigadeMapping[product.Id] = assemblyBrigadeId;
 
+            // ВСЕ продукты начинают с одного времени старта планирования
+            DateTime planningStartTime = _planningStartTime;
+
             // 2. Планируем продукт с выбранным маппингом бригад
             var plannedStages = await PlanProductWithBrigadeMappingAsync(
-                product, stageGraph, executionPlan, stageToBrigadeMapping, startTime, factoryId);
+                product, stageGraph, executionPlan, stageToBrigadeMapping, planningStartTime, factoryId);
 
             if (plannedStages == null || !plannedStages.Any())
             {
@@ -362,11 +369,11 @@ public class CoreService
     }
 
     private async Task<bool> PlanProductWithoutAssemblyStagesAsync(
-        ProductEntity product,
-        Guid factoryId,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
-        Dictionary<Guid, Guid> stageTypes)
+    ProductEntity product,
+    Guid factoryId,
+    List<StageNode> stageGraph,
+    List<StageExecutionGroup> executionPlan,
+    Dictionary<Guid, Guid> stageTypes)
     {
         try
         {
@@ -382,20 +389,14 @@ public class CoreService
                 return false;
             }
 
-            // Определяем время начала планирования
-            DateTime startTime = DateTime.Now;
-            foreach (var brigadeId in stageToBrigadeMapping.Values.Distinct())
-            {
-                if (_brigadeNextAvailableTime.ContainsKey(brigadeId) &&
-                    _brigadeNextAvailableTime[brigadeId] > startTime)
-                {
-                    startTime = _brigadeNextAvailableTime[brigadeId];
-                }
-            }
+            // ВАЖНО: Все продукты начинают с _planningStartTime
+            DateTime planningStartTime = _planningStartTime;
+
+            _logger.LogWarning($"Продукт {product.Id} начинает планирование с {planningStartTime:dd.MM.yyyy HH:mm}");
 
             // Планируем продукт
             var plannedStages = await PlanProductWithBrigadeMappingAsync(
-                product, stageGraph, executionPlan, stageToBrigadeMapping, startTime, factoryId);
+                product, stageGraph, executionPlan, stageToBrigadeMapping, planningStartTime, factoryId);
 
             if (plannedStages == null || !plannedStages.Any())
             {
@@ -417,13 +418,13 @@ public class CoreService
     }
 
     private async Task<(Guid BrigadeId, Dictionary<Guid, Guid> StageMapping, DateTime StartTime, DateTime EndTime)?>
-        SelectBestAssemblyBrigadeAsync(
-            ProductEntity product,
-            List<BrigadeEntity> assemblyBrigades,
-            List<StageNode> stageGraph,
-            List<StageExecutionGroup> executionPlan,
-            Dictionary<Guid, Guid> stageTypes,
-            Guid factoryId)
+    SelectBestAssemblyBrigadeAsync(
+        ProductEntity product,
+        List<BrigadeEntity> assemblyBrigades,
+        List<StageNode> stageGraph,
+        List<StageExecutionGroup> executionPlan,
+        Dictionary<Guid, Guid> stageTypes,
+        Guid factoryId)
     {
         var evaluations = new List<AssemblyBrigadeEvaluation>();
         var assemblyStageTypeId = _stageTypeIds.GetValueOrDefault("Сборка");
@@ -486,11 +487,11 @@ public class CoreService
     }
 
     private async Task<Dictionary<Guid, Guid>> CreateStageToBrigadeMappingAsync(
-        ProductEntity product,
-        List<StageNode> stageGraph,
-        Dictionary<Guid, Guid> stageTypes,
-        Guid? assemblyBrigadeId,
-        Guid factoryId)
+     ProductEntity product,
+     List<StageNode> stageGraph,
+     Dictionary<Guid, Guid> stageTypes,
+     Guid? assemblyBrigadeId,
+     Guid factoryId)
     {
         var stageToBrigadeMapping = new Dictionary<Guid, Guid>();
         var assemblyStageTypeId = _stageTypeIds.GetValueOrDefault("Сборка");
@@ -565,8 +566,18 @@ public class CoreService
                         else
                         {
                             // Выбираем бригаду с наименьшей текущей загрузкой
+                            // ВАЖНОЕ ИЗМЕНЕНИЕ: Используем _planningStartTime как минимальное время
+                            var minAvailableTime = _planningStartTime;
+
                             var bestBrigade = suitableBrigades
-                                .OrderBy(b => _brigadeNextAvailableTime.GetValueOrDefault(b.Id, DateTime.MinValue))
+                                .OrderBy(b =>
+                                {
+                                    var availableTime = _brigadeNextAvailableTime.ContainsKey(b.Id)
+                                        ? _brigadeNextAvailableTime[b.Id]
+                                        : minAvailableTime;
+                                    return availableTime;
+                                })
+                                .ThenBy(b => b.CountEmployee) // Предпочитаем бригады с меньшим количеством сотрудников
                                 .First();
 
                             brigadeForStageType[stageTypeId] = bestBrigade.Id;
@@ -587,14 +598,16 @@ public class CoreService
     }
 
     private async Task<(DateTime StartTime, DateTime EndTime)?> EstimateProductTimeWithMappingAsync(
-        ProductEntity product,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
-        Dictionary<Guid, Guid> stageToBrigadeMapping,
-        Guid factoryId)
+    ProductEntity product,
+    List<StageNode> stageGraph,
+    List<StageExecutionGroup> executionPlan,
+    Dictionary<Guid, Guid> stageToBrigadeMapping,
+    Guid factoryId)
     {
         try
         {
+            _logger.LogWarning($"Оценка времени для продукта {product.Id}");
+
             // Создаем временные копии для симуляции
             var simulatedBrigadeTimes = new Dictionary<Guid, DateTime>();
             var simulatedTimeSlots = new Dictionary<Guid, List<BrigadeTimeSlot>>();
@@ -602,9 +615,10 @@ public class CoreService
             // Инициализируем временные копии
             foreach (var brigadeId in stageToBrigadeMapping.Values.Distinct())
             {
+                // ВАЖНОЕ ИЗМЕНЕНИЕ: Используем _planningStartTime вместо DateTime.Now
                 simulatedBrigadeTimes[brigadeId] = _brigadeNextAvailableTime.ContainsKey(brigadeId)
                     ? _brigadeNextAvailableTime[brigadeId]
-                    : DateTime.Now;
+                    : _planningStartTime;
 
                 simulatedTimeSlots[brigadeId] = _brigadeTimeSlots.ContainsKey(brigadeId)
                     ? new List<BrigadeTimeSlot>(_brigadeTimeSlots[brigadeId])
@@ -625,7 +639,8 @@ public class CoreService
                     var currentBrigadeTime = simulatedBrigadeTimes[brigadeId];
 
                     // Учитываем зависимости от родительских этапов
-                    if (node.Parents.Any())
+                    bool hasDependencies = node.Parents.Any();
+                    if (hasDependencies)
                     {
                         var parentEndTimes = node.Parents
                             .Where(parentId => stageCompletionTimes.ContainsKey(parentId))
@@ -650,10 +665,12 @@ public class CoreService
                         brigadeId,
                         stage.StandartEmployee,
                         simulatedTimeSlots[brigadeId],
-                        factoryId);
+                        factoryId,
+                        hasDependencies);
 
                     if (!plannedTime.HasValue)
                     {
+                        _logger.LogWarning($"Не удалось найти время для этапа {stage.Id} в симуляции");
                         return null;
                     }
 
@@ -676,28 +693,32 @@ public class CoreService
 
             if (!stageCompletionTimes.Any())
             {
+                _logger.LogWarning($"Не удалось оценить время для продукта {product.Id}");
                 return null;
             }
 
             var startTime = stageCompletionTimes.Values.Min();
             var endTime = stageCompletionTimes.Values.Max();
 
+            _logger.LogWarning($"Оценка времени для продукта {product.Id}: " +
+                             $"{startTime:dd.MM.yyyy HH:mm} - {endTime:HH:mm}");
+
             return (startTime, endTime);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Ошибка при оценке времени с маппингом");
+            _logger.LogError(ex, $"Ошибка при оценке времени с маппингом для продукта {product.Id}");
             return null;
         }
     }
 
     private async Task<List<PlannedStage>> PlanProductWithBrigadeMappingAsync(
-        ProductEntity product,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
-        Dictionary<Guid, Guid> stageToBrigadeMapping,
-        DateTime startTime,
-        Guid factoryId)
+     ProductEntity product,
+     List<StageNode> stageGraph,
+     List<StageExecutionGroup> executionPlan,
+     Dictionary<Guid, Guid> stageToBrigadeMapping,
+     DateTime planningStartTime,
+     Guid factoryId)
     {
         try
         {
@@ -706,31 +727,45 @@ public class CoreService
             var plannedStages = new List<PlannedStage>();
             var stageCompletionTimes = new Dictionary<Guid, DateTime>();
 
-            // Словарь для отслеживания времени бригад
-            var brigadeCurrentTimes = new Dictionary<Guid, DateTime>();
-
-            // Инициализируем время бригад
-            foreach (var brigadeId in stageToBrigadeMapping.Values.Distinct())
-            {
-                brigadeCurrentTimes[brigadeId] = _brigadeNextAvailableTime.ContainsKey(brigadeId)
-                    ? _brigadeNextAvailableTime[brigadeId]
-                    : startTime;
-            }
-
             // Проходим по плану выполнения
             foreach (var group in executionPlan.OrderBy(g => g.Level))
             {
+                _logger.LogWarning($"Планирование группы уровня {group.Level} с {group.Stages.Count} этапами");
+
+                // Сначала собираем все этапы в группе
+                var groupStages = new List<(StageNode Node, Guid BrigadeId, int RequiredEmployees, TimeSpan Duration, bool HasDependencies)>();
+
                 foreach (var stage in group.Stages)
                 {
                     var node = stageGraph.FirstOrDefault(n => n.Id == stage.Id);
                     if (node == null) continue;
 
                     var brigadeId = stageToBrigadeMapping[node.Id];
-                    var currentBrigadeTime = brigadeCurrentTimes[brigadeId];
+                    var duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
+                    var hasDependencies = node.Parents.Any();
 
-                    // Учитываем зависимости
-                    if (node.Parents.Any())
+                    groupStages.Add((node, brigadeId, stage.StandartEmployee, duration, hasDependencies));
+                }
+
+                // Сортируем этапы:
+                // 1. Сначала этапы без зависимостей (они более гибкие)
+                // 2. Затем короткие этапы (лучше заполняют промежутки)
+                var sortedGroupStages = groupStages
+                    .OrderBy(s => s.HasDependencies ? 1 : 0)
+                    .ThenBy(s => s.Duration)
+                    .ToList();
+
+                foreach (var (node, brigadeId, requiredEmployees, duration, hasDependencies) in sortedGroupStages)
+                {
+                    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Определяем время начала поиска
+                    DateTime searchStartTime;
+
+                    if (hasDependencies)
                     {
+                        // Для этапов с зависимостями: после завершения родительских этапов
+                        // НО не раньше времени старта планирования
+                        searchStartTime = planningStartTime;
+
                         var parentEndTimes = node.Parents
                             .Where(parentId => stageCompletionTimes.ContainsKey(parentId))
                             .Select(parentId => stageCompletionTimes[parentId])
@@ -739,49 +774,60 @@ public class CoreService
                         if (parentEndTimes.Any())
                         {
                             var maxParentEndTime = parentEndTimes.Max();
-                            if (maxParentEndTime > currentBrigadeTime)
+                            if (maxParentEndTime > searchStartTime)
                             {
-                                currentBrigadeTime = maxParentEndTime;
+                                searchStartTime = maxParentEndTime;
                             }
                         }
                     }
+                    else
+                    {
+                        // Для этапов без зависимостей: начинаем с времени старта планирования
+                        searchStartTime = planningStartTime;
+                    }
+
+                    // КОРРЕКТИРУЕМ: Приводим время к рабочему графику
+                    searchStartTime = AdjustToWorkHours(searchStartTime);
+
+                    _logger.LogWarning($"Этап {node.Id}: поиск с {searchStartTime:HH:mm}, " +
+                                     $"длительность {duration.TotalMinutes} мин, " +
+                                     $"зависимости: {hasDependencies}");
 
                     // Ищем свободное время для этапа
-                    var duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
                     var plannedTime = await FindAvailableTimeSlotForBrigadeAsync(
-                        currentBrigadeTime,
+                        searchStartTime,
                         duration,
                         brigadeId,
-                        stage.StandartEmployee,
+                        requiredEmployees,
                         _brigadeTimeSlots.GetValueOrDefault(brigadeId, new List<BrigadeTimeSlot>()),
-                        factoryId);
+                        factoryId,
+                        hasDependencies);
 
                     if (!plannedTime.HasValue)
                     {
-                        _logger.LogError($"Не удалось найти время для этапа {stage.Id} на бригаде {brigadeId}");
+                        _logger.LogError($"Не удалось найти время для этапа {node.Id} на бригаде {brigadeId}");
                         return new List<PlannedStage>();
                     }
 
                     var stageEndTime = plannedTime.Value.Add(duration);
 
                     // Получаем тип этапа
-                    var stageTypeId = await GetStageTypeIdAsync(stage.Id);
+                    var stageTypeId = await GetStageTypeIdAsync(node.Id);
 
                     // Создаем запланированный этап
                     var plannedStage = new PlannedStage
                     {
                         ProductId = product.Id,
-                        StageSampleId = stage.Id,
+                        StageSampleId = node.Id,
                         BrigadeId = brigadeId,
                         StartTime = plannedTime.Value,
                         EndTime = stageEndTime,
                         StageTypeId = stageTypeId,
-                        RequiredEmployees = stage.StandartEmployee
+                        RequiredEmployees = requiredEmployees
                     };
 
                     plannedStages.Add(plannedStage);
-                    stageCompletionTimes[stage.Id] = stageEndTime;
-                    brigadeCurrentTimes[brigadeId] = stageEndTime;
+                    stageCompletionTimes[node.Id] = stageEndTime;
 
                     // Обновляем занятые слоты бригады
                     if (!_brigadeTimeSlots.ContainsKey(brigadeId))
@@ -794,17 +840,15 @@ public class CoreService
                         Start = plannedStage.StartTime,
                         End = plannedStage.EndTime,
                         ProductId = product.Id,
-                        StageId = stage.Id,
+                        StageId = node.Id,
                         BrigadeId = brigadeId,
-                        RequiredEmployees = stage.StandartEmployee
+                        RequiredEmployees = requiredEmployees
                     });
-                }
-            }
 
-            // Обновляем время доступности бригад
-            foreach (var brigadeId in brigadeCurrentTimes.Keys)
-            {
-                _brigadeNextAvailableTime[brigadeId] = brigadeCurrentTimes[brigadeId];
+                    _logger.LogWarning($"Запланирован этап {node.Id}: " +
+                        $"{plannedStage.StartTime:dd.MM.yyyy HH:mm} - {plannedStage.EndTime:HH:mm} " +
+                        $"на бригаде {brigadeId}");
+                }
             }
 
             return plannedStages;
@@ -816,19 +860,61 @@ public class CoreService
         }
     }
 
+    private DateTime GetPlanningStartTime()
+    {
+        // Возвращаем текущее время или начало рабочего дня
+        var now = DateTime.Now;
+
+        // Если сейчас выходной, переходим к следующему рабочему дню
+        if (now.DayOfWeek == DayOfWeek.Saturday)
+        {
+            return now.AddDays(2).Date.Add(WORKDAY_START);
+        }
+        else if (now.DayOfWeek == DayOfWeek.Sunday)
+        {
+            return now.AddDays(1).Date.Add(WORKDAY_START);
+        }
+
+        // Если сейчас вне рабочего времени, переходим к следующему рабочему дню
+        if (now.TimeOfDay < WORKDAY_START)
+        {
+            return now.Date.Add(WORKDAY_START);
+        }
+        else if (now.TimeOfDay >= WORKDAY_END)
+        {
+            var nextDay = now.AddDays(1);
+            // Пропускаем выходные
+            if (nextDay.DayOfWeek == DayOfWeek.Saturday)
+            {
+                nextDay = nextDay.AddDays(2);
+            }
+            else if (nextDay.DayOfWeek == DayOfWeek.Sunday)
+            {
+                nextDay = nextDay.AddDays(1);
+            }
+            return nextDay.Date.Add(WORKDAY_START);
+        }
+
+        // Иначе возвращаем текущее время
+        return now;
+    }
+
     private async Task<DateTime?> FindAvailableTimeSlotForBrigadeAsync(
-        DateTime startFrom,
-        TimeSpan duration,
-        Guid brigadeId,
-        int requiredEmployees,
-        List<BrigadeTimeSlot> brigadeTimeSlots,
-        Guid factoryId)
+    DateTime searchStartTime,
+    TimeSpan duration,
+    Guid brigadeId,
+    int requiredEmployees,
+    List<BrigadeTimeSlot> brigadeTimeSlots,
+    Guid factoryId,
+    bool hasDependencies)
     {
         try
         {
-            _logger.LogDebug($"Поиск слота для бригады {brigadeId}: начало с {startFrom}, " +
-                           $"длительность={duration.TotalMinutes} минут, " +
-                           $"сотрудников={requiredEmployees}");
+            _logger.LogWarning($"Поиск слота для бригады {brigadeId}: " +
+                             $"поиск с {searchStartTime:dd.MM.yyyy HH:mm}, " +
+                             $"длительность={duration.TotalMinutes} мин, " +
+                             $"сотрудников={requiredEmployees}, " +
+                             $"зависимости={hasDependencies}");
 
             // Получаем информацию о бригаде
             var brigade = await _brigadeRepository.GetById(brigadeId);
@@ -848,121 +934,128 @@ public class CoreService
                 return null;
             }
 
-            DateTime currentTime = AdjustToWorkHours(startFrom);
+            // КОРРЕКТИРУЕМ: Начинаем поиск с searchStartTime
+            DateTime currentSearchTime = AdjustToWorkHours(searchStartTime);
             int maxDaysToSearch = 30;
             int daysSearched = 0;
+
+            _logger.LogWarning($"Начинаем поиск с {currentSearchTime:dd.MM.yyyy HH:mm}");
 
             while (daysSearched < maxDaysToSearch)
             {
                 // Пропускаем выходные
-                if (currentTime.DayOfWeek == DayOfWeek.Saturday || currentTime.DayOfWeek == DayOfWeek.Sunday)
+                if (currentSearchTime.DayOfWeek == DayOfWeek.Saturday ||
+                    currentSearchTime.DayOfWeek == DayOfWeek.Sunday)
                 {
-                    currentTime = currentTime.Date.AddDays(1).Add(WORKDAY_START);
+                    currentSearchTime = currentSearchTime.Date.AddDays(1).Add(WORKDAY_START);
                     daysSearched++;
+                    _logger.LogWarning($"Пропускаем выходной, переходим к {currentSearchTime:dd.MM.yyyy HH:mm}");
                     continue;
                 }
 
-                // Рабочий день
-                DateTime workDayStart = currentTime.Date.Add(WORKDAY_START);
-                DateTime workDayEnd = currentTime.Date.Add(WORKDAY_END);
+                DateTime workDayStart = currentSearchTime.Date.Add(WORKDAY_START);
+                DateTime workDayEnd = currentSearchTime.Date.Add(WORKDAY_END);
 
-                // Начинаем поиск с currentTime или начала рабочего дня
-                DateTime searchStart = currentTime > workDayStart ? currentTime : workDayStart;
-
-                // Получаем занятые слоты на этот день для этой бригады
+                // Получаем занятые слоты на этот день
                 var dayBusySlots = brigadeTimeSlots
                     .Where(s => s.BrigadeId == brigadeId &&
-                               s.Start.Date == currentTime.Date)
+                               s.Start.Date == currentSearchTime.Date)
                     .OrderBy(s => s.Start)
                     .ToList();
+
+                _logger.LogWarning($"День {currentSearchTime.Date:dd.MM.yyyy}: {dayBusySlots.Count} занятых слотов");
 
                 // Если день полностью свободен
                 if (!dayBusySlots.Any())
                 {
-                    // Проверяем, помещается ли этап в рабочий день
-                    DateTime candidateStart = searchStart;
+                    DateTime candidateStart = currentSearchTime > workDayStart
+                        ? currentSearchTime
+                        : workDayStart;
+
                     DateTime candidateEnd = candidateStart.Add(duration);
 
                     if (candidateEnd.TimeOfDay <= WORKDAY_END)
                     {
-                        // Проверяем доступность сотрудников (все свободны)
+                        _logger.LogWarning($"Найден свободный день: {candidateStart:HH:mm} - {candidateEnd:HH:mm}");
                         return candidateStart;
                     }
                 }
                 else
                 {
-                    // Ищем промежутки между занятыми слотами
-                    DateTime lastEnd = searchStart;
+                    // Строим список всех временных интервалов между занятыми слотами
+                    var timePoints = new List<DateTime> { workDayStart };
 
-                    foreach (var busySlot in dayBusySlots)
+                    // Добавляем все точки из занятых слотов
+                    foreach (var slot in dayBusySlots)
                     {
-                        if (busySlot.End <= lastEnd)
-                            continue;
-
-                        if (busySlot.Start > lastEnd)
-                        {
-                            TimeSpan gap = busySlot.Start - lastEnd;
-
-                            if (gap >= duration)
-                            {
-                                DateTime candidateStart = lastEnd;
-                                DateTime candidateEnd = candidateStart.Add(duration);
-
-                                if (candidateEnd.TimeOfDay <= WORKDAY_END)
-                                {
-                                    // Проверяем, достаточно ли сотрудников в этом промежутке
-                                    // (упрощенная проверка - в реальности нужен более сложный алгоритм)
-                                    if (await CheckBrigadeAvailabilityAsync(brigadeId, candidateStart, duration, factoryId))
-                                    {
-                                        return candidateStart;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Проверяем, сколько сотрудников занято в этот момент
-                        var overlappingSlots = dayBusySlots
-                            .Where(s => s.Start < busySlot.End && s.End > busySlot.Start)
-                            .ToList();
-
-                        int busyEmployees = overlappingSlots.Sum(s => s.RequiredEmployees);
-                        int availableEmployees = totalEmployees - busyEmployees;
-
-                        if (availableEmployees >= requiredEmployees)
-                        {
-                            // Можно выполнять параллельно
-                            DateTime candidateStart = busySlot.Start;
-                            DateTime candidateEnd = candidateStart.Add(duration);
-
-                            if (candidateEnd.TimeOfDay <= WORKDAY_END &&
-                                candidateEnd <= busySlot.End)
-                            {
-                                return candidateStart;
-                            }
-                        }
-
-                        if (busySlot.End > lastEnd)
-                        {
-                            lastEnd = busySlot.End;
-                        }
+                        timePoints.Add(slot.Start);
+                        timePoints.Add(slot.End);
                     }
 
-                    // Проверяем конец дня
-                    if (workDayEnd - lastEnd >= duration)
-                    {
-                        DateTime candidateStart = lastEnd;
-                        DateTime candidateEnd = candidateStart.Add(duration);
+                    timePoints.Add(workDayEnd);
+                    timePoints = timePoints.OrderBy(t => t).Distinct().ToList();
 
-                        if (candidateEnd.TimeOfDay <= WORKDAY_END)
+                    // Ищем подходящий промежуток между точками
+                    for (int i = 0; i < timePoints.Count - 1; i++)
+                    {
+                        DateTime intervalStart = timePoints[i];
+                        DateTime intervalEnd = timePoints[i + 1];
+
+                        // Пропускаем нулевые промежутки
+                        if (intervalEnd - intervalStart <= TimeSpan.Zero) continue;
+
+                        // ВАЖНОЕ ИСПРАВЛЕНИЕ: Для этапов с зависимостями используем только часть промежутка,
+                        // которая начинается после searchStartTime
+                        DateTime actualStart = intervalStart;
+
+                        // Для этапов без зависимостей можно использовать весь промежуток
+                        // Для этапов с зависимостями - только часть после searchStartTime
+                        if (hasDependencies)
                         {
-                            return candidateStart;
+                            if (intervalEnd <= searchStartTime)
+                            {
+                                continue; // Весь промежуток до searchStartTime
+                            }
+
+                            if (intervalStart < searchStartTime)
+                            {
+                                actualStart = searchStartTime;
+                            }
+                        }
+                        else
+                        {
+                            // Для этапов без зависимостей начинаем с начала промежутка
+                            // но не раньше currentSearchTime
+                            if (intervalStart < currentSearchTime)
+                            {
+                                if (intervalEnd <= currentSearchTime)
+                                {
+                                    continue; // Весь промежуток до currentSearchTime
+                                }
+                                actualStart = currentSearchTime;
+                            }
+                        }
+
+                        // Проверяем, достаточно ли места в промежутке
+                        if (actualStart + duration <= intervalEnd)
+                        {
+                            // Проверяем доступность сотрудников
+                            bool hasEnoughEmployees = await CheckEmployeesAvailabilityInIntervalAsync(
+                                brigadeId, actualStart, duration, requiredEmployees, dayBusySlots);
+
+                            if (hasEnoughEmployees)
+                            {
+                                _logger.LogWarning($"Найден подходящий промежуток: {actualStart:HH:mm} - {actualStart.Add(duration):HH:mm}");
+                                return actualStart;
+                            }
                         }
                     }
                 }
 
-                // Переходим к следующему рабочему дню
+                // Переходим к следующему дню
                 daysSearched++;
-                currentTime = currentTime.Date.AddDays(1).Add(WORKDAY_START);
+                currentSearchTime = currentSearchTime.Date.AddDays(1).Add(WORKDAY_START);
+                _logger.LogWarning($"Переходим к следующему дню: {currentSearchTime:dd.MM.yyyy HH:mm}");
             }
 
             _logger.LogWarning($"Не удалось найти свободный слот за {daysSearched} дней для бригады {brigadeId}");
@@ -972,6 +1065,57 @@ public class CoreService
         {
             _logger.LogError(ex, "Ошибка при поиске свободного слота для бригады");
             return null;
+        }
+    }
+
+    private async Task<bool> CheckEmployeesAvailabilityInIntervalAsync(
+    Guid brigadeId,
+    DateTime intervalStart,
+    TimeSpan duration,
+    int requiredEmployees,
+    List<BrigadeTimeSlot> dayBusySlots)
+    {
+        try
+        {
+            // Получаем информацию о бригаде
+            var brigade = await _brigadeRepository.GetById(brigadeId);
+            if (brigade == null) return false;
+
+            var totalEmployees = brigade.CountEmployee;
+            DateTime intervalEnd = intervalStart.Add(duration);
+
+            // Разбиваем интервал на маленькие отрезки для проверки
+            DateTime checkTime = intervalStart;
+            int checkPoints = (int)duration.TotalMinutes; // проверяем каждую минуту
+
+            for (int i = 0; i <= checkPoints; i++)
+            {
+                // Получаем количество занятых сотрудников в этот момент
+                int busyEmployees = 0;
+                foreach (var slot in dayBusySlots)
+                {
+                    if (checkTime >= slot.Start && checkTime < slot.End)
+                    {
+                        busyEmployees += slot.RequiredEmployees;
+                    }
+                }
+
+                int availableEmployees = totalEmployees - busyEmployees;
+
+                if (availableEmployees < requiredEmployees)
+                {
+                    return false; // Не хватает сотрудников
+                }
+
+                checkTime = checkTime.AddMinutes(1);
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Ошибка при проверке доступности сотрудников для бригады {brigadeId}");
+            return false;
         }
     }
 
@@ -1055,10 +1199,14 @@ public class CoreService
     private double CalculateBrigadeTimeScore(DateTime startTime, DateTime endTime, BrigadeEntity brigade)
     {
         // Чем раньше завершение - тем лучше
-        double score = (endTime - DateTime.Now).TotalMinutes * -1;
+        // Теперь считаем относительно времени старта планирования
+        double score = (endTime - _planningStartTime).TotalMinutes * -1;
 
-        // Учитываем загрузку бригады
+        // Учитываем загрузку бригады (чем меньше сотрудников, тем выше приоритет для небольших задач)
         score += (10.0 / brigade.CountEmployee) * 100;
+
+        // Дополнительный бонус за более ранний старт
+        score += (_planningStartTime - startTime).TotalMinutes * 0.5;
 
         return score;
     }
@@ -1231,35 +1379,28 @@ public class CoreService
 
     private DateTime AdjustToWorkHours(DateTime dateTime)
     {
-        // Если это выходные, перемещаем на понедельник
-        if (dateTime.DayOfWeek == DayOfWeek.Saturday)
+        // Если дата уже в рабочее время, возвращаем как есть
+        if (dateTime.TimeOfDay >= WORKDAY_START && dateTime.TimeOfDay < WORKDAY_END)
         {
-            dateTime = dateTime.AddDays(2).Date.Add(WORKDAY_START);
-        }
-        else if (dateTime.DayOfWeek == DayOfWeek.Sunday)
-        {
-            dateTime = dateTime.AddDays(1).Date.Add(WORKDAY_START);
+            return dateTime;
         }
 
-        // Если время вне рабочего дня, перемещаем на начало следующего рабочего дня
-        if (dateTime.TimeOfDay < WORKDAY_START || dateTime.TimeOfDay >= WORKDAY_END)
+        // Если время до начала рабочего дня, устанавливаем на начало рабочего дня
+        if (dateTime.TimeOfDay < WORKDAY_START)
         {
-            var nextDay = dateTime.Date.AddDays(1);
-
-            // Пропускаем выходные
-            if (nextDay.DayOfWeek == DayOfWeek.Saturday)
-            {
-                nextDay = nextDay.AddDays(2);
-            }
-            else if (nextDay.DayOfWeek == DayOfWeek.Sunday)
-            {
-                nextDay = nextDay.AddDays(1);
-            }
-
-            return nextDay.Add(WORKDAY_START);
+            return dateTime.Date.Add(WORKDAY_START);
         }
 
-        return dateTime;
+        // Если время после конца рабочего дня, переходим к следующему рабочему дню
+        var nextDay = dateTime.Date.AddDays(1);
+
+        // Пропускаем выходные
+        while (nextDay.DayOfWeek == DayOfWeek.Saturday || nextDay.DayOfWeek == DayOfWeek.Sunday)
+        {
+            nextDay = nextDay.AddDays(1);
+        }
+
+        return nextDay.Add(WORKDAY_START);
     }
 
     private async Task CreateWorkingPeriodAsync(ProductEntity product, List<PlannedStage> plannedStages)
