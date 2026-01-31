@@ -1,6 +1,6 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Services;
+
+using KssGroupPlanning.Services.EntityServices;
 
 namespace KssGroupPlanning.Endpoints;
 
@@ -19,37 +19,37 @@ public static class WorkingPeriodStageEndpoints
         app.MapDelete("workingPeriodStage/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(NewWorkingPeriodStageService workingPeriodStageService)
+    private static async Task<IResult> GetAll(WorkingPeriodStageService workingPeriodStageService)
     {
         var workingPeriodStages = await workingPeriodStageService.GetAll();
         return Results.Ok(workingPeriodStages);
     }
-    private static async Task<IResult> GetById(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
+    private static async Task<IResult> GetById(Guid id, WorkingPeriodStageService workingPeriodStageService)
     {
         var workingPeriodStage = await workingPeriodStageService.GetById(id);
         return Results.Ok(workingPeriodStage);
     }
-    private static async Task<IResult> GetByWorkingPeriodId(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
+    private static async Task<IResult> GetByWorkingPeriodId(Guid id, WorkingPeriodStageService workingPeriodStageService)
     {
         var workingPeriodStage = await workingPeriodStageService.GetByWorkingPeriodId(id);
         return Results.Ok(workingPeriodStage);
     }
-    private static async Task<IResult> GetByProductSubTypeWorkingPeriodSampleId(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
+    private static async Task<IResult> GetByProductSubTypeWorkingPeriodSampleId(Guid id, WorkingPeriodStageService workingPeriodStageService)
     {
         var workingPeriodStage = await workingPeriodStageService.GetByProductSubTypeWorkingPeriodSampleId(id);
         return Results.Ok(workingPeriodStage);
     }
-    private static async Task<IResult> Create(WorkingPeriodStageEntity request, NewWorkingPeriodStageService workingPeriodStageService)
+    private static async Task<IResult> Create(WorkingPeriodStageEntity request, WorkingPeriodStageService workingPeriodStageService)
     {
         await workingPeriodStageService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, WorkingPeriodStageEntity request, NewWorkingPeriodStageService workingPeriodStageService)
+    private static async Task<IResult> Update(Guid id, WorkingPeriodStageEntity request, WorkingPeriodStageService workingPeriodStageService)
     {
         await workingPeriodStageService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, NewWorkingPeriodStageService workingPeriodStageService)
+    private static async Task<IResult> Delete(Guid id, WorkingPeriodStageService workingPeriodStageService)
     {
         await workingPeriodStageService.Delete(id);
         return Results.Ok();

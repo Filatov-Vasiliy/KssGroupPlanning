@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -18,45 +18,25 @@ public class MaterialStageRepository : IMaterialStageRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<MaterialStage>> GetAll()
+    public async Task<List<MaterialStageEntity>> GetAll()
     {
-        var materialStageEntities = await _dbcontext.MaterialStage.AsNoTracking().OrderBy(c => c.StageName).ToListAsync();
-        List<MaterialStage> materialStages = new List<MaterialStage>();
-        foreach (var materialStageEntity in materialStageEntities)
-        {
-            materialStages.Add(MaterialStage.Create(materialStageEntity.Id, materialStageEntity.StageName, materialStageEntity.GroupMaterialId));
-        }
-        return materialStages;
+        return await _dbcontext.MaterialStage.AsNoTracking().OrderBy(c => c.StageName).ToListAsync();
     }
 
-    public async Task<List<MaterialStage?>> GetByGroupMaterialId(Guid groupMaterialId)
+    public async Task<List<MaterialStageEntity?>> GetByGroupMaterialId(Guid groupMaterialId)
     {
-
-        var materialStageEntities = await _dbcontext.MaterialStage.AsNoTracking().OrderBy(c => c.StageName).Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
-        List<MaterialStage> materialStages = new List<MaterialStage>();
-        foreach (var materialStageEntity in materialStageEntities)
-        {
-            materialStages.Add(MaterialStage.Create(materialStageEntity.Id, materialStageEntity.StageName, materialStageEntity.GroupMaterialId));
-        }
-        return materialStages;
+        return await _dbcontext.MaterialStage.AsNoTracking().OrderBy(c => c.StageName).Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
     }
-    public async Task<MaterialStage?> GetById(Guid id)
+    public async Task<MaterialStageEntity?> GetById(Guid id)
     {
-        var materialStageEntity = await _dbcontext.MaterialStage.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return MaterialStage.Create(materialStageEntity.Id, materialStageEntity.StageName, materialStageEntity.GroupMaterialId);
+        return await _dbcontext.MaterialStage.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task Add(MaterialStage materialStage)
+    public async Task Add(MaterialStageEntity materialStage)
     {
-        var materialStageEntity = new MaterialStageEntity
-        {
-            Id = materialStage.Id,
-            StageName = materialStage.StageName,
-            GroupMaterialId = materialStage.GroupMaterialId,
-        };
-        await _dbcontext.AddAsync(materialStageEntity);
+        await _dbcontext.AddAsync(materialStage);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(MaterialStage materialStage)
+    public async Task Update(MaterialStageEntity materialStage)
     {
         var materialStageEntity = await _dbcontext.MaterialStage.FirstOrDefaultAsync(c => c.Id == materialStage.Id)
             ?? throw new Exception();

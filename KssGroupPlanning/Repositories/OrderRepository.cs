@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,46 +17,28 @@ public class OrderRepository : IOrderRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<Order>> GetAll()
+    public async Task<List<OrderEntity>> GetAll()
     {
-        var orderEntities = await _dbcontext.Order.AsNoTracking().OrderBy(c => c.Number).ToListAsync();
-        List<Order> orders = new List<Order>();
-        foreach (var orderEntity in orderEntities)
-        {
-            orders.Add(Order.Create(orderEntity.Id, orderEntity.Number, orderEntity.Manager, orderEntity.Contragent, orderEntity.PaymentAmount, orderEntity.PaymentCurrent, orderEntity.Status, orderEntity.CreateTime, orderEntity.UpdateTime));
-        }
-        return orders;
+        return await _dbcontext.Order.AsNoTracking().OrderBy(c => c.Number).ToListAsync();
+
     }
 
-    public async Task<Order?> GetById(Guid id)
+    public async Task<OrderEntity?> GetById(Guid id)
     {
 
-        var orderEntity = await _dbcontext.Order.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return Order.Create(orderEntity.Id, orderEntity.Number, orderEntity.Manager, orderEntity.Contragent, orderEntity.PaymentAmount,orderEntity.PaymentCurrent,orderEntity.Status,orderEntity.CreateTime,orderEntity.UpdateTime);
+        return await _dbcontext.Order.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<Order?> GetByNumber(string number)
+    public async Task<OrderEntity?> GetByNumber(string number)
     {
 
-        var orderEntity = await _dbcontext.Order.AsNoTracking().FirstOrDefaultAsync(c => c.Number == number);
-        return Order.Create(orderEntity.Id, orderEntity.Number, orderEntity.Manager, orderEntity.Contragent, orderEntity.PaymentAmount, orderEntity.PaymentCurrent, orderEntity.Status, orderEntity.CreateTime, orderEntity.UpdateTime);
+        return await _dbcontext.Order.AsNoTracking().FirstOrDefaultAsync(c => c.Number == number);
     }
-    public async Task Add(Order order)
+    public async Task Add(OrderEntity order)
     {
-        var orderEntity = new OrderEntity
-        {
-            Id = order.Id,
-            Number = order.Number,
-            Contragent = order.Contragent,
-            PaymentAmount = order.PaymentAmount,
-            PaymentCurrent = order.PaymentCurrent,
-            Status = order.Status,
-            CreateTime = order.CreateTime,
-            UpdateTime = order.UpdateTime
-        };
-        await _dbcontext.AddAsync(orderEntity);
+        await _dbcontext.AddAsync(order);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(Order order)
+    public async Task Update(OrderEntity order)
     {
         var orderEntity = await _dbcontext.Order.FirstOrDefaultAsync(c => c.Id == order.Id)
             ?? throw new Exception();

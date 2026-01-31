@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,55 +18,30 @@ public class WorkingPeriodRelationRepository : IWorkingPeriodRelationRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<WorkingPeriodRelation>> GetAll()
+    public async Task<List<WorkingPeriodRelationEntity>> GetAll()
     {
-        var workingPeriodRelationEntities = await _dbcontext.WorkingPeriodRelation.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
-        List<WorkingPeriodRelation> workingPeriodRelation = new List<WorkingPeriodRelation>();
-        foreach (var workingPeriodRelationEntity in workingPeriodRelationEntities)
-        {
-           workingPeriodRelation.Add(WorkingPeriodRelation.Create(workingPeriodRelationEntity.Id, workingPeriodRelationEntity.ParentProductSubTypeWorkingPeriodSampleId, workingPeriodRelationEntity.ChildProductSubTypeWorkingPeriodSampleId));
-        }
-        return workingPeriodRelation;
+        return await _dbcontext.WorkingPeriodRelation.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
     }
 
-    public async Task<WorkingPeriodRelation?> GetById(Guid id)
+    public async Task<WorkingPeriodRelationEntity?> GetById(Guid id)
     {
 
-        var workingPeriodRelationEntity = await _dbcontext.WorkingPeriodRelation.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return WorkingPeriodRelation.Create(workingPeriodRelationEntity.Id, workingPeriodRelationEntity.ParentProductSubTypeWorkingPeriodSampleId, workingPeriodRelationEntity.ChildProductSubTypeWorkingPeriodSampleId);
+        return await _dbcontext.WorkingPeriodRelation.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<List<WorkingPeriodRelation?>> GetByParentProductSubTypeWorkingPeriodSampleId(Guid parentProductSubTypeWorkingPeriodSampleId)
+    public async Task<List<WorkingPeriodRelationEntity?>> GetByParentProductSubTypeWorkingPeriodSampleId(Guid parentProductSubTypeWorkingPeriodSampleId)
     {
-        var workingPeriodRelationEntities = await _dbcontext.WorkingPeriodRelation.AsNoTracking().Where(c => c.ParentProductSubTypeWorkingPeriodSampleId == parentProductSubTypeWorkingPeriodSampleId).ToListAsync();
-        List<WorkingPeriodRelation> workingPeriodsRelations = new List<WorkingPeriodRelation>();
-        foreach (var workingPeriodRelationEntity in workingPeriodRelationEntities)
-        {
-            workingPeriodsRelations.Add(WorkingPeriodRelation.Create(workingPeriodRelationEntity.Id, workingPeriodRelationEntity.ParentProductSubTypeWorkingPeriodSampleId, workingPeriodRelationEntity.ChildProductSubTypeWorkingPeriodSampleId));
-        }
-        return workingPeriodsRelations;
+        return await _dbcontext.WorkingPeriodRelation.AsNoTracking().Where(c => c.ParentProductSubTypeWorkingPeriodSampleId == parentProductSubTypeWorkingPeriodSampleId).ToListAsync();
     }
-    public async Task<List<WorkingPeriodRelation?>> GetByChildProductSubTypeWorkingPeriodSampleId(Guid childProductSubTypeWorkingPeriodSampleId)
+    public async Task<List<WorkingPeriodRelationEntity?>> GetByChildProductSubTypeWorkingPeriodSampleId(Guid childProductSubTypeWorkingPeriodSampleId)
     {
-        var workingPeriodsRelationsEntities = await _dbcontext.WorkingPeriodRelation.AsNoTracking().Where(c => c.ChildProductSubTypeWorkingPeriodSampleId == childProductSubTypeWorkingPeriodSampleId).ToListAsync();
-        List<WorkingPeriodRelation> workingPeriodsRelations = new List<WorkingPeriodRelation>();
-        foreach (var workingPeriodsRelationsEntity in workingPeriodsRelationsEntities)
-        {
-            workingPeriodsRelations.Add(WorkingPeriodRelation.Create(workingPeriodsRelationsEntity.Id, workingPeriodsRelationsEntity.ParentProductSubTypeWorkingPeriodSampleId, workingPeriodsRelationsEntity.ChildProductSubTypeWorkingPeriodSampleId));
-        }
-        return workingPeriodsRelations;
+        return await _dbcontext.WorkingPeriodRelation.AsNoTracking().Where(c => c.ChildProductSubTypeWorkingPeriodSampleId == childProductSubTypeWorkingPeriodSampleId).ToListAsync();
     }
-    public async Task Add(WorkingPeriodRelation workingPeriodRelation)
+    public async Task Add(WorkingPeriodRelationEntity workingPeriodRelation)
     {
-        var workingPeriodRelationEntity = new WorkingPeriodRelationEntity
-        {
-            Id = workingPeriodRelation.Id,
-            ParentProductSubTypeWorkingPeriodSampleId = workingPeriodRelation.ParentProductSubTypeWorkingPeriodSampleId,
-            ChildProductSubTypeWorkingPeriodSampleId = workingPeriodRelation.ChildProductSubTypeWorkingPeriodSampleId,
-        };
-        await _dbcontext.AddAsync(workingPeriodRelationEntity);
+        await _dbcontext.AddAsync(workingPeriodRelation);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(WorkingPeriodRelation workingPeriodRelation)
+    public async Task Update(WorkingPeriodRelationEntity workingPeriodRelation)
     {
         var workingPeriodRelationEntity = await _dbcontext.WorkingPeriodRelation.FirstOrDefaultAsync(c => c.Id == workingPeriodRelation.Id)
             ?? throw new Exception();

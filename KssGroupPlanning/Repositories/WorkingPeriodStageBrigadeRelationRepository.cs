@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,55 +18,30 @@ public class WorkingPeriodStageBrigadeRelationRepository : IWorkingPeriodStageBr
     {
         _dbcontext = context;
     }
-    public async Task<List<WorkingPeriodStageBrigadeRelation>> GetAll()
+    public async Task<List<WorkingPeriodStageBrigadeRelationEntity>> GetAll()
     {
-        var workingPeriodStageBrigadeRelationEntities = await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
-        List<WorkingPeriodStageBrigadeRelation> workingPeriodStageBrigadeRelations = new List<WorkingPeriodStageBrigadeRelation>();
-        foreach (var workingPeriodStageBrigadeRelationEntity in workingPeriodStageBrigadeRelationEntities)
-        {
-            workingPeriodStageBrigadeRelations.Add(WorkingPeriodStageBrigadeRelation.Create(workingPeriodStageBrigadeRelationEntity.Id, workingPeriodStageBrigadeRelationEntity.WorkingPeriodStageId, workingPeriodStageBrigadeRelationEntity.BrigadeId));
-        }
-        return workingPeriodStageBrigadeRelations;
+        return await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
     }
 
-    public async Task<WorkingPeriodStageBrigadeRelation?> GetById(Guid id)
+    public async Task<WorkingPeriodStageBrigadeRelationEntity?> GetById(Guid id)
     {
 
-        var workingPeriodStageBrigadeRelationEntity = await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return WorkingPeriodStageBrigadeRelation.Create(workingPeriodStageBrigadeRelationEntity.Id, workingPeriodStageBrigadeRelationEntity.WorkingPeriodStageId, workingPeriodStageBrigadeRelationEntity.BrigadeId);
+        return await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<List<WorkingPeriodStageBrigadeRelation?>> GetByWorkingPeriodStageId(Guid workingPeriodStageId)
+    public async Task<List<WorkingPeriodStageBrigadeRelationEntity?>> GetByWorkingPeriodStageId(Guid workingPeriodStageId)
     {
-        var workingPeriodStageBrigadeRelationEntities = await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().Where(c => c.WorkingPeriodStageId == workingPeriodStageId).ToListAsync();
-        List<WorkingPeriodStageBrigadeRelation> workingPeriodStageBrigadeRelations = new List<WorkingPeriodStageBrigadeRelation>();
-        foreach (var workingPeriodStageBrigadeRelationEntity in workingPeriodStageBrigadeRelationEntities)
-        {
-            workingPeriodStageBrigadeRelations.Add(WorkingPeriodStageBrigadeRelation.Create(workingPeriodStageBrigadeRelationEntity.Id, workingPeriodStageBrigadeRelationEntity.WorkingPeriodStageId, workingPeriodStageBrigadeRelationEntity.BrigadeId));
-        }
-        return workingPeriodStageBrigadeRelations;
+        return await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().Where(c => c.WorkingPeriodStageId == workingPeriodStageId).ToListAsync();
     }
-    public async Task<List<WorkingPeriodStageBrigadeRelation?>> GetByBrigadeId(Guid brigadeId)
+    public async Task<List<WorkingPeriodStageBrigadeRelationEntity?>> GetByBrigadeId(Guid brigadeId)
     {
-        var workingPeriodStageBrigadeRelationEntities = await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().Where(c => c.BrigadeId == brigadeId).ToListAsync();
-        List<WorkingPeriodStageBrigadeRelation> workingPeriodStageBrigadeRelations = new List<WorkingPeriodStageBrigadeRelation>();
-        foreach (var workingPeriodStageBrigadeRelationEntity in workingPeriodStageBrigadeRelationEntities)
-        {
-            workingPeriodStageBrigadeRelations.Add(WorkingPeriodStageBrigadeRelation.Create(workingPeriodStageBrigadeRelationEntity.Id, workingPeriodStageBrigadeRelationEntity.WorkingPeriodStageId, workingPeriodStageBrigadeRelationEntity.BrigadeId));
-        }
-        return workingPeriodStageBrigadeRelations;
+        return await _dbcontext.WorkingPeriodStageBrigadeRelation.AsNoTracking().Where(c => c.BrigadeId == brigadeId).ToListAsync();
     }
-    public async Task Add(WorkingPeriodStageBrigadeRelation workingPeriodStageBrigadeRelation)
+    public async Task Add(WorkingPeriodStageBrigadeRelationEntity workingPeriodStageBrigadeRelation)
     {
-        var workingPeriodStageBrigadeRelationEntity = new WorkingPeriodStageBrigadeRelationEntity
-        {
-            Id = workingPeriodStageBrigadeRelation.Id,
-            WorkingPeriodStageId = workingPeriodStageBrigadeRelation.WorkingPeriodStageId,
-            BrigadeId = workingPeriodStageBrigadeRelation.BrigadeId,
-        };
-        await _dbcontext.AddAsync(workingPeriodStageBrigadeRelationEntity);
+        await _dbcontext.AddAsync(workingPeriodStageBrigadeRelation);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(WorkingPeriodStageBrigadeRelation workingPeriodStageBrigadeRelation)
+    public async Task Update(WorkingPeriodStageBrigadeRelationEntity workingPeriodStageBrigadeRelation)
     {
         var WorkingPeriodStageMaterialStageEntity = await _dbcontext.WorkingPeriodStageBrigadeRelation.FirstOrDefaultAsync(c => c.Id == workingPeriodStageBrigadeRelation.Id)
             ?? throw new Exception();

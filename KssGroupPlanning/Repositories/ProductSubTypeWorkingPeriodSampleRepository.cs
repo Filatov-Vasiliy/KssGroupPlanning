@@ -1,7 +1,8 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KssGroupPlanning.Repositories;
@@ -14,46 +15,25 @@ public class ProductSubTypeWorkingPeriodSampleRepository : IProductSubTypeWorkin
     {
         _dbcontext = context;
     }
-    public async Task<List<ProductSubTypeWorkingPeriodSample>> GetAll()
+    public async Task<List<ProductSubTypeWorkingPeriodSampleEntity>> GetAll()
     {
-        var productSubTypeWorkingPeriodSampleEntities = await _dbcontext.ProductSubTypeWorkingPeriodSample.AsNoTracking().ToListAsync();
-        List<ProductSubTypeWorkingPeriodSample> productSubTypeWorkingPeriodSamples = new List<ProductSubTypeWorkingPeriodSample>();
-        foreach (var productSubTypeWorkingPeriodSampleEntity in productSubTypeWorkingPeriodSampleEntities)
-        {
-            productSubTypeWorkingPeriodSamples.Add(ProductSubTypeWorkingPeriodSample.Create(productSubTypeWorkingPeriodSampleEntity.Id, productSubTypeWorkingPeriodSampleEntity.ProductSubTypeId, productSubTypeWorkingPeriodSampleEntity.RowNumber, productSubTypeWorkingPeriodSampleEntity.WorkingPeriodName, productSubTypeWorkingPeriodSampleEntity.StandartTime, productSubTypeWorkingPeriodSampleEntity.StandartEmployee));
-        }
-        return productSubTypeWorkingPeriodSamples;
+        return await _dbcontext.ProductSubTypeWorkingPeriodSample.AsNoTracking().ToListAsync();
     }
 
-    public async Task<ProductSubTypeWorkingPeriodSample?> GetById(Guid id)
+    public async Task<ProductSubTypeWorkingPeriodSampleEntity?> GetById(Guid id)
     {
-        var productSubTypeWorkingPeriodSampleEntity = await _dbcontext.ProductSubTypeWorkingPeriodSample.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
-        return ProductSubTypeWorkingPeriodSample.Create(productSubTypeWorkingPeriodSampleEntity.Id, productSubTypeWorkingPeriodSampleEntity.ProductSubTypeId, productSubTypeWorkingPeriodSampleEntity.RowNumber, productSubTypeWorkingPeriodSampleEntity.WorkingPeriodName, productSubTypeWorkingPeriodSampleEntity.StandartTime, productSubTypeWorkingPeriodSampleEntity.StandartEmployee);
+        return await _dbcontext.ProductSubTypeWorkingPeriodSample.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
     }
-    public async Task<List<ProductSubTypeWorkingPeriodSample?>> GetByProductSubTypeId(Guid productSubTypeId)
+    public async Task<List<ProductSubTypeWorkingPeriodSampleEntity?>> GetByProductSubTypeId(Guid productSubTypeId)
     {
-        var productSubTypeWorkingPeriodsSampleEntities = await _dbcontext.ProductSubTypeWorkingPeriodSample.AsNoTracking().Where(p => p.ProductSubTypeId == productSubTypeId).ToListAsync();
-        List<ProductSubTypeWorkingPeriodSample> productSubTypeWorkingPeriodSamples = new List<ProductSubTypeWorkingPeriodSample>();
-        foreach (var productSubTypeWorkingPeriodSampleEntity in productSubTypeWorkingPeriodsSampleEntities)
-        {
-            productSubTypeWorkingPeriodSamples.Add(ProductSubTypeWorkingPeriodSample.Create(productSubTypeWorkingPeriodSampleEntity.Id, productSubTypeWorkingPeriodSampleEntity.ProductSubTypeId, productSubTypeWorkingPeriodSampleEntity.RowNumber, productSubTypeWorkingPeriodSampleEntity.WorkingPeriodName, productSubTypeWorkingPeriodSampleEntity.StandartTime, productSubTypeWorkingPeriodSampleEntity.StandartEmployee));
-        }
-        return productSubTypeWorkingPeriodSamples;
+        return await _dbcontext.ProductSubTypeWorkingPeriodSample.AsNoTracking().Where(p => p.ProductSubTypeId == productSubTypeId).ToListAsync();
     }
-    public async Task Add(ProductSubTypeWorkingPeriodSample productSubTypeWorkingPeriodSample)
+    public async Task Add(ProductSubTypeWorkingPeriodSampleEntity productSubTypeWorkingPeriodSample)
     {
-        var productSubTypeWorkingPeriodSampleEntity = new ProductSubTypeWorkingPeriodSampleEntity
-        {
-            Id = productSubTypeWorkingPeriodSample.Id,
-            RowNumber = productSubTypeWorkingPeriodSample.RowNumber,
-            ProductSubTypeId = productSubTypeWorkingPeriodSample.ProductSubTypeId,
-            StandartTime = productSubTypeWorkingPeriodSample.StandartTime,
-            WorkingPeriodName = productSubTypeWorkingPeriodSample.WorkingPeriodName
-        };
-        await _dbcontext.AddAsync(productSubTypeWorkingPeriodSampleEntity);
+        await _dbcontext.AddAsync(productSubTypeWorkingPeriodSample);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(ProductSubTypeWorkingPeriodSample productSubTypeWorkingPeriodSample)
+    public async Task Update(ProductSubTypeWorkingPeriodSampleEntity productSubTypeWorkingPeriodSample)
     {
         var productSubTypeWorkingPeriodSampleEntity = await _dbcontext.ProductSubTypeWorkingPeriodSample.FirstOrDefaultAsync(p => p.Id == productSubTypeWorkingPeriodSample.Id)
             ?? throw new Exception();

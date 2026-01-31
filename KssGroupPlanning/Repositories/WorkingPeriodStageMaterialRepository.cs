@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,56 +18,30 @@ public class WorkingPeriodStageMaterialRepository : IWorkingPeriodStageMaterialR
     {
         _dbcontext = context;
     }
-    public async Task<List<WorkingPeriodStageMaterial>> GetAll()
+    public async Task<List<WorkingPeriodStageMaterialEntity>> GetAll()
     {
-        var workingPeriodStageMaterialEntities = await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
-        List<WorkingPeriodStageMaterial> workingPeriodStageMaterials = new List<WorkingPeriodStageMaterial>();
-        foreach (var workingPeriodStageMaterialEntity in workingPeriodStageMaterialEntities)
-        {
-            workingPeriodStageMaterials.Add(WorkingPeriodStageMaterial.Create(workingPeriodStageMaterialEntity.Id, workingPeriodStageMaterialEntity.WorkingPeriodStageId, workingPeriodStageMaterialEntity.GroupMaterialId, workingPeriodStageMaterialEntity.DateDelivery));
-        }
-        return workingPeriodStageMaterials;
+        return await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
     }
 
-    public async Task<WorkingPeriodStageMaterial?> GetById(Guid id)
+    public async Task<WorkingPeriodStageMaterialEntity?> GetById(Guid id)
     {
 
-        var workingPeriodStageMaterialEntity = await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return WorkingPeriodStageMaterial.Create(workingPeriodStageMaterialEntity.Id, workingPeriodStageMaterialEntity.WorkingPeriodStageId, workingPeriodStageMaterialEntity.GroupMaterialId, workingPeriodStageMaterialEntity.DateDelivery);
+        return await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<List<WorkingPeriodStageMaterial?>> GetByGroupMaterialId(Guid groupMaterialId)
+    public async Task<List<WorkingPeriodStageMaterialEntity?>> GetByGroupMaterialId(Guid groupMaterialId)
     {
-        var workingPeriodStageMaterialEntities = await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
-        List<WorkingPeriodStageMaterial> workingPeriodStageMaterials = new List<WorkingPeriodStageMaterial>();
-        foreach (var workingPeriodStageMaterialEntity in workingPeriodStageMaterialEntities)
-        {
-            workingPeriodStageMaterials.Add(WorkingPeriodStageMaterial.Create(workingPeriodStageMaterialEntity.Id, workingPeriodStageMaterialEntity.WorkingPeriodStageId, workingPeriodStageMaterialEntity.GroupMaterialId, workingPeriodStageMaterialEntity.DateDelivery));
-        }
-        return workingPeriodStageMaterials;
+        return await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
     }
-    public async Task<List<WorkingPeriodStageMaterial?>> GetByWorkingPeriodStageId(Guid workingPeriodStageId)
+    public async Task<List<WorkingPeriodStageMaterialEntity?>> GetByWorkingPeriodStageId(Guid workingPeriodStageId)
     {
-        var workingPeriodStageMaterialEntities = await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().Where(c => c.WorkingPeriodStageId == workingPeriodStageId).ToListAsync();
-        List<WorkingPeriodStageMaterial> workingPeriodStageMaterials = new List<WorkingPeriodStageMaterial>();
-        foreach (var workingPeriodStageMaterialEntity in workingPeriodStageMaterialEntities)
-        {
-            workingPeriodStageMaterials.Add(WorkingPeriodStageMaterial.Create(workingPeriodStageMaterialEntity.Id, workingPeriodStageMaterialEntity.WorkingPeriodStageId, workingPeriodStageMaterialEntity.GroupMaterialId, workingPeriodStageMaterialEntity.DateDelivery));
-        }
-        return workingPeriodStageMaterials;
+        return await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().Where(c => c.WorkingPeriodStageId == workingPeriodStageId).ToListAsync();
     }
-    public async Task Add(WorkingPeriodStageMaterial workingPeriodStageMaterial)
+    public async Task Add(WorkingPeriodStageMaterialEntity workingPeriodStageMaterial)
     {
-        var workingPeriodStageMaterialEntity = new WorkingPeriodStageMaterialEntity
-        {
-            Id = workingPeriodStageMaterial.Id,
-            WorkingPeriodStageId = workingPeriodStageMaterial.WorkingPeriodStageId,
-            GroupMaterialId = workingPeriodStageMaterial.GroupMaterialId,
-            DateDelivery = workingPeriodStageMaterial.DateDelivery,
-        };
-        await _dbcontext.AddAsync(workingPeriodStageMaterialEntity);
+        await _dbcontext.AddAsync(workingPeriodStageMaterial);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(WorkingPeriodStageMaterial workingPeriodStageMaterial)
+    public async Task Update(WorkingPeriodStageMaterialEntity workingPeriodStageMaterial)
     {
         var workingPeriodStageMaterialEntity = await _dbcontext.WorkingPeriodStageMaterial.FirstOrDefaultAsync(c => c.Id == workingPeriodStageMaterial.Id)
             ?? throw new Exception();

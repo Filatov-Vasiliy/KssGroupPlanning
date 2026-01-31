@@ -1,7 +1,8 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KssGroupPlanning.Repositories;
@@ -14,47 +15,40 @@ public class ProductRepository : IProductRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<Product>> GetAll()
+    public async Task<List<ProductEntity>> GetAll()
     {
-        var productEntities = await _dbcontext.Product.AsNoTracking().OrderBy(f => f.Number).ToListAsync();
-        List<Product> products = new List<Product>();
-        foreach (var productEntity in productEntities)
-        {
-            products.Add(Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.ParentProductId, productEntity.Status, productEntity.StartDate, productEntity.EndDate, productEntity.CreateTime, productEntity.UpdateTime));
-        }
-        return products;
+        return await _dbcontext.Product.AsNoTracking().OrderBy(f => f.Number).ToListAsync();
     }
 
-    public async Task<Product?> GetById(Guid id)
+    public async Task<ProductEntity?> GetById(Guid id)
     {
-        var productEntity = await _dbcontext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
-        return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId, productEntity.ParentProductId, productEntity.Status, productEntity.StartDate, productEntity.EndDate, productEntity.CreateTime, productEntity.UpdateTime);
+        return await _dbcontext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
     }
-    public async Task<Product?> GetByNumber(string number)
+    public async Task<ProductEntity?> GetByNumber(string number)
     {
-        var productEntity = await _dbcontext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Number == number);
-        return Product.Create(productEntity.Id, productEntity.Number, productEntity.ProductSubTypeId, productEntity.FactoryId, productEntity.OrderId,productEntity.ParentProductId, productEntity.Status,productEntity.StartDate, productEntity.EndDate, productEntity.CreateTime, productEntity.UpdateTime);
+        return await _dbcontext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Number == number);
     }
-    public async Task Add(Product product)
+    public async Task<List<ProductEntity?>> GetByOrderId(Guid orderId)
     {
-        var productEntity = new ProductEntity
-        {
-            Id = product.Id,
-            Number = product.Number,
-            ProductSubTypeId = product.ProductSubTypeId,
-            FactoryId = product.FactoryId,
-            OrderId = product.OrderId,
-            ParentProductId = product.ParentProductId,
-            Status = product.Status,
-            StartDate  = product.StartDate,
-            EndDate = product.EndDate,
-            CreateTime = product.CreateTime,
-            UpdateTime = product.UpdateTime
-        };
-        await _dbcontext.AddAsync(productEntity);
+
+        return await _dbcontext.Product.AsNoTracking().Where(c => c.OrderId == orderId).ToListAsync();
+    }
+    public async Task<List<ProductEntity?>> GetByProductSubTypeId(Guid productSubTypeId)
+    {
+
+        return await _dbcontext.Product.AsNoTracking().Where(c => c.ProductSubTypeId == productSubTypeId).ToListAsync();
+    }
+    public async Task<List<ProductEntity?>> GetByFactoryId(Guid factoryId)
+    {
+
+        return await _dbcontext.Product.AsNoTracking().Where(c => c.FactoryId == factoryId).ToListAsync();
+    }
+    public async Task Add(ProductEntity product)
+    {
+        await _dbcontext.AddAsync(product);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(Product product)
+    public async Task Update(ProductEntity product)
     {
         var productEntity = await _dbcontext.Product.FirstOrDefaultAsync(p => p.Id == product.Id)
             ?? throw new Exception();

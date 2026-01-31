@@ -1,6 +1,6 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Services;
+
+using KssGroupPlanning.Services.EntityServices;
 
 namespace KssGroupPlanning.Endpoints;
 
@@ -19,37 +19,37 @@ public static class WorkingPeriodEndpoints
         app.MapDelete("workingPeriod/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(NewWorkingPeriodService workingPeriodService)
+    private static async Task<IResult> GetAll(WorkingPeriodService workingPeriodService)
     {
         var workingPeriods = await workingPeriodService.GetAll();
         return Results.Ok(workingPeriods);
     }
-    private static async Task<IResult> GetById(Guid id, NewWorkingPeriodService workingPeriodService)
+    private static async Task<IResult> GetById(Guid id, WorkingPeriodService workingPeriodService)
     {
         var workingPeriod = await workingPeriodService.GetById(id);
         return Results.Ok(workingPeriod);
     }
-    private static async Task<IResult> GetByName(string name, NewWorkingPeriodService workingPeriodService)
+    private static async Task<IResult> GetByName(string name, WorkingPeriodService workingPeriodService)
     {
         var workingPeriod = await workingPeriodService.GetByName(name);
         return Results.Ok(workingPeriod);
     }
-    private static async Task<IResult> GetByProductId(Guid id, NewWorkingPeriodService workingPeriodService)
+    private static async Task<IResult> GetByProductId(Guid id, WorkingPeriodService workingPeriodService)
     {
         var workingPeriod = await workingPeriodService.GetByProductId(id);
         return Results.Ok(workingPeriod);
     }
-    private static async Task<IResult> Create(WorkingPeriodEntity request, NewWorkingPeriodService workingPeriodService)
+    private static async Task<IResult> Create(WorkingPeriodEntity request, WorkingPeriodService workingPeriodService)
     {
         await workingPeriodService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, WorkingPeriodEntity request, NewWorkingPeriodService workingPeriodService)
+    private static async Task<IResult> Update(Guid id, WorkingPeriodEntity request, WorkingPeriodService workingPeriodService)
     {
         await workingPeriodService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, NewWorkingPeriodService workingPeriodService)
+    private static async Task<IResult> Delete(Guid id, WorkingPeriodService workingPeriodService)
     {
         await workingPeriodService.Delete(id);
         return Results.Ok();

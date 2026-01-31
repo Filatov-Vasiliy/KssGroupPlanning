@@ -1,0 +1,17 @@
+﻿using KssGroupPlanning.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace KssGroupPlanning.Interfaces.EntityInterfaces;
+
+public interface IProductRepository
+{
+    Task<List<ProductEntity>> GetAll();
+    Task<ProductEntity?> GetById(Guid id);
+    Task<ProductEntity?> GetByNumber(string number);
+    Task<List<ProductEntity?>> GetByOrderId(Guid orderId);
+    Task<List<ProductEntity?>> GetByProductSubTypeId(Guid productSubTypeId);
+    Task<List<ProductEntity?>> GetByFactoryId(Guid factoryId);
+    Task Add(ProductEntity product);
+    Task Update(ProductEntity product);
+    Task Delete(Guid id);
+}

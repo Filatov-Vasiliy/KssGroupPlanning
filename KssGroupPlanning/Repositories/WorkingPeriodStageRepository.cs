@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,69 +18,30 @@ public class WorkingPeriodStageRepository : IWorkingPeriodStageRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<WorkingPeriodStage>> GetAll()
+    public async Task<List<WorkingPeriodStageEntity>> GetAll()
     {
-        var workingPeriodStageEntities = await _dbcontext.WorkingPeriodStage.AsNoTracking().OrderBy(c => c.DateFrom).ToListAsync();
-        List<WorkingPeriodStage> workingPeriodStages = new List<WorkingPeriodStage>();
-        foreach (var workingPeriodStageEntity in workingPeriodStageEntities)
-        {
-            workingPeriodStages.Add(WorkingPeriodStage.Create(workingPeriodStageEntity.Id, workingPeriodStageEntity.WorkingPeriodId, workingPeriodStageEntity.DateFrom, workingPeriodStageEntity.DateTo,
-                workingPeriodStageEntity.Status, workingPeriodStageEntity.Recycling,workingPeriodStageEntity.ProductSubTypeWorkingPeriodSampleId,
-                workingPeriodStageEntity.CreateTime, workingPeriodStageEntity.UpdateTime));
-        }
-        return workingPeriodStages;
+        return await _dbcontext.WorkingPeriodStage.AsNoTracking().OrderBy(c => c.DateFrom).ToListAsync();
     }
 
-    public async Task<WorkingPeriodStage?> GetById(Guid id)
+    public async Task<WorkingPeriodStageEntity?> GetById(Guid id)
     {
 
-        var workingPeriodStageEntity = await _dbcontext.WorkingPeriodStage.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return WorkingPeriodStage.Create(workingPeriodStageEntity.Id, workingPeriodStageEntity.WorkingPeriodId, workingPeriodStageEntity.DateFrom, workingPeriodStageEntity.DateTo,
-                workingPeriodStageEntity.Status, workingPeriodStageEntity.Recycling, workingPeriodStageEntity.ProductSubTypeWorkingPeriodSampleId,
-                workingPeriodStageEntity.CreateTime, workingPeriodStageEntity.UpdateTime);
+        return await _dbcontext.WorkingPeriodStage.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<List<WorkingPeriodStage?>> GetByProductSubTypeWorkingPeriodSampleId(Guid productSubTypeWorkingPeriodsSampleId)
+    public async Task<List<WorkingPeriodStageEntity?>> GetByProductSubTypeWorkingPeriodSampleId(Guid productSubTypeWorkingPeriodsSampleId)
     {
-        var workingPeriodStageEntities = await _dbcontext.WorkingPeriodStage.AsNoTracking().OrderBy(c => c.DateFrom).Where(c => c.ProductSubTypeWorkingPeriodSampleId == productSubTypeWorkingPeriodsSampleId).ToListAsync();
-        List<WorkingPeriodStage> workingPeriodStages = new List<WorkingPeriodStage>();
-        foreach (var workingPeriodStageEntity in workingPeriodStageEntities)
-        {
-            workingPeriodStages.Add(WorkingPeriodStage.Create(workingPeriodStageEntity.Id, workingPeriodStageEntity.WorkingPeriodId, workingPeriodStageEntity.DateFrom, workingPeriodStageEntity.DateTo,
-                workingPeriodStageEntity.Status, workingPeriodStageEntity.Recycling, workingPeriodStageEntity.ProductSubTypeWorkingPeriodSampleId,
-                workingPeriodStageEntity.CreateTime, workingPeriodStageEntity.UpdateTime));
-        }
-        return workingPeriodStages;
+        return await _dbcontext.WorkingPeriodStage.AsNoTracking().OrderBy(c => c.DateFrom).Where(c => c.ProductSubTypeWorkingPeriodSampleId == productSubTypeWorkingPeriodsSampleId).ToListAsync();
     }
-    public async Task<List<WorkingPeriodStage?>> GetByWorkingPeriodId(Guid workingPeriodId)
+    public async Task<List<WorkingPeriodStageEntity?>> GetByWorkingPeriodId(Guid workingPeriodId)
     {
-        var workingPeriodStageEntities = await _dbcontext.WorkingPeriodStage.AsNoTracking().OrderBy(c => c.DateFrom).Where(c => c.WorkingPeriodId == workingPeriodId).ToListAsync();
-        List<WorkingPeriodStage> workingPeriodStages = new List<WorkingPeriodStage>();
-        foreach (var workingPeriodStageEntity in workingPeriodStageEntities)
-        {
-            workingPeriodStages.Add(WorkingPeriodStage.Create(workingPeriodStageEntity.Id, workingPeriodStageEntity.WorkingPeriodId, workingPeriodStageEntity.DateFrom, workingPeriodStageEntity.DateTo,
-                workingPeriodStageEntity.Status, workingPeriodStageEntity.Recycling, workingPeriodStageEntity.ProductSubTypeWorkingPeriodSampleId,
-                workingPeriodStageEntity.CreateTime, workingPeriodStageEntity.UpdateTime));
-        }
-        return workingPeriodStages;
+        return await _dbcontext.WorkingPeriodStage.AsNoTracking().OrderBy(c => c.DateFrom).Where(c => c.WorkingPeriodId == workingPeriodId).ToListAsync();
     }
-    public async Task Add(WorkingPeriodStage workingPeriodStage)
+    public async Task Add(WorkingPeriodStageEntity workingPeriodStage)
     {
-        var workingPeriodStageEntity = new WorkingPeriodStageEntity
-        {
-            Id = workingPeriodStage.Id,
-            WorkingPeriodId = workingPeriodStage.WorkingPeriodId,
-            DateFrom = workingPeriodStage.DateFrom,
-            DateTo = workingPeriodStage.DateTo,
-            Status = workingPeriodStage.Status,
-            Recycling = workingPeriodStage.Recycling,
-            ProductSubTypeWorkingPeriodSampleId = workingPeriodStage.ProductSubTypeWorkingPeriodSampleId,
-            CreateTime = workingPeriodStage.CreateTime,
-            UpdateTime = workingPeriodStage.UpdateTime
-        };
-        await _dbcontext.AddAsync(workingPeriodStageEntity);
+        await _dbcontext.AddAsync(workingPeriodStage);
         await _dbcontext.SaveChangesAsync(); 
     }
-    public async Task Update(WorkingPeriodStage workingPeriodStage)
+    public async Task Update(WorkingPeriodStageEntity workingPeriodStage)
     {
         var workingPeriodStageEntity = await _dbcontext.WorkingPeriodStage.FirstOrDefaultAsync(c => c.Id == workingPeriodStage.Id)
             ?? throw new Exception();

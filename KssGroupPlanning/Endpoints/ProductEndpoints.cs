@@ -1,6 +1,5 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Services;
+using KssGroupPlanning.Services.EntityServices;
 
 namespace KssGroupPlanning.Endpoints;
 
@@ -21,47 +20,47 @@ public static class ProductEndpoints
         app.MapDelete("product/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(NewProductService productService)
+    private static async Task<IResult> GetAll(ProductService productService)
     {
         var products = await productService.GetAll();
         return Results.Ok(products);
     }
-    private static async Task<IResult> GetById(Guid id, NewProductService productService)
+    private static async Task<IResult> GetById(Guid id, ProductService productService)
     {
         var product = await productService.GetById(id);
         return Results.Ok(product);
     }
-    private static async Task<IResult> GetByNumber(string number, NewProductService productService)
+    private static async Task<IResult> GetByNumber(string number, ProductService productService)
     {
         var product = await productService.GetByNumber(number);
         return Results.Ok(product);
     }
-    private static async Task<IResult> GetByProductSubTypeId(Guid id, NewProductService productService)
+    private static async Task<IResult> GetByProductSubTypeId(Guid id, ProductService productService)
     {
         var product = await productService.GetByProductSubTypeId(id);
         return Results.Ok(product);
     }
-    private static async Task<IResult> GetByFactoryId(Guid id, NewProductService productService)
+    private static async Task<IResult> GetByFactoryId(Guid id, ProductService productService)
     {
         var product = await productService.GetByFactoryId(id);
         return Results.Ok(product);
     }
-    private static async Task<IResult> GetByOrderId(Guid id, NewProductService productService)
+    private static async Task<IResult> GetByOrderId(Guid id, ProductService productService)
     {
         var product = await productService.GetByOrderId(id);
         return Results.Ok(product);
     }
-    private static async Task<IResult> Create(ProductEntity request, NewProductService productService)
+    private static async Task<IResult> Create(ProductEntity request, ProductService productService)
     {
         await productService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, ProductEntity request, NewProductService productService)
+    private static async Task<IResult> Update(Guid id, ProductEntity request, ProductService productService)
     {
         await productService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, NewProductService productService)
+    private static async Task<IResult> Delete(Guid id, ProductService productService)
     {
         await productService.Delete(id);
         return Results.Ok();

@@ -1,7 +1,8 @@
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KssGroupPlanning.Repositories;
@@ -14,45 +15,27 @@ public class StageRepository : IStageRepository
 	{
 		_dbcontext = context;
 	}
-	public async Task<List<Stage>> GetAll()
+	public async Task<List<StageEntity>> GetAll()
 	{
-		var stageEntities = await _dbcontext.Stage.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
-		List<Stage> stages = new List<Stage>();
-		foreach (var stageEntity in stageEntities)
-		{
-			stages.Add(Stage.Create(stageEntity.Id, stageEntity.Name, stageEntity.ProductId, stageEntity.Status, stageEntity.Date, stageEntity.CreateTime, stageEntity.UpdateTime));
-		}
-		return stages;
+        return await _dbcontext.Stage.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
 	}
 
-	public async Task<Stage?> GetById(Guid id)
+	public async Task<StageEntity?> GetById(Guid id)
 	{
 
-		var stageEntity = await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-		return Stage.Create(stageEntity.Id, stageEntity.Name, stageEntity.ProductId, stageEntity.Status, stageEntity.Date, stageEntity.CreateTime, stageEntity.UpdateTime);
+        return await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
 	}
-	public async Task<Stage?> GetByProductId(Guid productId)
+	public async Task<StageEntity?> GetByProductId(Guid productId)
 	{
-		var stageEntity = await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
-		return Stage.Create(stageEntity.Id, stageEntity.Name,stageEntity.ProductId,stageEntity.Status, stageEntity.Date, stageEntity.CreateTime,stageEntity.UpdateTime);
+        return await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
 	}
 	
-	public async Task Add(Stage stage)
+	public async Task Add(StageEntity stage)
 	{
-		var stageEntity = new StageEntity
-		{
-			Id = stage.Id,
-			Name = stage.Name,
-			ProductId = stage.ProductId,
-			Status = stage.Status,
-			Date = stage.Date,
-			CreateTime = stage.CreateTime,
-			UpdateTime = stage.UpdateTime
-		};
-		await _dbcontext.AddAsync(stageEntity);
+		await _dbcontext.AddAsync(stage);
 		await _dbcontext.SaveChangesAsync();
 	}
-	public async Task Update(Stage stage)
+	public async Task Update(StageEntity stage)
 	{
 		var StageEntity = await _dbcontext.Stage.FirstOrDefaultAsync(s => s.Id == stage.Id)
 			?? throw new Exception();

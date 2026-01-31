@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,40 +18,27 @@ public class StageTypeRepository : IStageTypeRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<StageType>> GetAll()
+    public async Task<List<StageTypeEntity>> GetAll()
     {
-        var stageTypeEntities = await _dbcontext.StageType.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
-        List<StageType> stageTypes = new List<StageType>();
-        foreach (var stageTypeEntity in stageTypeEntities)
-        {
-            stageTypes.Add(StageType.Create(stageTypeEntity.Id, stageTypeEntity.Name));
-        }
-        return stageTypes;
+        return await _dbcontext.StageType.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
     }
 
-    public async Task<StageType?> GetById(Guid id)
+    public async Task<StageTypeEntity?> GetById(Guid id)
     {
 
-        var stageTypeEntity = await _dbcontext.StageType.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return StageType.Create(stageTypeEntity.Id, stageTypeEntity.Name);
+        return await _dbcontext.StageType.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<StageType?> GetByName(string name)
+    public async Task<StageTypeEntity?> GetByName(string name)
     {
 
-        var stageTypeEntity = await _dbcontext.StageType.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
-        return StageType.Create(stageTypeEntity.Id, stageTypeEntity.Name);
+        return await _dbcontext.StageType.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
     }
-    public async Task Add(StageType stageType)
+    public async Task Add(StageTypeEntity stageType)
     {
-        var stageTypeEntity = new StageTypeEntity
-        {
-            Id = stageType.Id,
-            Name = stageType.Name
-        };
-        await _dbcontext.AddAsync(stageTypeEntity);
+        await _dbcontext.AddAsync(stageType);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(StageType stageType)
+    public async Task Update(StageTypeEntity stageType)
     {
         var stageTypeEntity = await _dbcontext.StageType.FirstOrDefaultAsync(c => c.Id == stageType.Id)
             ?? throw new Exception();

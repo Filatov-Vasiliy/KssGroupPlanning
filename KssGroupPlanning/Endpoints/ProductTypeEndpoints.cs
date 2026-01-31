@@ -1,6 +1,6 @@
 ﻿using KssGroupPlanning.Contracts.ProductTypes;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Services;
+using KssGroupPlanning.Services.EntityServices;
+using KssGroupPlanning.Entities;
 
 namespace KssGroupPlanning.Endpoints;
 
@@ -18,31 +18,31 @@ public static class ProductTypeEndpoints
         app.MapDelete("productType/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(NewProductTypeService productTypeService) {
+    private static async Task<IResult> GetAll(ProductTypeService productTypeService) {
         var productTypes = await productTypeService.GetAll();
         return Results.Ok(productTypes);
     }
-    private static async Task<IResult> GetById(Guid id, NewProductTypeService productTypeService)
+    private static async Task<IResult> GetById(Guid id, ProductTypeService productTypeService)
     {
         var productType = await productTypeService.GetById(id);
         return Results.Ok(productType);
     }
-    private static async Task<IResult> GetByName(string name, NewProductTypeService productTypeService)
+    private static async Task<IResult> GetByName(string name, ProductTypeService productTypeService)
     {
         var productType = await productTypeService.GetByName(name);
         return Results.Ok(productType);
     }
-    private static async Task<IResult> Create( CreateProductType request, NewProductTypeService productTypeService)
+    private static async Task<IResult> Create( CreateProductType request, ProductTypeService productTypeService)
     {
         await productTypeService.Add(request.Name);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, UpdateProductType request, ProductTypeService productTypeService)
+    private static async Task<IResult> Update(Guid id, ProductTypeEntity request, ProductTypeService productTypeService)
     {
-        await productTypeService.Update(ProductType.Create(id, request.Name));
+        await productTypeService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, NewProductTypeService productTypeService)
+    private static async Task<IResult> Delete(Guid id, ProductTypeService productTypeService)
     {
         await productTypeService.Delete(id);
         return Results.Ok();

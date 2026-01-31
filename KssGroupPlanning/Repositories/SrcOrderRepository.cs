@@ -1,16 +1,16 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning;
+
 using Microsoft.EntityFrameworkCore;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+using KssGroupPlanning.Infrastuction.Db;
 
 public class SrcOrderRepository(ProjectDbContext context) : ISrcOrderRepository
 {
     private readonly ProjectDbContext _dbcontext = context;
 
-    public async Task Add(List<SrcOrder> srcOrders)
+    public async Task Add(List<SrcOrderEntity> srcOrders)
     {
-        foreach (SrcOrder srcOrder in srcOrders)
+        foreach (SrcOrderEntity srcOrder in srcOrders)
         {
 
             var srcOrderEntity = new SrcOrderEntity
@@ -34,20 +34,13 @@ public class SrcOrderRepository(ProjectDbContext context) : ISrcOrderRepository
         await _dbcontext.SaveChangesAsync();
     }
 
-    public async Task<User> GetByEmail(string email)
+    public async Task<UserEntity> GetByEmail(string email)
     {
-        var userEntity = await _dbcontext.User.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email) ?? throw new Exception();
-        return User.Create(userEntity.Id, userEntity.UserName, userEntity.PasswordHash, userEntity.Email);
+        return await _dbcontext.User.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email) ?? throw new Exception();
     }
 
-    public async Task<List<SrcOrder>> GetSrcOrders()
+    public async Task<List<SrcOrderEntity>> GetSrcOrders()
     {
-        var srcOrderEntities = await _dbcontext.SrcOrder.AsNoTracking().ToListAsync();
-        List<SrcOrder> srcOrders = new List<SrcOrder>();
-        foreach (var srcOrderEntity in srcOrderEntities) 
-        {
-            srcOrders.Add(SrcOrder.Create(srcOrderEntity.OrderName, srcOrderEntity.Status, srcOrderEntity.Contragent, srcOrderEntity.Dogovor, srcOrderEntity.Manager, srcOrderEntity.OrderNumber, srcOrderEntity.OrderDate, srcOrderEntity.SchemeDate, srcOrderEntity.LogisticDate, srcOrderEntity.CreateDate, srcOrderEntity.PaymentAmount, srcOrderEntity.PaymentCurrent, srcOrderEntity.Qty));
-        }
-        return srcOrders;
+        return await _dbcontext.SrcOrder.AsNoTracking().ToListAsync();
     }
 }

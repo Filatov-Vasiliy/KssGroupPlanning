@@ -1,7 +1,7 @@
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KssGroupPlanning.Repositories;
@@ -14,38 +14,25 @@ public class FactoryRepository : IFactoryRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<Factory>> GetAll()
+    public async Task<List<FactoryEntity>> GetAll()
     {
-        var factoryEntities = await _dbcontext.Factory.AsNoTracking().OrderBy(f => f.Name).ToListAsync();
-        List<Factory> factories = new List<Factory>();
-        foreach (var factoryEntity in factoryEntities)
-        {
-            factories.Add(Factory.Create(factoryEntity.Id, factoryEntity.Name));
-        }
-        return factories;
+        return await _dbcontext.Factory.AsNoTracking().OrderBy(f => f.Name).ToListAsync();
     }
 
-    public async Task<Factory?> GetById(Guid id)
+    public async Task<FactoryEntity?> GetById(Guid id)
     {
-        var factoryEntity = await _dbcontext.Factory.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
-        return Factory.Create(factoryEntity.Id, factoryEntity.Name);
+        return await _dbcontext.Factory.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
     }
-    public async Task<Factory?> GetByName(string name)
+    public async Task<FactoryEntity?> GetByName(string name)
     {
-        var factoryEntity = await _dbcontext.Factory.AsNoTracking().FirstOrDefaultAsync(f => f.Name == name);
-        return Factory.Create(factoryEntity.Id, factoryEntity.Name);
+        return await _dbcontext.Factory.AsNoTracking().FirstOrDefaultAsync(f => f.Name == name);
     }
-    public async Task Add(Factory factory)
+    public async Task Add(FactoryEntity factory)
     {
-        var factoryEntity = new FactoryEntity
-        {
-            Id = factory.Id,
-            Name = factory.Name
-        };
-        await _dbcontext.AddAsync(factoryEntity);
+        await _dbcontext.AddAsync(factory);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(Factory factory)
+    public async Task Update(FactoryEntity factory)
     {
         var factoryEntity = await _dbcontext.Factory.FirstOrDefaultAsync(f => f.Id == factory.Id)
             ?? throw new Exception();

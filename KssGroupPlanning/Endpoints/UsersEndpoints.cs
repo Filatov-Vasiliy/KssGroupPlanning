@@ -1,5 +1,5 @@
 ﻿using KssGroupPlanning.Contracts.Users;
-using KssGroupPlanning.Services;
+using KssGroupPlanning.Services.EntityServices;
 
 namespace KssGroupPlanning.Endpoints;
 

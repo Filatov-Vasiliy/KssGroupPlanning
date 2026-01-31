@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,56 +18,30 @@ public class ProductSubTypeGroupMaterialRelationRepository : IProductSubTypeGrou
     {
         _dbcontext = context;
     }
-    public async Task<List<ProductSubTypeGroupMaterialRelation>> GetAll()
+    public async Task<List<ProductSubTypeGroupMaterialRelationEntity>> GetAll()
     {
-        var productSubTypeGroupMaterialRelationEntities = await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
-        List<ProductSubTypeGroupMaterialRelation> productSubTypeGroupMaterialRelations = new List<ProductSubTypeGroupMaterialRelation>();
-        foreach (var productSubTypeGroupMaterialRelationEntity in productSubTypeGroupMaterialRelationEntities)
-        {
-            productSubTypeGroupMaterialRelations.Add(ProductSubTypeGroupMaterialRelation.Create(productSubTypeGroupMaterialRelationEntity.Id, productSubTypeGroupMaterialRelationEntity.GroupMaterialId, productSubTypeGroupMaterialRelationEntity.ProductSubTypeWorkingPeriodSampleId));
-        }
-        return productSubTypeGroupMaterialRelations;
+        return await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
     }
 
-    public async Task<ProductSubTypeGroupMaterialRelation?> GetById(Guid id)
+    public async Task<ProductSubTypeGroupMaterialRelationEntity?> GetById(Guid id)
     {
 
-        var productSubTypeGroupMaterialRelationEntity = await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return ProductSubTypeGroupMaterialRelation.Create(productSubTypeGroupMaterialRelationEntity.Id, productSubTypeGroupMaterialRelationEntity.GroupMaterialId, productSubTypeGroupMaterialRelationEntity.ProductSubTypeWorkingPeriodSampleId);
-
+        return await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<List<ProductSubTypeGroupMaterialRelation?>> GetByGroupMaterialId(Guid groupMaterialId)
+    public async Task<List<ProductSubTypeGroupMaterialRelationEntity?>> GetByGroupMaterialId(Guid groupMaterialId)
     {
-        var productSubTypeGroupMaterialRelationEntities = await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
-        List<ProductSubTypeGroupMaterialRelation> productSubTypeGroupMaterialRelations = new List<ProductSubTypeGroupMaterialRelation>();
-        foreach (var productSubTypeGroupMaterialRelationEntity in productSubTypeGroupMaterialRelationEntities)
-        {
-            productSubTypeGroupMaterialRelations.Add(ProductSubTypeGroupMaterialRelation.Create(productSubTypeGroupMaterialRelationEntity.Id, productSubTypeGroupMaterialRelationEntity.GroupMaterialId, productSubTypeGroupMaterialRelationEntity.ProductSubTypeWorkingPeriodSampleId));
-        }
-        return productSubTypeGroupMaterialRelations;
+        return await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
     }
-    public async Task<List<ProductSubTypeGroupMaterialRelation?>> GetByProductSubTypeWorkingPeriodSampleId(Guid productSubTypeWorkingPeriodSampleId)
+    public async Task<List<ProductSubTypeGroupMaterialRelationEntity?>> GetByProductSubTypeWorkingPeriodSampleId(Guid productSubTypeWorkingPeriodSampleId)
     {
-        var productSubTypeGroupMaterialRelationEntities = await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().Where(c => c.ProductSubTypeWorkingPeriodSampleId == productSubTypeWorkingPeriodSampleId).ToListAsync();
-        List<ProductSubTypeGroupMaterialRelation> productSubTypeGroupMaterialRelations = new List<ProductSubTypeGroupMaterialRelation>();
-        foreach (var productSubTypeGroupMaterialRelationEntity in productSubTypeGroupMaterialRelationEntities)
-        {
-            productSubTypeGroupMaterialRelations.Add(ProductSubTypeGroupMaterialRelation.Create(productSubTypeGroupMaterialRelationEntity.Id, productSubTypeGroupMaterialRelationEntity.GroupMaterialId, productSubTypeGroupMaterialRelationEntity.ProductSubTypeWorkingPeriodSampleId));
-        }
-        return productSubTypeGroupMaterialRelations;
+        return await _dbcontext.ProductSubTypeGroupMaterialRelation.AsNoTracking().Where(c => c.ProductSubTypeWorkingPeriodSampleId == productSubTypeWorkingPeriodSampleId).ToListAsync();
     }
-    public async Task Add(ProductSubTypeGroupMaterialRelation productSubTypeGroupMaterialRelation)
+    public async Task Add(ProductSubTypeGroupMaterialRelationEntity productSubTypeGroupMaterialRelation)
     {
-        var productSubTypeGroupMaterialRelationEntity = new ProductSubTypeGroupMaterialRelationEntity
-        {
-            Id = productSubTypeGroupMaterialRelation.Id,
-            ProductSubTypeWorkingPeriodSampleId = productSubTypeGroupMaterialRelation.ProductSubTypeWorkingPeriodSampleId,
-            GroupMaterialId = productSubTypeGroupMaterialRelation.GroupMaterialId,
-        };
-        await _dbcontext.AddAsync(productSubTypeGroupMaterialRelationEntity);
+        await _dbcontext.AddAsync(productSubTypeGroupMaterialRelation);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(ProductSubTypeGroupMaterialRelation productSubTypeGroupMaterialRelation)
+    public async Task Update(ProductSubTypeGroupMaterialRelationEntity productSubTypeGroupMaterialRelation)
     {
         var productSubTypeGroupMaterialRelationEntity = await _dbcontext.ProductSubTypeGroupMaterialRelation.FirstOrDefaultAsync(c => c.Id == productSubTypeGroupMaterialRelation.Id)
             ?? throw new Exception();
