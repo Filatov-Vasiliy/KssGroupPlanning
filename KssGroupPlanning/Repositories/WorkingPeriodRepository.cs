@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,51 +18,31 @@ public class WorkingPeriodRepository : IWorkingPeriodRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<WorkingPeriod>> GetAll()
+    public async Task<List<WorkingPeriodEntity>> GetAll()
     {
-        var workingPeriodEntities = await _dbcontext.WorkingPeriod.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
-        List<WorkingPeriod> workingPeriods = new List<WorkingPeriod>();
-        foreach (var workingPeriodEntity in workingPeriodEntities)
-        {
-            workingPeriods.Add(WorkingPeriod.Create(workingPeriodEntity.Id, workingPeriodEntity.Name,workingPeriodEntity.Status,workingPeriodEntity.ProductId, workingPeriodEntity.DateFrom, workingPeriodEntity.DateTo,workingPeriodEntity.CreateTime,workingPeriodEntity.UpdateTime));
-        }
-        return workingPeriods;
+        return await _dbcontext.WorkingPeriod.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
     }
 
-    public async Task<WorkingPeriod?> GetById(Guid id)
+    public async Task<WorkingPeriodEntity?> GetById(Guid id)
     {
 
-        var workingPeriodEntity = await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return WorkingPeriod.Create(workingPeriodEntity.Id, workingPeriodEntity.Name, workingPeriodEntity.Status, workingPeriodEntity.ProductId, workingPeriodEntity.DateFrom, workingPeriodEntity.DateTo, workingPeriodEntity.CreateTime, workingPeriodEntity.UpdateTime);
+        return await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<WorkingPeriod?> GetByName(string name)
+    public async Task<WorkingPeriodEntity?> GetByName(string name)
     {
 
-        var workingPeriodEntity = await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
-        return WorkingPeriod.Create(workingPeriodEntity.Id, workingPeriodEntity.Name, workingPeriodEntity.Status, workingPeriodEntity.ProductId, workingPeriodEntity.DateFrom, workingPeriodEntity.DateTo, workingPeriodEntity.CreateTime, workingPeriodEntity.UpdateTime);
+        return await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
     }
-    public async Task<WorkingPeriod?> GetByProductId(Guid productId)
+    public async Task<WorkingPeriodEntity?> GetByProductId(Guid productId)
     {
-        var workingPeriodEntity = await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
-        return WorkingPeriod.Create(workingPeriodEntity.Id, workingPeriodEntity.Name, workingPeriodEntity.Status, workingPeriodEntity.ProductId, workingPeriodEntity.DateFrom, workingPeriodEntity.DateTo, workingPeriodEntity.CreateTime, workingPeriodEntity.UpdateTime);
+        return await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
     }
-    public async Task Add(WorkingPeriod workingPeriod)
+    public async Task Add(WorkingPeriodEntity workingPeriod)
     {
-        var workingPeriodEntity = new WorkingPeriodEntity
-        {
-            Id = workingPeriod.Id,
-            Name = workingPeriod.Name,
-            Status = workingPeriod.Status,
-            ProductId = workingPeriod.ProductId,
-            DateFrom = workingPeriod.DateFrom,
-            DateTo = workingPeriod.DateTo,
-            CreateTime = workingPeriod.CreateTime,
-            UpdateTime = workingPeriod.UpdateTime
-        };
-        await _dbcontext.AddAsync(workingPeriodEntity);
+        await _dbcontext.AddAsync(workingPeriod);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(WorkingPeriod workingPeriod)
+    public async Task Update(WorkingPeriodEntity workingPeriod)
     {
         var workingPeriodEntity = await _dbcontext.WorkingPeriod.FirstOrDefaultAsync(c => c.Id == workingPeriod.Id)
             ?? throw new Exception();

@@ -1,7 +1,8 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KssGroupPlanning.Repositories;
@@ -14,56 +15,30 @@ public class ProductSubTypeStageSampleRepository : IProductSubTypeStageSampleRep
     {
         _dbcontext = context;
     }
-    public async Task<List<ProductSubTypeStageSample>> GetAll()
+    public async Task<List<ProductSubTypeStageSampleEntity>> GetAll()
     {
-        var productSubTypeStageSampleEntities = await _dbcontext.ProductSubTypeStageSample.AsNoTracking().ToListAsync();
-        List<ProductSubTypeStageSample> productSubTypeStageSamples = new List<ProductSubTypeStageSample>();
-        foreach (var productSubTypeStageSampleEntity in productSubTypeStageSampleEntities)
-        {
-            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime));
-        }
-        return productSubTypeStageSamples;
+        return await _dbcontext.ProductSubTypeStageSample.AsNoTracking().ToListAsync();
     }
 
-    public async Task<ProductSubTypeStageSample?> GetById(Guid id)
+    public async Task<ProductSubTypeStageSampleEntity?> GetById(Guid id)
     {
-        var productSubTypeStageSampleEntity = await _dbcontext.ProductSubTypeStageSample.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
-        return ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime);
+        return await _dbcontext.ProductSubTypeStageSample.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
     }
-    public async Task<List<ProductSubTypeStageSample?>> GetByProductSubTypeId(Guid productSubTypeId)
+    public async Task<List<ProductSubTypeStageSampleEntity?>> GetByProductSubTypeId(Guid productSubTypeId)
     {
-        var productSubTypeStageSampleEntities = await _dbcontext.ProductSubTypeStageSample.AsNoTracking().Where(p => p.ProductSubTypeId == productSubTypeId).ToListAsync();
-        List<ProductSubTypeStageSample> productSubTypeStageSamples = new List<ProductSubTypeStageSample>();
-        foreach (var productSubTypeStageSampleEntity in productSubTypeStageSampleEntities)
-        {
-            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime));
-        }
-        return productSubTypeStageSamples;
-        }
-    public async Task<List<ProductSubTypeStageSample?>> GetByMaterialStageId(Guid materialStageId)
-    {
-        var productSubTypeStageSampleEntities = await _dbcontext.ProductSubTypeStageSample.AsNoTracking().Where(p => p.MaterialStageId == materialStageId).ToListAsync();
-        List<ProductSubTypeStageSample> productSubTypeStageSamples = new List<ProductSubTypeStageSample>();
-        foreach (var productSubTypeStageSampleEntity in productSubTypeStageSampleEntities)
-        {
-            productSubTypeStageSamples.Add(ProductSubTypeStageSample.Create(productSubTypeStageSampleEntity.Id, productSubTypeStageSampleEntity.ProductSubTypeId, productSubTypeStageSampleEntity.RowNumber, productSubTypeStageSampleEntity.MaterialStageId, productSubTypeStageSampleEntity.StandartTime));
-        }
-        return productSubTypeStageSamples;
+        return await _dbcontext.ProductSubTypeStageSample.AsNoTracking().Where(p => p.ProductSubTypeId == productSubTypeId).ToListAsync();
     }
-    public async Task Add(ProductSubTypeStageSample productSubTypeStagesSample)
+    public async Task<List<ProductSubTypeStageSampleEntity?>> GetByMaterialStageId(Guid materialStageId)
     {
-        var productSubTypeStagesSampleEntity = new ProductSubTypeStageSampleEntity
-        {
-            Id = productSubTypeStagesSample.Id,
-            RowNumber = productSubTypeStagesSample.RowNumber,
-            ProductSubTypeId = productSubTypeStagesSample.ProductSubTypeId,
-            StandartTime = productSubTypeStagesSample.StandartTime,
-            MaterialStageId = productSubTypeStagesSample.MaterialStageId,
-        };
-        await _dbcontext.AddAsync(productSubTypeStagesSampleEntity);
+        return await _dbcontext.ProductSubTypeStageSample.AsNoTracking().Where(p => p.MaterialStageId == materialStageId).ToListAsync();
+    }
+    public async Task Add(ProductSubTypeStageSampleEntity productSubTypeStagesSample)
+    {
+
+        await _dbcontext.AddAsync(productSubTypeStagesSample);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(ProductSubTypeStageSample productSubTypeStageSample)
+    public async Task Update(ProductSubTypeStageSampleEntity productSubTypeStageSample)
     {
         var productSubTypeStageSampleEntity = await _dbcontext.ProductSubTypeStageSample.FirstOrDefaultAsync(p => p.Id == productSubTypeStageSample.Id)
             ?? throw new Exception();

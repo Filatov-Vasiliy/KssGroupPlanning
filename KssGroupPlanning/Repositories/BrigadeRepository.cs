@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -18,57 +16,32 @@ public class BrigadeRepository : IBrigadeRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<Brigade>> GetAll()
+    public async Task<List<BrigadeEntity>> GetAll()
     {
-        var brigadeEntities = await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).ToListAsync();
-        List<Brigade> brigades = new List<Brigade>();
-        foreach (var brigadeEntity in brigadeEntities)
-        {
-            brigades.Add(Brigade.Create(brigadeEntity.Id, brigadeEntity.StageTypeId, brigadeEntity.FactoryId, brigadeEntity.CountEmployee));
-        }
-        return brigades;
+        return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).ToListAsync();
     }
 
-    public async Task<List<Brigade?>> GetByFactoryId(Guid factoryId)
+    public async Task<List<BrigadeEntity?>> GetByFactoryId(Guid factoryId)
     {
 
-        var brigadeEntities = await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == factoryId).ToListAsync();
-        List<Brigade> brigades = new List<Brigade>();
-        foreach (var brigadeEntity in brigadeEntities)
-        {
-            brigades.Add(Brigade.Create(brigadeEntity.Id, brigadeEntity.StageTypeId, brigadeEntity.FactoryId, brigadeEntity.CountEmployee));
-        }
-        return brigades;
+        return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.FactoryId == factoryId).ToListAsync();
+
     }
-    public async Task<List<Brigade?>> GetByStageTypeId(Guid stageTypeId)
+    public async Task<List<BrigadeEntity?>> GetByStageTypeId(Guid stageTypeId)
     {
 
-        var brigadeEntities = await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == stageTypeId).ToListAsync();
-        List<Brigade> brigades = new List<Brigade>();
-        foreach (var brigadeEntity in brigadeEntities)
-        {
-            brigades.Add(Brigade.Create(brigadeEntity.Id, brigadeEntity.StageTypeId, brigadeEntity.FactoryId, brigadeEntity.CountEmployee));
-        }
-        return brigades;
+        return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.StageTypeId == stageTypeId).ToListAsync();
     }
-    public async Task<Brigade?> GetById(Guid id)
+    public async Task<BrigadeEntity?> GetById(Guid id)
     {
-        var brigadeEntity = await _dbcontext.Brigade.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return Brigade.Create(brigadeEntity.Id, brigadeEntity.StageTypeId, brigadeEntity.FactoryId, brigadeEntity.CountEmployee);
+        return await _dbcontext.Brigade.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task Add(Brigade brigade)
+    public async Task Add(BrigadeEntity brigade)
     {
-        var brigadeEntity = new BrigadeEntity
-        {
-            Id = brigade.Id,
-            StageTypeId = brigade.StageTypeId,
-            FactoryId = brigade.FactoryId,
-            CountEmployee = brigade.CountEmployee,
-        };
-        await _dbcontext.AddAsync(brigadeEntity);
+        await _dbcontext.AddAsync(brigade);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(Brigade brigade)
+    public async Task Update(BrigadeEntity brigade)
     {
         var brigadeEntity = await _dbcontext.Brigade.FirstOrDefaultAsync(c => c.Id == brigade.Id)
             ?? throw new Exception();

@@ -1,7 +1,7 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Repository;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Models.Help;
+using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KssGroupPlanning.Repositories;
@@ -14,40 +14,28 @@ public class GroupMaterialRepository : IGroupMaterialRepository
     {
         _dbcontext = context;
     }
-    public async Task<List<GroupMaterial>> GetAll()
+    public async Task<List<GroupMaterialEntity>> GetAll()
     {
-        var groupMaterialEntities = await _dbcontext.GroupMaterial.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
-        List<GroupMaterial> groupMaterials = new List<GroupMaterial>();
-        foreach (var groupMaterialEntity in groupMaterialEntities)
-        {
-            groupMaterials.Add(GroupMaterial.Create(groupMaterialEntity.Id, groupMaterialEntity.Name));
-        }
-        return groupMaterials;
+        return await _dbcontext.GroupMaterial.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
     }
 
-    public async Task<GroupMaterial?> GetById(Guid id)
+    public async Task<GroupMaterialEntity?> GetById(Guid id)
     {
 
-        var groupMaterialEntity = await _dbcontext.GroupMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
-        return GroupMaterial.Create(groupMaterialEntity.Id, groupMaterialEntity.Name);
+        return await _dbcontext.GroupMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
-    public async Task<GroupMaterial?> GetByName(string name)
+    public async Task<GroupMaterialEntity?> GetByName(string name)
     {
 
-        var groupMaterialEntity = await _dbcontext.GroupMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
-        return GroupMaterial.Create(groupMaterialEntity.Id, groupMaterialEntity.Name);
+        return await _dbcontext.GroupMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
     }
-    public async Task Add(GroupMaterial groupMaterial)
+    public async Task Add(GroupMaterialEntity groupMaterial)
     {
-        var groupMaterialEntity = new GroupMaterialEntity
-        {
-            Id = groupMaterial.Id,
-            Name = groupMaterial.Name
-        };
-        await _dbcontext.AddAsync(groupMaterialEntity);
+
+        await _dbcontext.AddAsync(groupMaterial);
         await _dbcontext.SaveChangesAsync();
     }
-    public async Task Update(GroupMaterial groupMaterial)
+    public async Task Update(GroupMaterialEntity groupMaterial)
     {
         var groupMaterialEntity = await _dbcontext.GroupMaterial.FirstOrDefaultAsync(c => c.Id == groupMaterial.Id)
             ?? throw new Exception();

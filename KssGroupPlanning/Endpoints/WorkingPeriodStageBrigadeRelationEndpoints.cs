@@ -1,4 +1,4 @@
-﻿using KssGroupPlanning.Services;
+﻿using KssGroupPlanning.Services.EntityServices;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace KssGroupPlanning.Endpoints
@@ -11,7 +11,7 @@ namespace KssGroupPlanning.Endpoints
             return app;
         }
 
-        private static async Task<IResult> GetAll(NewWorkingPeriodStageBrigadeRelationService relationService)
+        private static async Task<IResult> GetAll(WorkingPeriodStageBrigadeRelationService relationService)
         {
             var relation = await relationService.GetAll();
             return Results.Ok(relation);

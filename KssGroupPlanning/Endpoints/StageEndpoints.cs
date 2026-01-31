@@ -1,6 +1,5 @@
 ﻿using KssGroupPlanning.Entities;
-using KssGroupPlanning.Models;
-using KssGroupPlanning.Services;
+using KssGroupPlanning.Services.EntityServices;
 
 namespace KssGroupPlanning.Endpoints;
 
@@ -18,32 +17,32 @@ public static class StageEndpoints
         app.MapDelete("stage/{id:guid}", Delete);
         return app;
     }
-    private static async Task<IResult> GetAll(NewStageService stageService)
+    private static async Task<IResult> GetAll(StageService stageService)
     {
         var stages = await stageService.GetAll();
         return Results.Ok(stages);
     }
-    private static async Task<IResult> GetById(Guid id, NewStageService stageService)
+    private static async Task<IResult> GetById(Guid id, StageService stageService)
     {
         var stage = await stageService.GetById(id);
         return Results.Ok(stage);
     }
-    private static async Task<IResult> GetByProductId(Guid id, NewStageService stageService)
+    private static async Task<IResult> GetByProductId(Guid id, StageService stageService)
     {
         var stage = await stageService.GetByProductId(id);
         return Results.Ok(stage);
     }
-    private static async Task<IResult> Create(StageEntity request, NewStageService stageService)
+    private static async Task<IResult> Create(StageEntity request, StageService stageService)
     {
         await stageService.Add(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Update(Guid id, StageEntity request, NewStageService stageService)
+    private static async Task<IResult> Update(Guid id, StageEntity request, StageService stageService)
     {
         await stageService.Update(request);
         return Results.Ok();
     }
-    private static async Task<IResult> Delete(Guid id, NewStageService stageService)
+    private static async Task<IResult> Delete(Guid id, StageService stageService)
     {
         await stageService.Delete(id);
         return Results.Ok();

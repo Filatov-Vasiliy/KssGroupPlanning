@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using KssGroupPlanning.Entities;
-using KssGroupPlanning.Models;
-
 namespace KssGroupPlanning.Configurations;
 
 public class ProductSubTypeGroupMaterialRelationConfiguration : IEntityTypeConfiguration<ProductSubTypeGroupMaterialRelationEntity>
