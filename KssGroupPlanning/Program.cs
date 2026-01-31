@@ -11,6 +11,10 @@ using Microsoft.AspNetCore.Diagnostics;
 using KssGroupPlanning.Extentions;
 using KssGroupPlanning.Services;
 using KssGroupPlanning.Entities;
+
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 services.AddEndpointsApiExplorer();
