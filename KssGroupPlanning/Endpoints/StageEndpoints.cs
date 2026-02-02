@@ -12,6 +12,7 @@ public static class StageEndpoints
         app.MapGet("stage/", GetAll);
         app.MapGet("stage/{id::guid}", GetById);
         app.MapGet("stageByProductId/{id::guid}", GetByProductId);
+        app.MapGet("stageByProductSubTypeStageSampleId/{id::guid}", GetByProductSubTypeStageSampleId);
         app.MapPost("stage/", Create);
         app.MapPut("stage/{id::guid}", Update);
         app.MapDelete("stage/{id:guid}", Delete);
@@ -30,6 +31,11 @@ public static class StageEndpoints
     private static async Task<IResult> GetByProductId(Guid id, StageService stageService)
     {
         var stage = await stageService.GetByProductId(id);
+        return Results.Ok(stage);
+    }
+    private static async Task<IResult> GetByProductSubTypeStageSampleId(Guid id, StageService stageService)
+    {
+        var stage = await stageService.GetByProductSubTypeStageSampleId(id);
         return Results.Ok(stage);
     }
     private static async Task<IResult> Create(StageEntity request, StageService stageService)

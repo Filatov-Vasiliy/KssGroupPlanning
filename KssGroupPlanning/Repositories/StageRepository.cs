@@ -17,7 +17,7 @@ public class StageRepository : IStageRepository
 	}
 	public async Task<List<StageEntity>> GetAll()
 	{
-        return await _dbcontext.Stage.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
+        return await _dbcontext.Stage.AsNoTracking().OrderBy(c => c.CreateTime).ToListAsync();
 	}
 
 	public async Task<StageEntity?> GetById(Guid id)
@@ -29,8 +29,12 @@ public class StageRepository : IStageRepository
 	{
         return await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
 	}
-	
-	public async Task Add(StageEntity stage)
+    public async Task<StageEntity?> GetByProductSubTypeStageSampleId(Guid productSubTypeStageSampleId)
+    {
+        return await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.ProductSubTypeStageSampleId == productSubTypeStageSampleId);
+    }
+
+    public async Task Add(StageEntity stage)
 	{
 		await _dbcontext.AddAsync(stage);
 		await _dbcontext.SaveChangesAsync();
@@ -40,7 +44,7 @@ public class StageRepository : IStageRepository
 		var StageEntity = await _dbcontext.Stage.FirstOrDefaultAsync(s => s.Id == stage.Id)
 			?? throw new Exception();
 
-		StageEntity.Name = stage.Name;
+		StageEntity.ProductSubTypeStageSampleId = stage.ProductSubTypeStageSampleId;
 		StageEntity.ProductId = stage.ProductId;
 		StageEntity.Status = stage.Status;
 		StageEntity.Date = stage.Date;

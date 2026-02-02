@@ -11,5 +11,6 @@ public class ProductSubTypeStageSampleEntity
     public string StageName { get; set; }
     public Guid MaterialStageId { get; set; }
     public MaterialStageEntity? MaterialStage { get; set; } = null;
+    public List<StageEntity> Stages { get; set; }
     public string StandartTime { get; set; } // string??
 }

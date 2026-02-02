@@ -18,6 +18,8 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<OrderEntity> Order { get; set; }
     public DbSet<FactoryEntity> Factory { get; set; }
     public DbSet<SrcOrderEntity> SrcOrder { get; set; }
+    public DbSet<SrcProductEntity> SrcProduct { get; set; }
+    public DbSet<SrcMaterialEntity> SrcMaterial { get; set; }
     public DbSet<StageEntity> Stage { get; set; }
     public DbSet<StageTypeEntity> StageType { get; set; }
     public DbSet<WorkingPeriodEntity> WorkingPeriod { get; set; }
@@ -42,6 +44,8 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
         modelBuilder.ApplyConfiguration(new FactoryConfiguration());
         modelBuilder.ApplyConfiguration(new SrcOrderConfiguration());
+        modelBuilder.ApplyConfiguration(new SrcProductConfiguration());
+        modelBuilder.ApplyConfiguration(new SrcMaterialConfiguration());
         modelBuilder.ApplyConfiguration(new StageConfiguration());
         modelBuilder.ApplyConfiguration(new StageTypeConfiguration());
         modelBuilder.ApplyConfiguration(new WorkingPeriodConfiguration());

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KssGroupPlanning.Configurations;
 
-public class SrcOrderConfiguration : IEntityTypeConfiguration<SrcOrderEntity>
+public class SrcMaterialConfiguration : IEntityTypeConfiguration<SrcMaterialEntity>
 {
-    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SrcOrderEntity> builder)
+    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SrcMaterialEntity> builder)
     {
         builder.HasKey(so => so.Id);
 

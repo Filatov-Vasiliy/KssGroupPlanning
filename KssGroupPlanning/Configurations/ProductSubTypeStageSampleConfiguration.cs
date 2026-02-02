@@ -11,5 +11,6 @@ public class ProductSubTypeStageSampleConfiguration : IEntityTypeConfiguration<P
         builder.HasKey(pstss => pstss.Id);
         builder.HasOne(pstss => pstss.ProductSubType).WithMany(pst => pst.ProductSubTypeStageSamples).HasForeignKey(pstss => pstss.ProductSubTypeId);
         builder.HasOne(pstss => pstss.MaterialStage).WithMany(ms => ms.ProductSubTypeStageSamples).HasForeignKey(ms => ms.MaterialStageId);
+        builder.HasMany(pstss => pstss.Stages).WithOne(s => s.ProductSubTypeStageSample);
     }
 }

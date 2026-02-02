@@ -22,9 +22,9 @@ public class WorkingPeriodStageMaterialService
     {
         return await _workingPeriodStageMaterialRepository.GetById(id);
     }
-    public async Task<List<WorkingPeriodStageMaterialEntity?>> GetByWorkingPeriodStageId(Guid workingPeriodStageId)
+    public async Task<List<WorkingPeriodStageMaterialEntity?>> GetByProductId(Guid productId)
     {
-        return await _workingPeriodStageMaterialRepository.GetByWorkingPeriodStageId( workingPeriodStageId);
+        return await _workingPeriodStageMaterialRepository.GetByProductId( productId);
     }
     public async Task<List<WorkingPeriodStageMaterialEntity?>> GetByGroupMaterialId(Guid groupMaterialId)
     {
@@ -35,7 +35,7 @@ public class WorkingPeriodStageMaterialService
         var workingPeriodStageMaterialEntity = new WorkingPeriodStageMaterialEntity
         {
             Id = Guid.NewGuid(),
-            WorkingPeriodStageId = workingPeriodStageMaterial.WorkingPeriodStageId,
+            ProductId = workingPeriodStageMaterial.ProductId,
             GroupMaterialId = workingPeriodStageMaterial.GroupMaterialId,
             DateDelivery = workingPeriodStageMaterial.DateDelivery,
         };

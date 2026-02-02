@@ -3,7 +3,9 @@
     public class StageEntity
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        
+        public Guid ProductSubTypeStageSampleId { get; set; }
+        public ProductSubTypeStageSampleEntity? ProductSubTypeStageSample { get; set; } = null;
         public Guid ProductId { get; set; }
         public string Status { get; set; }
         public DateTime Date { get; set; }

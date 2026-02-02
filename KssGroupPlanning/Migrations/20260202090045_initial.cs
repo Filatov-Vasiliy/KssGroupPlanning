@@ -48,8 +48,8 @@ namespace KssGroupPlanning.Migrations
                     PaymentAmount = table.Column<decimal>(type: "numeric", nullable: false),
                     PaymentCurrent = table.Column<decimal>(type: "numeric", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
-                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -69,9 +69,31 @@ namespace KssGroupPlanning.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SrcMaterial",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductOrderName = table.Column<string>(type: "text", nullable: false),
+                    ProductOrderDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    MaterialName = table.Column<string>(type: "text", nullable: false),
+                    MaterialGroup = table.Column<string>(type: "text", nullable: false),
+                    Qty = table.Column<decimal>(type: "numeric", nullable: false),
+                    CurrentQty = table.Column<decimal>(type: "numeric", nullable: false),
+                    PostedDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    ForAdmissionDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    CreateDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    ProductOrderNameChild = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SrcMaterial", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SrcOrder",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OrderName = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
                     Contragent = table.Column<string>(type: "text", nullable: false),
@@ -88,7 +110,28 @@ namespace KssGroupPlanning.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SrcOrder", x => x.OrderName);
+                    table.PrimaryKey("PK_SrcOrder", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SrcProduct",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductOrderName = table.Column<string>(type: "text", nullable: false),
+                    ProductOrderDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    Comment = table.Column<string>(type: "text", nullable: false),
+                    Factory = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    CreateDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    OrderNumber = table.Column<string>(type: "text", nullable: false),
+                    OrderDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    ProductName = table.Column<string>(type: "text", nullable: false),
+                    Qty = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SrcProduct", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -118,6 +161,24 @@ namespace KssGroupPlanning.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MaterialStage",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StageName = table.Column<string>(type: "text", nullable: false),
+                    GroupMaterialId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MaterialStage", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MaterialStage_GroupMaterial_GroupMaterialId",
+                        column: x => x.GroupMaterialId,
+                        principalTable: "GroupMaterial",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProductSubType",
                 columns: table => new
                 {
@@ -142,6 +203,7 @@ namespace KssGroupPlanning.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     StageTypeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
                     FactoryId = table.Column<Guid>(type: "uuid", nullable: false),
                     CountEmployee = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -175,8 +237,8 @@ namespace KssGroupPlanning.Migrations
                     Status = table.Column<string>(type: "text", nullable: false),
                     StartDate = table.Column<DateOnly>(type: "date", nullable: true),
                     EndDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -214,11 +276,18 @@ namespace KssGroupPlanning.Migrations
                     ProductSubTypeId = table.Column<Guid>(type: "uuid", nullable: false),
                     RowNumber = table.Column<int>(type: "integer", nullable: false),
                     StageName = table.Column<string>(type: "text", nullable: false),
+                    MaterialStageId = table.Column<Guid>(type: "uuid", nullable: false),
                     StandartTime = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProductSubTypeStageSample", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductSubTypeStageSample_MaterialStage_MaterialStageId",
+                        column: x => x.MaterialStageId,
+                        principalTable: "MaterialStage",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ProductSubTypeStageSample_ProductSubType_ProductSubTypeId",
                         column: x => x.ProductSubTypeId,
@@ -250,29 +319,6 @@ namespace KssGroupPlanning.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Stage",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Stage", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Stage_Product_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Product",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "WorkingPeriod",
                 columns: table => new
                 {
@@ -280,16 +326,71 @@ namespace KssGroupPlanning.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DateFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    DateFrom = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DateTo = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CreateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WorkingPeriod", x => x.Id);
                     table.ForeignKey(
                         name: "FK_WorkingPeriod_Product_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Product",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WorkingPeriodStageMaterial",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    GroupMaterialId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DateDelivery = table.Column<DateOnly>(type: "date", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkingPeriodStageMaterial", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WorkingPeriodStageMaterial_GroupMaterial_GroupMaterialId",
+                        column: x => x.GroupMaterialId,
+                        principalTable: "GroupMaterial",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_WorkingPeriodStageMaterial_Product_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Product",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Stage",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductSubTypeStageSampleId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    Date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CreateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Stage", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Stage_ProductSubTypeStageSample_ProductSubTypeStageSampleId",
+                        column: x => x.ProductSubTypeStageSampleId,
+                        principalTable: "ProductSubTypeStageSample",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Stage_Product_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Product",
                         principalColumn: "Id",
@@ -377,13 +478,13 @@ namespace KssGroupPlanning.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkingPeriodId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DateFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateFrom = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DateTo = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
                     Recycling = table.Column<TimeOnly>(type: "time without time zone", nullable: true),
                     ProductSubTypeWorkingPeriodSampleId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -421,32 +522,6 @@ namespace KssGroupPlanning.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_WorkingPeriodStageBrigadeRelation_WorkingPeriodStage_Workin~",
-                        column: x => x.WorkingPeriodStageId,
-                        principalTable: "WorkingPeriodStage",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WorkingPeriodStageMaterial",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    WorkingPeriodStageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    GroupMaterialId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DateDelivery = table.Column<DateOnly>(type: "date", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WorkingPeriodStageMaterial", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_WorkingPeriodStageMaterial_GroupMaterial_GroupMaterialId",
-                        column: x => x.GroupMaterialId,
-                        principalTable: "GroupMaterial",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_WorkingPeriodStageMaterial_WorkingPeriodStage_WorkingPeriod~",
                         column: x => x.WorkingPeriodStageId,
                         principalTable: "WorkingPeriodStage",
                         principalColumn: "Id",
@@ -535,6 +610,12 @@ namespace KssGroupPlanning.Migrations
                 column: "StageTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MaterialStage_GroupMaterialId",
+                table: "MaterialStage",
+                column: "GroupMaterialId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Product_FactoryId",
                 table: "Product",
                 column: "FactoryId");
@@ -570,6 +651,11 @@ namespace KssGroupPlanning.Migrations
                 column: "ProductSubTypeWorkingPeriodSampleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProductSubTypeStageSample_MaterialStageId",
+                table: "ProductSubTypeStageSample",
+                column: "MaterialStageId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductSubTypeStageSample_ProductSubTypeId",
                 table: "ProductSubTypeStageSample",
                 column: "ProductSubTypeId");
@@ -583,6 +669,11 @@ namespace KssGroupPlanning.Migrations
                 name: "IX_Stage_ProductId",
                 table: "Stage",
                 column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stage_ProductSubTypeStageSampleId",
+                table: "Stage",
+                column: "ProductSubTypeStageSampleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkingPeriod_ProductId",
@@ -625,9 +716,9 @@ namespace KssGroupPlanning.Migrations
                 column: "GroupMaterialId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkingPeriodStageMaterial_WorkingPeriodStageId",
+                name: "IX_WorkingPeriodStageMaterial_ProductId",
                 table: "WorkingPeriodStageMaterial",
-                column: "WorkingPeriodStageId");
+                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkingPeriodStageTypeRelation_ProductSubTypeWorkingPeriodS~",
@@ -647,10 +738,13 @@ namespace KssGroupPlanning.Migrations
                 name: "ProductSubTypeGroupMaterialRelation");
 
             migrationBuilder.DropTable(
-                name: "ProductSubTypeStageSample");
+                name: "SrcMaterial");
 
             migrationBuilder.DropTable(
                 name: "SrcOrder");
+
+            migrationBuilder.DropTable(
+                name: "SrcProduct");
 
             migrationBuilder.DropTable(
                 name: "Stage");
@@ -671,13 +765,16 @@ namespace KssGroupPlanning.Migrations
                 name: "WorkingPeriodStageTypeRelation");
 
             migrationBuilder.DropTable(
+                name: "ProductSubTypeStageSample");
+
+            migrationBuilder.DropTable(
                 name: "Brigade");
 
             migrationBuilder.DropTable(
-                name: "GroupMaterial");
+                name: "WorkingPeriodStage");
 
             migrationBuilder.DropTable(
-                name: "WorkingPeriodStage");
+                name: "MaterialStage");
 
             migrationBuilder.DropTable(
                 name: "StageType");
@@ -687,6 +784,9 @@ namespace KssGroupPlanning.Migrations
 
             migrationBuilder.DropTable(
                 name: "WorkingPeriod");
+
+            migrationBuilder.DropTable(
+                name: "GroupMaterial");
 
             migrationBuilder.DropTable(
                 name: "Product");

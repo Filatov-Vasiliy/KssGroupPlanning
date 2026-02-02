@@ -13,6 +13,7 @@ public static class BrigadeEndpoints
         app.MapGet("brigade/{id::guid}", GetById);
         app.MapGet("brigadeByStageTypeId/{id::guid}", GetByStageTypeId);
         app.MapGet("brigadeByFactoryId/{id::guid}", GetByFactoryId);
+        //app.MapGet("brigadeByName/{name::string}", GetByName);
         app.MapPost("brigade/", Create);
         app.MapPut("brigade/{id::guid}", Update);
         app.MapDelete("brigade/{id:guid}", Delete);
@@ -36,6 +37,11 @@ public static class BrigadeEndpoints
     private static async Task<IResult> GetByFactoryId(Guid id, BrigadeService brigadeService)
     {
         var Brigade = await brigadeService.GetByFactoryId(id);
+        return Results.Ok(Brigade);
+    }
+    private static async Task<IResult> GetByName(string name, BrigadeService brigadeService)
+    {
+        var Brigade = await brigadeService.GetByName(name);
         return Results.Ok(Brigade);
     }
     private static async Task<IResult> Create(BrigadeEntity request, BrigadeService brigadeService)
