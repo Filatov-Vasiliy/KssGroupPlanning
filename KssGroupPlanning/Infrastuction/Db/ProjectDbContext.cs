@@ -86,6 +86,7 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
         modelBuilder.Entity<ProductSubTypeEntity>().HasData(
             new ProductSubTypeEntity[]
             { 
+                new ProductSubTypeEntity { Id = Guid.Parse("4373dba9-30ac-4f46-8d51-cd79edd9d649"),Name = "Подтип А", ProductTypeId = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b") },
                 new ProductSubTypeEntity { Id = Guid.Parse("41bfadaa-08ee-4a09-ab66-4c53d72c9959"),Name = "Подтип А", ProductTypeId = Guid.Parse("0cb6cef3-948e-426e-b655-a481772a84ca") },
                 new ProductSubTypeEntity { Id = Guid.Parse("eaeda842-4989-4a5d-9755-0090f45db54f"),Name = "Подтип Б", ProductTypeId = Guid.Parse("0cb6cef3-948e-426e-b655-a481772a84ca") },
                 new ProductSubTypeEntity { Id = Guid.Parse("0a283d26-f089-410e-8fdd-08135ba9b999"),Name = "Подтип В", ProductTypeId = Guid.Parse("0cb6cef3-948e-426e-b655-a481772a84ca") },
