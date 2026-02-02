@@ -3,6 +3,7 @@ namespace KssGroupPlanning.Entities;
 
 public class SrcProductEntity
 {
+    public Guid Id { get; set; }
     [Name("product_order_name")]
     public string ProductOrderName { get; set; }
     [Name("productorderdate")]
@@ -25,6 +26,6 @@ public class SrcProductEntity
     [Name("product_name")]
     public string ProductName { get; set; }
     [Name("qty")]
-    public int qty { get; set; }
+    public int Qty { get; set; }
 //public DateTime? UploadTime { get; set; } = DateTime.Now;
 }

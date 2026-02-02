@@ -22,6 +22,7 @@ services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 // Add services to the container.
 var configuration = builder.Configuration;
+/*
 static void orderScvReader()
 {
     List<string> badRecord = new List<string>();
@@ -35,6 +36,7 @@ static void orderScvReader()
     }
 }
 orderScvReader();
+*/
 //services.AddTransient<ExceptionHandlerMiddleware>();
 
 services.AddScoped<UserService>();
@@ -84,6 +86,10 @@ services.AddScoped<IWorkingPeriodStageBrigadeRelationRepository, WorkingPeriodSt
 services.AddScoped<IWorkingPeriodStageMaterialRepository, WorkingPeriodStageMaterialRepository>();
 services.AddScoped<IWorkingPeriodStageRepository, WorkingPeriodStageRepository>();
 services.AddScoped<IWorkingPeriodStageTypeRelationRepository, NewWorkingPeriodStageTypeRelationRepository>();
+services.AddScoped<ISrcOrderRepository, SrcOrderRepository>();
+services.AddScoped<ISrcProductRepository, SrcProductRepository>();
+services.AddScoped<ISrcMaterialRepository, SrcMaterialRepository>();
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

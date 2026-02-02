@@ -34,11 +34,6 @@ public class SrcOrderRepository(ProjectDbContext context) : ISrcOrderRepository
         await _dbcontext.SaveChangesAsync();
     }
 
-    public async Task<UserEntity> GetByEmail(string email)
-    {
-        return await _dbcontext.User.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email) ?? throw new Exception();
-    }
-
     public async Task<List<SrcOrderEntity>> GetSrcOrders()
     {
         return await _dbcontext.SrcOrder.AsNoTracking().ToListAsync();

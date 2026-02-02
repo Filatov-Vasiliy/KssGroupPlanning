@@ -16,6 +16,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<ProductEntity>
         builder.HasOne(p => p.ParentProduct).WithMany(p => p.ChildProducts).HasForeignKey(p => p.ParentProductId);
         builder.HasOne(p => p.ProductSubType).WithMany(pst => pst.Products).HasForeignKey(p => p.ProductSubTypeId);
         builder.HasOne(p => p.Factory).WithMany(f => f.Products).HasForeignKey(p => p.FactoryId);
-
+        builder.HasMany(p => p.WorkingPeriodStageMaterials).WithOne(wpsm => wpsm.Product);
     }
 }

@@ -12,7 +12,7 @@ public static class WorkingPeriodStageMaterialEndpoints
         //app.MapPost("login", Login);
         app.MapGet("workingPeriodStageMaterial/", GetAll);
         app.MapGet("workingPeriodStageMaterial/{id::guid}", GetById);
-        app.MapGet("workingPeriodStageMaterialByWorkingPeriodStageId/{id::guid}", GetByWorkingPeriodStageId);
+        app.MapGet("workingPeriodStageMaterialByProductId/{id::guid}", GetByProductId);
         app.MapGet("workingPeriodStageMaterialByGroupMaterialId/{id::guid}", GetByGroupMaterialId);
         app.MapPost("workingPeriodStageMaterial/", Create);
         app.MapPut("workingPeriodStageMaterial/{id::guid}", Update);
@@ -29,9 +29,9 @@ public static class WorkingPeriodStageMaterialEndpoints
         var workingPeriodStageMaterial = await workingPeriodStageMaterialService.GetById(id);
         return Results.Ok(workingPeriodStageMaterial);
     }
-    private static async Task<IResult> GetByWorkingPeriodStageId(Guid id, WorkingPeriodStageMaterialService workingPeriodStageMaterialService)
+    private static async Task<IResult> GetByProductId(Guid id, WorkingPeriodStageMaterialService workingPeriodStageMaterialService)
     {
-        var workingPeriodStageMaterial = await workingPeriodStageMaterialService.GetByWorkingPeriodStageId(id);
+        var workingPeriodStageMaterial = await workingPeriodStageMaterialService.GetByProductId(id);
         return Results.Ok(workingPeriodStageMaterial);
     }
     private static async Task<IResult> GetByGroupMaterialId(Guid id, WorkingPeriodStageMaterialService workingPeriodStageMaterialService)

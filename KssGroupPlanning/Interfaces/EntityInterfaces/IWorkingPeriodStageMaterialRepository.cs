@@ -7,7 +7,7 @@ namespace KssGroupPlanning.Interfaces.EntityInterfaces
     {
         Task<List<WorkingPeriodStageMaterialEntity>> GetAll();
         Task<WorkingPeriodStageMaterialEntity?> GetById(Guid id);
-        Task<List<WorkingPeriodStageMaterialEntity?>> GetByWorkingPeriodStageId(Guid workingPeriodStageId);
+        Task<List<WorkingPeriodStageMaterialEntity?>> GetByProductId(Guid productId);
         Task<List<WorkingPeriodStageMaterialEntity?>> GetByGroupMaterialId(Guid groupMaterialId);
         Task Add(WorkingPeriodStageMaterialEntity workingPeriodStageMaterial);
         Task Update(WorkingPeriodStageMaterialEntity workingPeriodStageMaterial);

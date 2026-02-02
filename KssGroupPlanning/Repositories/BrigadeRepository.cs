@@ -27,6 +27,12 @@ public class BrigadeRepository : IBrigadeRepository
         return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.FactoryId == factoryId).ToListAsync();
 
     }
+    public async Task<List<BrigadeEntity?>> GetByName(string name)
+    {
+
+        return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).Where(c => c.Name == name).ToListAsync();
+
+    }
     public async Task<List<BrigadeEntity?>> GetByStageTypeId(Guid stageTypeId)
     {
 
@@ -46,6 +52,7 @@ public class BrigadeRepository : IBrigadeRepository
         var brigadeEntity = await _dbcontext.Brigade.FirstOrDefaultAsync(c => c.Id == brigade.Id)
             ?? throw new Exception();
         brigadeEntity.Id = brigade.Id;
+        brigadeEntity.Name = brigade.Name;
         brigadeEntity.FactoryId = brigade.FactoryId;
         brigadeEntity.StageTypeId = brigade.StageTypeId;
         brigadeEntity.CountEmployee = brigade.CountEmployee;

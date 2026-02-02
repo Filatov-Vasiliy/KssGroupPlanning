@@ -26,12 +26,16 @@ public class StageService
     {
         return await _StageRepository.GetByProductId(productId);
     }
+    public async Task<StageEntity?> GetByProductSubTypeStageSampleId(Guid productSubTypeStageSampleId)
+    {
+        return await _StageRepository.GetByProductSubTypeStageSampleId(productSubTypeStageSampleId);
+    }
     public async Task Add(StageEntity stage)
     {
         var StageEntity = new StageEntity
         {
             Id = Guid.NewGuid(),
-            Name = stage.Name,
+            ProductSubTypeStageSampleId = stage.ProductSubTypeStageSampleId,
             ProductId = stage.ProductId,
             Status = stage.Status,
             CreateTime = DateTime.Now,

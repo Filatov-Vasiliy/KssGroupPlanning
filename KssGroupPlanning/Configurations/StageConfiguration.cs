@@ -10,5 +10,6 @@ public class StageConfiguration : IEntityTypeConfiguration<StageEntity>
     {
         builder.HasKey(s => s.Id);
         builder.HasOne(s => s.Product).WithMany(p => p.Stages).HasForeignKey(s => s.ProductId);
+        builder.HasOne(s => s.ProductSubTypeStageSample).WithMany(pstss =>pstss.Stages).HasForeignKey(s => s.ProductSubTypeStageSampleId);
     }
 }

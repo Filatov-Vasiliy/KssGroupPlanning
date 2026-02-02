@@ -26,6 +26,10 @@ public class BrigadeService
     {
         return await _brigadeRepository.GetByFactoryId(factoryId);
     }
+    public async Task<List<BrigadeEntity?>> GetByName(string name)
+    {
+        return await _brigadeRepository.GetByName(name);
+    }
     public async Task<List<BrigadeEntity?>> GetByStageTypeId(Guid stageTypeId)
     {
         return await _brigadeRepository.GetByStageTypeId(stageTypeId);

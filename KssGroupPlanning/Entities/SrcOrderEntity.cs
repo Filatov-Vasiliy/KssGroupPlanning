@@ -4,6 +4,7 @@ namespace KssGroupPlanning.Entities;
 
 public class SrcOrderEntity
 {
+    public Guid Id { get; set; }
     [Name("order_name")]
     public string OrderName { get; set; }
     [Name("status")]

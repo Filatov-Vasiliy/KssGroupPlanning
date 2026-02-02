@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20251007131721_initial_v2")]
-    partial class initial_v2
+    [Migration("20260202090045_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace KssGroupPlanning.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.MaterialStageEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -36,6 +36,10 @@ namespace KssGroupPlanning.Migrations
 
                     b.Property<Guid>("FactoryId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("StageTypeId")
                         .HasColumnType("uuid");
@@ -111,7 +115,7 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Manager")
                         .IsRequired()
@@ -132,7 +136,7 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -146,7 +150,7 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateOnly?>("EndDate")
                         .HasColumnType("date");
@@ -174,7 +178,7 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -634,10 +638,56 @@ namespace KssGroupPlanning.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KssGroupPlanning.Entities.SrcMaterialEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("CreateDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("CurrentQty")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateOnly>("ForAdmissionDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("MaterialGroup")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MaterialName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("PostedDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("ProductOrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ProductOrderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProductOrderNameChild")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Qty")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SrcMaterial");
+                });
+
             modelBuilder.Entity("KssGroupPlanning.Entities.SrcOrderEntity", b =>
                 {
-                    b.Property<string>("OrderName")
-                        .HasColumnType("text");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Contragent")
                         .IsRequired()
@@ -660,6 +710,10 @@ namespace KssGroupPlanning.Migrations
                     b.Property<DateOnly>("OrderDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("OrderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasColumnType("text");
@@ -680,9 +734,56 @@ namespace KssGroupPlanning.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("OrderName");
+                    b.HasKey("Id");
 
                     b.ToTable("SrcOrder");
+                });
+
+            modelBuilder.Entity("KssGroupPlanning.Entities.SrcProductEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("CreateDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Factory")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("OrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("ProductOrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ProductOrderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Qty")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SrcProduct");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.StageEntity", b =>
@@ -692,16 +793,15 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductSubTypeStageSampleId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Status")
@@ -709,11 +809,13 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductSubTypeStageSampleId");
 
                     b.ToTable("Stage");
                 });
@@ -763,13 +865,13 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("DateFrom")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("DateTo")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -783,7 +885,7 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -841,13 +943,13 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("DateFrom")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("DateTo")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid>("ProductSubTypeWorkingPeriodSampleId")
                         .HasColumnType("uuid");
@@ -860,7 +962,7 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid>("WorkingPeriodId")
                         .HasColumnType("uuid");
@@ -886,14 +988,14 @@ namespace KssGroupPlanning.Migrations
                     b.Property<Guid>("GroupMaterialId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("WorkingPeriodStageId")
+                    b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("GroupMaterialId");
 
-                    b.HasIndex("WorkingPeriodStageId");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("WorkingPeriodStageMaterial");
                 });
@@ -919,7 +1021,7 @@ namespace KssGroupPlanning.Migrations
                     b.ToTable("WorkingPeriodStageTypeRelation");
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.MaterialStageEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
                 {
                     b.HasOne("KssGroupPlanning.Entities.FactoryEntity", "Factory")
                         .WithMany("Brigades")
@@ -1048,7 +1150,15 @@ namespace KssGroupPlanning.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("KssGroupPlanning.Entities.ProductSubTypeStageSampleEntity", "ProductSubTypeStageSample")
+                        .WithMany("Stages")
+                        .HasForeignKey("ProductSubTypeStageSampleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Product");
+
+                    b.Navigation("ProductSubTypeStageSample");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodEntity", b =>
@@ -1083,7 +1193,7 @@ namespace KssGroupPlanning.Migrations
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageBrigadeRelationEntity", b =>
                 {
-                    b.HasOne("KssGroupPlanning.Entities.MaterialStageEntity", "Brigade")
+                    b.HasOne("KssGroupPlanning.Entities.BrigadeEntity", "Brigade")
                         .WithMany("WorkingPeriodStageBrigadeRelations")
                         .HasForeignKey("BrigadeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1127,15 +1237,15 @@ namespace KssGroupPlanning.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("KssGroupPlanning.Entities.WorkingPeriodStageEntity", "WorkingPeriodStage")
+                    b.HasOne("KssGroupPlanning.Entities.ProductEntity", "Product")
                         .WithMany("WorkingPeriodStageMaterials")
-                        .HasForeignKey("WorkingPeriodStageId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("GroupMaterial");
 
-                    b.Navigation("WorkingPeriodStage");
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageTypeRelationEntity", b =>
@@ -1157,7 +1267,7 @@ namespace KssGroupPlanning.Migrations
                     b.Navigation("StageType");
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.MaterialStageEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.BrigadeEntity", b =>
                 {
                     b.Navigation("WorkingPeriodStageBrigadeRelations");
                 });
@@ -1194,6 +1304,8 @@ namespace KssGroupPlanning.Migrations
 
                     b.Navigation("Stages");
 
+                    b.Navigation("WorkingPeriodStageMaterials");
+
                     b.Navigation("WorkingPeriods");
                 });
 
@@ -1204,6 +1316,11 @@ namespace KssGroupPlanning.Migrations
                     b.Navigation("ProductSubTypeWorkingPeriodSamples");
 
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeStageSampleEntity", b =>
+                {
+                    b.Navigation("Stages");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeWorkingPeriodSampleEntity", b =>
@@ -1239,8 +1356,6 @@ namespace KssGroupPlanning.Migrations
             modelBuilder.Entity("KssGroupPlanning.Entities.WorkingPeriodStageEntity", b =>
                 {
                     b.Navigation("WorkingPeriodStageBrigadeRelations");
-
-                    b.Navigation("WorkingPeriodStageMaterials");
                 });
 #pragma warning restore 612, 618
         }
