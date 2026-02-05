@@ -12,6 +12,7 @@ using KssGroupPlanning.Services.EntityServices;
 using KssGroupPlanning.Interfaces.EntityInterfaces;
 using KssGroupPlanning.Infrastuction.auth;
 using KssGroupPlanning.Infrastuction.Db;
+using System.Text.Json.Serialization;
 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -100,6 +101,15 @@ services.AddDbContext<ProjectDbContext>(
         options.UseNpgsql(configuration.GetConnectionString("ProjectDbContext"));
     });
 services.Configure<JwtOptions>(configuration.GetSection("JwtOptions"));
+
+services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    // Optional: Add other options as needed, e.g.,
+    options.SerializerOptions.WriteIndented = true;
+
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
