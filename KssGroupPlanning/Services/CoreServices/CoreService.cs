@@ -1700,13 +1700,13 @@ public class CoreService
             }
 
             // Обновляем даты продукта
-            product.StartDate = DateOnly.FromDateTime(plannedStages.First().StartTime);
+            /*product.StartDate = DateOnly.FromDateTime(plannedStages.First().StartTime);
             product.EndDate = DateOnly.FromDateTime(plannedStages.Last().EndTime);
             product.UpdateTime = DateTime.Now;
 
             await _productRepository.Update(product);
 
-            _logger.LogWarning($"Продукт {product.Id} обновлен: StartDate={product.StartDate}, EndDate={product.EndDate}");
+            _logger.LogWarning($"Продукт {product.Id} обновлен: StartDate={product.StartDate}, EndDate={product.EndDate}");*/
         }
         catch (Exception ex)
         {
