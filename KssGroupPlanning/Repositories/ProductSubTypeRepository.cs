@@ -29,9 +29,9 @@ public class ProductSubTypeRepository : IProductSubTypeRepository
     {
         return await _dbcontext.ProductSubType.AsNoTracking().FirstOrDefaultAsync(p => p.Name == name);
     }
-    public async Task<ProductSubTypeEntity?> GetByProductTypeId(Guid productTypeId)
+    public async Task<List<ProductSubTypeEntity?>> GetByProductTypeId(Guid productTypeId)
     {
-        return await _dbcontext.ProductSubType.AsNoTracking().FirstOrDefaultAsync(p => p.ProductTypeId == productTypeId);
+        return await _dbcontext.ProductSubType.AsNoTracking().Where(p => p.ProductTypeId == productTypeId).ToListAsync();
     }
     public async Task Add(ProductSubTypeEntity productSubType)
     {

@@ -7,5 +7,6 @@ namespace KssGroupPlanning.Interfaces.EntityInterfaces;
         Task Add(List<SrcMaterialEntity> srcMaterials);
 
         Task<List<SrcMaterialEntity>> GetSrcMaterials();
+        Task RemoveDuplicates();
 
     }

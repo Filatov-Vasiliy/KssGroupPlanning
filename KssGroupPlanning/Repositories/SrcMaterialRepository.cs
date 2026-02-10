@@ -36,4 +36,16 @@ public class SrcMaterialRepository(ProjectDbContext context) : ISrcMaterialRepos
     {
         return await _dbcontext.SrcMaterial.AsNoTracking().ToListAsync();
     }
+    public async Task RemoveDuplicates()
+    {
+        /*
+        var duplicates = _dbcontext.SrcMaterial.AsNoTracking().GroupBy(m => m.MaterialName, m => m.ProductOrderName).Where(g => g.Count() > 1).SelectMany(g => g.Skip(1)).ToList();
+        
+        if (duplicates.Any())
+        {
+            _dbcontext.SrcMaterial.RemoveRange(duplicates);
+            _dbcontext.SaveChanges();
+        }
+        */
+    }
 }

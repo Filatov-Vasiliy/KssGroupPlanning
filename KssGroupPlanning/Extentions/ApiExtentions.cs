@@ -24,6 +24,8 @@ public static class ApiExtentions
         app.MapWorkingPeriodStageMaterialEndpoints();
 
         app.MapCoreEndpoints(); //?!?!?!
+        app.MapTestIntegrationEndpoints();
+
         app.MapWorkingPeriodStageBrigadeRelationEndpoints();
 
     }

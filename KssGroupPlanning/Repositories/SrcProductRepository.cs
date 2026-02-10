@@ -36,4 +36,13 @@ public class SrcProductRepository(ProjectDbContext context) : ISrcProductReposit
     {
         return await _dbcontext.SrcProduct.AsNoTracking().ToListAsync();
     }
+    public async Task RemoveDuplicates()
+    {
+        var duplicates = _dbcontext.SrcProduct.AsNoTracking().GroupBy(p => p.ProductOrderName).Where(g => g.Count()>1).SelectMany(g => g.Skip(1)).ToList();
+        if (duplicates.Any())
+        {
+            _dbcontext.SrcProduct.RemoveRange(duplicates);
+            _dbcontext.SaveChanges();
+        }
+    }
 }

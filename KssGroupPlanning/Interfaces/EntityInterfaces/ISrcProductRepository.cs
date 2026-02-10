@@ -9,5 +9,6 @@ namespace KssGroupPlanning.Interfaces.EntityInterfaces
 
         Task<List<SrcProductEntity>> GetSrcProducts();
 
+        Task RemoveDuplicates();
     }
 }

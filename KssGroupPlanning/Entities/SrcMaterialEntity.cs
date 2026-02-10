@@ -4,26 +4,34 @@ namespace KssGroupPlanning.Entities
 {
     public class SrcMaterialEntity
     {
+        [Ignore]
         public Guid Id { get; set; }
         [Name("Product order name")]
-        public string ProductOrderName { get; set; }
-        [Name("Product_order_date")]
-        public DateOnly ProductOrderDate { get; set; }
-        [Name("Material Name")]
-        public string MaterialName { get; set; }
+        public string? ProductOrderName { get; set; }
+        [Name("Product order date")]
+        [Format("dd.mm.yyyy")]
+        public DateOnly? ProductOrderDate { get; set; }
+        [Name("Material name")]
+        public string? MaterialName { get; set; }
         [Name("Material group")]
-        public string MaterialGroup { get; set; }
+        public string? MaterialGroup { get; set; }
         [Name("qty")]
-        public decimal Qty { get; set; }
+        public decimal? Qty { get; set; }
         [Name("Current qty")]
-        public decimal CurrentQty { get; set; }
-        [Name("Posted Date")]
-        public DateOnly PostedDate { get; set; }
+        public decimal? CurrentQty { get; set; }
+        [Name("Posted date")]
+        [Format("dd.mm.yyyy")]
+        public DateOnly? PostedDate { get; set; }
         [Name("For admission date")]
-        public DateOnly ForAdmissionDate { get; set; }
-        [Name("Create Date")]
-        public DateOnly CreateDate { get; set; }
+        [Format("dd.mm.yyyy")]
+        public DateOnly? ForAdmissionDate { get; set; }
+        [Name("Create date")]
+        [Format("dd.mm.yyyy")]
+        public DateOnly? CreateDate { get; set; }
         [Name("Product order name child")]
-        public string ProductOrderNameChild { get; set; }
+        public string? ProductOrderNameChild { get; set; }
+        [Name("Product order date child")]
+        [Format("dd.mm.yyyy")]
+        public DateOnly? ProductOrderDateChild { get; set; }
     }
 }

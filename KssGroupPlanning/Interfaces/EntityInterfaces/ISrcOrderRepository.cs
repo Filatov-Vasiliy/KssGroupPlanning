@@ -9,5 +9,6 @@ namespace KssGroupPlanning.Interfaces.EntityInterfaces
 
         Task<List<SrcOrderEntity>> GetSrcOrders();
 
+        Task RemoveDuplicates();
     }
 }
