@@ -58,6 +58,7 @@ public class ProductRepository : IProductRepository
         productEntity.FactoryId = product.FactoryId;
         productEntity.OrderId = product.OrderId;
         productEntity.ParentProductId = product.ParentProductId;
+        productEntity.ProductSubTypeId = product.ProductSubTypeId;
         productEntity.Status = product.Status;
         productEntity.StartDate = product.StartDate;
         productEntity.EndDate = product.EndDate;
