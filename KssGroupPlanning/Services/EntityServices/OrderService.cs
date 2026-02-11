@@ -17,6 +17,11 @@ public class OrderService
     {
         return await _orderRepository.GetAll();
     }
+    public async Task<List<OrderEntity>> GetAllDetailed()
+    {
+        return await _orderRepository.GetAllDetailed();
+    }
+
 
     public async Task<OrderEntity?> GetById(Guid id)
     {
