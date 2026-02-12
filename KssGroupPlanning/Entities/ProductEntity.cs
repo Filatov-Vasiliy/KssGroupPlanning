@@ -17,7 +17,8 @@ public class ProductEntity
     public List<StageEntity>? Stages { get; set; } =  new List<StageEntity>();
     public List<WorkingPeriodEntity>? WorkingPeriods { get; set; } = new List<WorkingPeriodEntity>();
     public List<WorkingPeriodStageMaterialEntity>? WorkingPeriodStageMaterials { get; set; } = new List<WorkingPeriodStageMaterialEntity>();
-
+    public Guid? SubProductStageId { get; set; } 
+    public StageEntity? SubProductStage { get; set; }
     public DateOnly? StartDate { get; set; } = null;
     public DateOnly? EndDate { get; set; } = null;
     public DateTime CreateTime { get; set; } = DateTime.Now;

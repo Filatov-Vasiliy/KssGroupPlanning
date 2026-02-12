@@ -48,6 +48,7 @@ public class ProductService
             OrderId = product.OrderId,
             FactoryId = product.FactoryId,
             ParentProductId = product.ParentProductId,
+            SubProductStageId = product.SubProductStageId,
             Status = product.Status,
             CreateTime = DateTime.Now,
             UpdateTime = DateTime.Now,
