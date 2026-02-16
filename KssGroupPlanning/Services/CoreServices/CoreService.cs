@@ -17,7 +17,6 @@ public class CoreService
     private readonly IMaterialStageRepository _materialStageRepository;
     private readonly IProductSubTypeStageSampleRepository _productSubTypeStageSampleRepository;
     private readonly IProductSubTypeGroupMaterialRelationRepository _productSubTypeGroupMaterialRelationRepository;
-
     private readonly ILogger<CoreService> _logger;
 
     private List<ProductEntity>? _products;
@@ -26,28 +25,21 @@ public class CoreService
     private Dictionary<Guid, List<BrigadeEntity>> _factoryBrigades;
     private Dictionary<string, Guid> _stageTypeIds;
 
-    private Dictionary<Guid, BrigadeScheduler> _factoryBrigadeSchedulers = new();
-
-    // Словарь для отслеживания времени завершения бригад (UTC)
+    // Доступность бригад (UTC)
     private Dictionary<Guid, DateTime> _brigadeNextAvailableTime = new();
-
-    // Словарь для отслеживания занятых слотов по бригадам (даты в UTC)
+    // Занятые слоты бригад (UTC)
     private Dictionary<Guid, List<BrigadeTimeSlot>> _brigadeTimeSlots = new();
 
-    // Словарь для отслеживания бригад сборки, назначенных на продукты
-    private Dictionary<Guid, Guid> _productAssemblyBrigadeMapping = new();
-
-    // Словари для учета дочерних изделий
+    // Иерархия продуктов
     private Dictionary<Guid, List<ProductEntity>> _childrenByParentId = null!;
-    private Dictionary<Guid, DateTime> _productStageConstraintDates = null!; // ключ – StageId, значение – UTC
+    private Dictionary<Guid, DateTime> _productStageConstraintDates = null!; // StageId -> макс. дата завершения детей (UTC)
 
-    // Константы для рабочего времени (время задано в UTC, т.к. фабрики в одном поясе и мы работаем в UTC)
+    // Рабочее время (UTC, фабрики в одном поясе)
     private readonly TimeSpan WORKDAY_START = new(8, 0, 0);
     private readonly TimeSpan WORKDAY_END = new(20, 0, 0);
-    private readonly TimeSpan WORKDAY_DURATION = new(12, 0, 0);
 
-    private DateTime _planningStartTimeUtc; // всегда UTC
-    private List<Guid> _plannedProductIdsInThisRun = null!; // ID продуктов, запланированных в текущем запуске
+    private DateTime _planningStartTimeUtc;
+    private List<Guid> _plannedProductIdsInThisRun = null!;
 
     public CoreService(
         IProductRepository productRepository,
@@ -88,38 +80,26 @@ public class CoreService
         try
         {
             _logger.LogWarning("Начало планирования производства");
-
             _plannedProductIdsInThisRun = new List<Guid>();
             _planningStartTimeUtc = DateTime.UtcNow;
-            _logger.LogWarning($"Время старта планирования (UTC): {_planningStartTimeUtc:dd.MM.yyyy HH:mm}");
+            _logger.LogWarning($"Время старта (UTC): {_planningStartTimeUtc:dd.MM.yyyy HH:mm}");
 
             _products = await _productRepository.GetAll();
             _allWorkingPeriods = await _workingPeriodRepository.GetAll();
             _allWorkingPeriodStages = await _workingPeriodStageRepository.GetAll();
 
-            _logger.LogWarning($"Загружено: {_products?.Count ?? 0} продуктов, " +
-                               $"{_allWorkingPeriods.Count} рабочих периодов, " +
-                               $"{_allWorkingPeriodStages.Count} этапов");
-
-            // Определяем продукты, которые нужно запланировать в этом запуске
             var productIdsToPlan = _products!
                 .Where(p => !_allWorkingPeriods.Any(wp => wp.ProductId == p.Id))
                 .Select(p => p.Id)
                 .ToHashSet();
 
             await TestStandartTimeParsing();
-
-            // Загружаем все фабрики и их бригады
             await LoadFactoryBrigades();
-
-            // Инициализируем доступность бригад и загружаем занятые слоты для всех фабрик
             foreach (var factoryId in _factoryBrigades.Keys)
             {
                 await InitializeBrigadeAvailability(factoryId);
                 await LoadBrigadeTimeSlotsAsync(factoryId);
             }
-
-            // Загружаем ID типов этапов
             await LoadStageTypeIds();
 
             if (_products == null || !_products.Any())
@@ -128,1426 +108,788 @@ public class CoreService
                 return;
             }
 
-            // Сортируем продукты по EndDate (приоритет по срокам)
             SortProductsByEndDate();
 
-            // --- Построение иерархии продуктов ---
+            // Построение иерархии
             _childrenByParentId = _products
                 .Where(p => p.ParentProductId.HasValue)
                 .GroupBy(p => p.ParentProductId.Value)
                 .ToDictionary(g => g.Key, g => g.ToList());
-
             _productStageConstraintDates = new Dictionary<Guid, DateTime>();
 
-            // Планируем продукты, у которых нет родителя (корни иерархии)
-            var rootProducts = _products.Where(p => p.ParentProductId == null).ToList();
-            foreach (var rootProduct in rootProducts)
+            // Планируем корневые продукты
+            foreach (var root in _products.Where(p => p.ParentProductId == null))
+                await PlanProductHierarchyAsync(root);
+
+            // Дополнительная попытка для оставшихся
+            var unplanned = _products.Where(p => !_allWorkingPeriods.Any(wp => wp.ProductId == p.Id)).ToList();
+            if (unplanned.Any())
             {
-                await PlanProductHierarchyAsync(rootProduct);
+                _logger.LogWarning($"Осталось незапланированных: {unplanned.Count}. Пробуем отдельно.");
+                foreach (var p in unplanned)
+                    await PlanProductWithBrigadeSelectionAsync(p, p.FactoryId);
             }
 
-            // На случай циклических зависимостей или продуктов с родителем, который не является корнем
-            var unplannedProducts = _products
-                .Where(p => !_allWorkingPeriods.Any(wp => wp.ProductId == p.Id))
-                .ToList();
-            if (unplannedProducts.Any())
-            {
-                _logger.LogWarning($"Остались незапланированные продукты: {unplannedProducts.Count}. Пробуем запланировать отдельно.");
-                foreach (var product in unplannedProducts)
-                {
-                    await PlanProductWithBrigadeSelectionAsync(product, product.FactoryId);
-                }
-            }
-
-            // Итоговый подсчёт: сколько из требуемых продуктов реально запланировано в этом запуске
-            var successfullyPlannedCount = _plannedProductIdsInThisRun.Intersect(productIdsToPlan).Count();
-            _logger.LogWarning($"Успешно запланировано {successfullyPlannedCount} продуктов из {productIdsToPlan.Count} (требовавших планирования). Всего продуктов в БД: {_products.Count}");
+            var successCount = _plannedProductIdsInThisRun.Intersect(productIdsToPlan).Count();
+            _logger.LogWarning($"Запланировано {successCount} из {productIdsToPlan.Count} (требовавших планирования). Всего продуктов: {_products.Count}");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при планировании производства");
+            _logger.LogError(ex, "Ошибка при планировании");
             throw;
         }
     }
 
-    // ========== Иерархия продуктов ==========
+    // ========== Иерархия ==========
     private async Task<bool> PlanProductHierarchyAsync(ProductEntity product)
     {
-        // Если уже запланирован – пропускаем
         if (_allWorkingPeriods.Any(wp => wp.ProductId == product.Id))
             return true;
 
-        // Сначала планируем всех детей
         if (_childrenByParentId.TryGetValue(product.Id, out var children))
         {
             foreach (var child in children)
-            {
                 if (!await PlanProductHierarchyAsync(child))
                 {
-                    _logger.LogError($"Не удалось запланировать дочерний продукт {child.Id} для родителя {product.Id}");
+                    _logger.LogError($"Не удалось запланировать дочерний {child.Id} для родителя {product.Id}");
                     return false;
                 }
-            }
         }
 
-        // Планируем сам продукт
         var result = await PlanProductWithBrigadeSelectionAsync(product, product.FactoryId);
         if (result)
-            _logger.LogWarning($"Продукт {product.Id} успешно запланирован");
+            _logger.LogWarning($"Продукт {product.Id} запланирован");
         else
             _logger.LogError($"Не удалось запланировать продукт {product.Id}");
-
         return result;
     }
 
-    private async Task UpdateParentStageConstraintAsync(ProductEntity childProduct, DateTime childWorkingPeriodEndTimeUtc)
+    private async Task UpdateParentStageConstraintAsync(ProductEntity childProduct, DateTime childEndUtc)
     {
         if (!childProduct.ParentProductId.HasValue || !childProduct.SubProductStageId.HasValue)
             return;
 
-        var parentProductId = childProduct.ParentProductId.Value;
         var stageId = childProduct.SubProductStageId.Value;
-
-        try
+        var stage = await _stageRepository.GetById(stageId);
+        if (stage == null || stage.ProductId != childProduct.ParentProductId)
         {
-            var stage = await _stageRepository.GetById(stageId);
-            if (stage == null)
-            {
-                _logger.LogError($"Stage с Id {stageId} не найдена для родительского продукта {parentProductId}");
-                return;
-            }
-
-            if (stage.ProductId != parentProductId)
-            {
-                _logger.LogError($"Stage {stageId} принадлежит продукту {stage.ProductId}, а не ожидаемому родителю {parentProductId}");
-                return;
-            }
-
-            // Обновляем словарь ограничений – храним МАКСИМАЛЬНУЮ дату (UTC)
-            if (_productStageConstraintDates.TryGetValue(stageId, out var existingDate))
-            {
-                if (childWorkingPeriodEndTimeUtc <= existingDate)
-                    return;
-                _productStageConstraintDates[stageId] = childWorkingPeriodEndTimeUtc;
-                _logger.LogWarning($"Обновлена дата ограничения для Stage {stageId}: {childWorkingPeriodEndTimeUtc:dd.MM.yyyy HH:mm} UTC");
-            }
-            else
-            {
-                _productStageConstraintDates[stageId] = childWorkingPeriodEndTimeUtc;
-                _logger.LogWarning($"Установлена дата ограничения для Stage {stageId}: {childWorkingPeriodEndTimeUtc:dd.MM.yyyy HH:mm} UTC");
-            }
-
-            // Обновляем сущность Stage в БД (дата в UTC)
-            stage.Date = _productStageConstraintDates[stageId];
-            stage.UpdateTime = DateTime.UtcNow;
-
-            await _stageRepository.Update(stage);
-            _logger.LogWarning($"Обновлена Stage {stageId} родительского продукта {parentProductId}: Date = {stage.Date:dd.MM.yyyy HH:mm} UTC");
+            _logger.LogError($"Stage {stageId} не найдена или не принадлежит родителю");
+            return;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при обновлении Stage родительского продукта {parentProductId}");
-        }
+
+        if (_productStageConstraintDates.TryGetValue(stageId, out var existing) && childEndUtc <= existing)
+            return;
+
+        _productStageConstraintDates[stageId] = childEndUtc;
+        stage.Date = childEndUtc;
+        stage.UpdateTime = DateTime.UtcNow;
+        await _stageRepository.Update(stage);
+        _logger.LogWarning($"Обновлена Stage {stageId} родителя: {childEndUtc:dd.MM.yyyy HH:mm} UTC");
     }
 
-    // ========== Вспомогательные методы ==========
+    // ========== Получение дат Stage ==========
     private async Task<List<DateTime>> GetStageDatesWithMaterialStageNamePAsync(Guid productId)
     {
-        var stageDates = new List<DateTime>();
+        var result = new List<DateTime>();
+        var product = await _productRepository.GetById(productId);
+        if (product == null) return result;
 
-        try
+        var stages = await _stageRepository.GetByProductId(productId);
+        if (stages == null) return result;
+
+        foreach (var stage in stages)
         {
-            _logger.LogWarning($"Поиск Stage с MaterialStage.Name = 'П' для продукта {productId}");
-
-            var product = await _productRepository.GetById(productId);
-            if (product == null)
-            {
-                _logger.LogError($"Продукт {productId} не найден");
-                return stageDates;
-            }
-
-            var productStages = await _stageRepository.GetByProductId(productId);
-            if (productStages == null || !productStages.Any())
-            {
-                _logger.LogWarning($"Для продукта {productId} не найдены Stage");
-                return stageDates;
-            }
-
-            _logger.LogWarning($"Найдено {productStages.Count} Stage для продукта {productId}");
-
-            foreach (var stage in productStages)
-            {
-                if (stage == null) continue;
-
-                try
-                {
-                    var stageSample = await _productSubTypeStageSampleRepository.GetById(stage.ProductSubTypeStageSampleId);
-                    if (stageSample == null) continue;
-
-                    var materialStage = await _materialStageRepository.GetById(stageSample.MaterialStageId);
-                    if (materialStage == null) continue;
-
-                    if (materialStage.StageName?.Trim() == "П")
-                    {
-                        stageDates.Add(stage.Date);
-                        _logger.LogWarning($"Найден Stage с MaterialStage.Name = 'П': {stage.Id}, дата: {stage.Date:dd.MM.yyyy HH:mm} UTC");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Ошибка при обработке Stage {stage?.Id}");
-                }
-            }
-
-            _logger.LogWarning($"Для продукта {productId} найдено {stageDates.Count} Stage с MaterialStage.Name = 'П'");
+            var sample = await _productSubTypeStageSampleRepository.GetById(stage.ProductSubTypeStageSampleId);
+            if (sample == null) continue;
+            var material = await _materialStageRepository.GetById(sample.MaterialStageId);
+            if (material?.StageName?.Trim() == "П")
+                result.Add(stage.Date);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при поиске Stage с MaterialStage.Name = 'П' для продукта {productId}");
-        }
-
-        return stageDates;
+        return result;
     }
 
     private async Task<DateTime> GetProductPlanningStartTimeAsync(Guid productId)
     {
-        try
-        {
-            _logger.LogWarning($"Определение времени старта планирования для продукта {productId}");
-
-            var stageDates = await GetStageDatesWithMaterialStageNamePAsync(productId);
-
-            DateTime productPlanningStartTimeUtc;
-
-            if (stageDates.Any())
-            {
-                var maxStageDate = stageDates.Max(); // уже UTC
-                productPlanningStartTimeUtc = maxStageDate;
-                _logger.LogWarning($"Продукт {productId}: используем дату Stage с 'П' = {maxStageDate:dd.MM.yyyy HH:mm} UTC");
-            }
-            else
-            {
-                productPlanningStartTimeUtc = _planningStartTimeUtc;
-                _logger.LogWarning($"Продукт {productId}: нет Stage с 'П', используем общее время старта планирования = {_planningStartTimeUtc:dd.MM.yyyy HH:mm} UTC");
-            }
-
-            // Корректируем на рабочие часы
-            productPlanningStartTimeUtc = AdjustToWorkHours(productPlanningStartTimeUtc);
-
-            _logger.LogWarning($"Окончательное время старта планирования для продукта {productId}: {productPlanningStartTimeUtc:dd.MM.yyyy HH:mm} UTC");
-
-            return productPlanningStartTimeUtc;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при определении времени старта планирования для продукта {productId}");
-            return AdjustToWorkHours(_planningStartTimeUtc);
-        }
+        var dates = await GetStageDatesWithMaterialStageNamePAsync(productId);
+        var start = dates.Any() ? dates.Max() : _planningStartTimeUtc;
+        start = AdjustToWorkHours(start);
+        _logger.LogWarning($"Продукт {productId} старт: {start:dd.MM.yyyy HH:mm} UTC");
+        return start;
     }
 
-    private async Task<List<DateTime>> GetStageDatesForWorkingPeriodSampleAsync(
-        Guid productId,
-        Guid productSubTypeWorkingPeriodSampleId)
+    private async Task<List<DateTime>> GetStageDatesForWorkingPeriodSampleAsync(Guid productId, Guid sampleId)
     {
-        var stageDates = new List<DateTime>();
+        var result = new List<DateTime>();
+        var product = await _productRepository.GetById(productId);
+        if (product == null) return result;
 
-        try
+        // Блок 1: даты через связи MaterialStage
+        var relations = await _productSubTypeGroupMaterialRelationRepository
+            .GetByProductSubTypeWorkingPeriodSampleId(sampleId);
+        if (relations != null)
         {
-            _logger.LogWarning($"Получение дат Stage для продукта {productId} и этапа рабочего периода {productSubTypeWorkingPeriodSampleId}");
-
-            var product = await _productRepository.GetById(productId);
-            if (product == null)
+            foreach (var rel in relations)
             {
-                _logger.LogError($"Продукт {productId} не найден");
-                return stageDates;
-            }
-
-            // ---------- БЛОК 1: Даты из связи с MaterialStage (старая логика) ----------
-            var relations = await _productSubTypeGroupMaterialRelationRepository
-                .GetByProductSubTypeWorkingPeriodSampleId(productSubTypeWorkingPeriodSampleId);
-
-            if (relations != null && relations.Any())
-            {
-                _logger.LogWarning($"Для этапа рабочего периода {productSubTypeWorkingPeriodSampleId} найдено {relations.Count} связей с GroupMaterial");
-
-                foreach (var relation in relations)
+                var materialStages = await _materialStageRepository.GetByGroupMaterialId(rel.GroupMaterialId);
+                if (materialStages == null) continue;
+                foreach (var ms in materialStages)
                 {
-                    var materialStages = await _materialStageRepository.GetByGroupMaterialId(relation.GroupMaterialId);
-                    if (materialStages != null && materialStages.Any())
+                    var samples = await _productSubTypeStageSampleRepository.GetByMaterialStageId(ms.Id);
+                    var filtered = samples?.Where(s => s?.ProductSubTypeId == product.ProductSubTypeId).ToList();
+                    if (filtered == null) continue;
+                    foreach (var s in filtered)
                     {
-                        foreach (var materialStage in materialStages)
-                        {
-                            var stageSamples = await _productSubTypeStageSampleRepository.GetByMaterialStageId(materialStage.Id);
-                            var filteredSamples = stageSamples?
-                                .Where(s => s?.ProductSubTypeId == product.ProductSubTypeId)
-                                .ToList();
-
-                            if (filteredSamples != null && filteredSamples.Any())
-                            {
-                                foreach (var stageSample in filteredSamples)
-                                {
-                                    var stages = await _stageRepository.GetByProductSubTypeStageSampleId(stageSample.Id);
-                                    var productStages = stages?
-                                        .Where(s => s?.ProductId == productId)
-                                        .ToList();
-
-                                    if (productStages != null && productStages.Any())
-                                    {
-                                        foreach (var stage in productStages)
-                                        {
-                                            if (stage != null && stage.Date != DateTime.MinValue)
-                                            {
-                                                stageDates.Add(stage.Date);
-                                                _logger.LogWarning($"Найдена дата Stage: {stage.Date:dd.MM.yyyy HH:mm} UTC (StageId: {stage.Id}) для этапа {productSubTypeWorkingPeriodSampleId}");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        var stages = await _stageRepository.GetByProductSubTypeStageSampleId(s.Id);
+                        var productStages = stages?.Where(st => st?.ProductId == productId).ToList();
+                        if (productStages == null) continue;
+                        foreach (var st in productStages)
+                            if (st.Date != DateTime.MinValue)
+                                result.Add(st.Date);
                     }
                 }
             }
-            else
-            {
-                _logger.LogWarning($"Для этапа рабочего периода {productSubTypeWorkingPeriodSampleId} не найдены связи с GroupMaterial");
-            }
-
-            // ---------- БЛОК 2: Даты ограничений от дочерних продуктов ----------
-            var productStagesForConstraint = await _stageRepository.GetByProductId(productId);
-            var currentStage = productStagesForConstraint?
-                .FirstOrDefault(s => s.ProductSubTypeStageSampleId == productSubTypeWorkingPeriodSampleId);
-
-            if (currentStage != null)
-            {
-                if (_productStageConstraintDates.TryGetValue(currentStage.Id, out var constraintDateUtc))
-                {
-                    stageDates.Add(constraintDateUtc);
-                    _logger.LogWarning($"Добавлена дата ограничения от подпродукта: {constraintDateUtc:dd.MM.yyyy HH:mm} UTC (StageId: {currentStage.Id})");
-                }
-            }
-            else
-            {
-                _logger.LogWarning($"Не найдена Stage у продукта {productId} с ProductSubTypeStageSampleId = {productSubTypeWorkingPeriodSampleId} – ограничения от подпродуктов не будут учтены для этого этапа");
-            }
-
-            _logger.LogWarning($"Для продукта {productId} и этапа {productSubTypeWorkingPeriodSampleId} найдено {stageDates.Count} дат Stage");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при получении дат Stage для этапа рабочего периода {productSubTypeWorkingPeriodSampleId}");
         }
 
-        return stageDates;
+        // Блок 2: ограничения от детей
+        var allStages = await _stageRepository.GetByProductId(productId);
+        var currentStage = allStages?.FirstOrDefault(s => s.ProductSubTypeStageSampleId == sampleId);
+        if (currentStage != null && _productStageConstraintDates.TryGetValue(currentStage.Id, out var constraint))
+            result.Add(constraint);
+
+        return result;
     }
 
-    // ========== Работа с бригадами и их занятостью ==========
+    // ========== Бригады ==========
     private async Task LoadFactoryBrigades()
     {
-        try
+        _factoryBrigades = new Dictionary<Guid, List<BrigadeEntity>>();
+        var factories = await _factoryRepository.GetAll();
+        _logger.LogWarning($"Загружено {factories.Count} фабрик");
+        foreach (var f in factories)
         {
-            _factoryBrigades = new Dictionary<Guid, List<BrigadeEntity>>();
-            _factoryBrigadeSchedulers = new Dictionary<Guid, BrigadeScheduler>();
-
-            var allFactories = await _factoryRepository.GetAll();
-            _logger.LogWarning($"Загружено {allFactories.Count} фабрик");
-
-            foreach (var factory in allFactories)
-            {
-                var factoryBrigades = await _brigadeRepository.GetByFactoryId(factory.Id);
-                if (factoryBrigades != null)
-                {
-                    _factoryBrigades[factory.Id] = factoryBrigades;
-                    var scheduler = new BrigadeScheduler(_logger);
-                    scheduler.InitializeBrigades(factoryBrigades);
-                    _factoryBrigadeSchedulers[factory.Id] = scheduler;
-                    _logger.LogWarning($"Фабрика {factory.Id}: {factoryBrigades.Count} бригад");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при загрузке бригад по фабрикам");
-            throw;
+            var br = await _brigadeRepository.GetByFactoryId(f.Id);
+            if (br != null)
+                _factoryBrigades[f.Id] = br;
         }
     }
 
     private async Task LoadBrigadeTimeSlotsAsync(Guid factoryId)
     {
-        try
-        {
-            if (_factoryBrigades.TryGetValue(factoryId, out var factoryBrigades))
-            {
-                foreach (var brigade in factoryBrigades)
-                {
-                    _brigadeTimeSlots[brigade.Id] = await GetBrigadeBusyTimeSlotsAsync(brigade.Id);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при загрузке временных слотов для бригад фабрики {factoryId}");
-        }
+        if (!_factoryBrigades.TryGetValue(factoryId, out var brigades)) return;
+        foreach (var b in brigades)
+            _brigadeTimeSlots[b.Id] = await GetBrigadeBusyTimeSlotsAsync(b.Id);
     }
 
     private async Task<List<BrigadeTimeSlot>> GetBrigadeBusyTimeSlotsAsync(Guid brigadeId)
     {
-        var timeSlots = new List<BrigadeTimeSlot>();
+        var slots = new List<BrigadeTimeSlot>();
+        var relations = await _workingPeriodStageBrigadeRelationRepository.GetByBrigadeId(brigadeId);
+        if (relations == null) return slots;
 
-        try
+        var stageIds = relations.Select(r => r.WorkingPeriodStageId).ToHashSet();
+        var stages = _allWorkingPeriodStages.Where(s => stageIds.Contains(s.Id)).ToList();
+        foreach (var s in stages)
         {
-            var brigadeRelations = await _workingPeriodStageBrigadeRelationRepository.GetByBrigadeId(brigadeId);
-            if (brigadeRelations != null && brigadeRelations.Any())
+            var sample = await _productSubTypeWorkingPeriodSampleRepository.GetById(s.ProductSubTypeWorkingPeriodSampleId);
+            if (sample != null)
             {
-                var stageIds = brigadeRelations.Select(r => r.WorkingPeriodStageId).ToList();
-                var stages = _allWorkingPeriodStages.Where(s => stageIds.Contains(s.Id)).ToList();
-
-                foreach (var stage in stages)
+                slots.Add(new BrigadeTimeSlot
                 {
-                    var stageSample = await _productSubTypeWorkingPeriodSampleRepository.GetById(stage.ProductSubTypeWorkingPeriodSampleId);
-                    if (stageSample != null)
-                    {
-                        timeSlots.Add(new BrigadeTimeSlot
-                        {
-                            Start = stage.DateFrom, // уже UTC
-                            End = stage.DateTo,     // уже UTC
-                            ProductId = GetProductIdByWorkingPeriodId(stage.WorkingPeriodId),
-                            StageId = stage.Id,
-                            BrigadeId = brigadeId,
-                            RequiredEmployees = stageSample.StandartEmployee
-                        });
-                    }
-                }
+                    Start = s.DateFrom,
+                    End = s.DateTo,
+                    ProductId = GetProductIdByWorkingPeriodId(s.WorkingPeriodId),
+                    StageId = s.Id,
+                    BrigadeId = brigadeId,
+                    RequiredEmployees = sample.StandartEmployee
+                });
             }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при получении занятых слотов для бригады {brigadeId}");
-        }
-
-        return timeSlots;
+        return slots;
     }
 
-    private Guid GetProductIdByWorkingPeriodId(Guid workingPeriodId)
-    {
-        var workingPeriod = _allWorkingPeriods.FirstOrDefault(wp => wp.Id == workingPeriodId);
-        return workingPeriod?.ProductId ?? Guid.Empty;
-    }
+    private Guid GetProductIdByWorkingPeriodId(Guid wpId) =>
+        _allWorkingPeriods.FirstOrDefault(wp => wp.Id == wpId)?.ProductId ?? Guid.Empty;
 
     private async Task InitializeBrigadeAvailability(Guid factoryId)
     {
-        if (_factoryBrigades.TryGetValue(factoryId, out var factoryBrigades))
-        {
-            foreach (var brigade in factoryBrigades)
-            {
-                _brigadeNextAvailableTime[brigade.Id] = _planningStartTimeUtc;
-                _logger.LogWarning($"Бригада {brigade.Id} инициализирована, доступна с {_brigadeNextAvailableTime[brigade.Id]:dd.MM.yyyy HH:mm} UTC");
-            }
-        }
+        if (!_factoryBrigades.TryGetValue(factoryId, out var brigades)) return;
+        foreach (var b in brigades)
+            _brigadeNextAvailableTime[b.Id] = _planningStartTimeUtc;
     }
 
-    // ========== Основная логика планирования ==========
+    // ========== Основное планирование продукта ==========
     private async Task<bool> PlanProductWithBrigadeSelectionAsync(ProductEntity product, Guid factoryId)
     {
-        try
+        if (_allWorkingPeriods.Any(wp => wp.ProductId == product.Id))
+            return false;
+
+        var stages = await _productSubTypeWorkingPeriodSampleRepository.GetByProductSubTypeId(product.ProductSubTypeId);
+        if (stages == null || !stages.Any())
         {
-            _logger.LogWarning($"Начало планирования продукта {product.Id} с выбором бригады");
-
-            if (_allWorkingPeriods.Any(wp => wp.ProductId == product.Id))
-            {
-                _logger.LogWarning($"У продукта {product.Id} уже есть рабочий период");
-                return false;
-            }
-
-            var productStages = await _productSubTypeWorkingPeriodSampleRepository.GetByProductSubTypeId(product.ProductSubTypeId);
-            if (productStages == null || !productStages.Any())
-            {
-                _logger.LogWarning($"Для продукта {product.Id} не найдены этапы сборки");
-                return false;
-            }
-
-            _logger.LogWarning($"Найдено {productStages.Count} этапов");
-
-            var stageGraph = await BuildStageDependencyGraphAsync(productStages);
-            _logger.LogWarning($"Построен граф из {stageGraph.Count} узлов");
-
-            var executionPlan = await GetStageExecutionPlanAsync(stageGraph);
-            _logger.LogWarning($"Создан план из {executionPlan.Count} групп выполнения");
-
-            var rootStages = stageGraph.Where(n => !n.Parents.Any()).ToList();
-            _logger.LogWarning($"Корневых этапов (без родителей): {rootStages.Count}");
-
-            if (rootStages.Count == 0)
-            {
-                _logger.LogError("Нет корневых этапов! Возможно, цикличные зависимости.");
-                return false;
-            }
-
-            var stageTypes = await GetStageTypesForGraphAsync(stageGraph);
-            var assemblyStageTypeId = _stageTypeIds.GetValueOrDefault("Сборка");
-            var hasAssemblyStages = stageTypes.Any(kv => kv.Value == assemblyStageTypeId);
-
-            if (hasAssemblyStages)
-            {
-                return await PlanProductWithAssemblyStagesAsync(product, factoryId, stageGraph, executionPlan, stageTypes);
-            }
-            else
-            {
-                return await PlanProductWithoutAssemblyStagesAsync(product, factoryId, stageGraph, executionPlan, stageTypes);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при планировании продукта {product.Id}");
+            _logger.LogWarning($"Для продукта {product.Id} нет этапов");
             return false;
         }
+
+        var graph = await BuildStageDependencyGraphAsync(stages);
+        var plan = await GetStageExecutionPlanAsync(graph);
+        var stageTypes = await GetStageTypesForGraphAsync(graph);
+        var assemblyTypeId = _stageTypeIds.GetValueOrDefault("Сборка");
+        var hasAssembly = stageTypes.Any(kv => kv.Value == assemblyTypeId);
+
+        return hasAssembly
+            ? await PlanProductWithAssemblyStagesAsync(product, factoryId, graph, plan, stageTypes)
+            : await PlanProductWithoutAssemblyStagesAsync(product, factoryId, graph, plan, stageTypes);
     }
 
     private async Task<bool> PlanProductWithAssemblyStagesAsync(
-        ProductEntity product,
-        Guid factoryId,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
+        ProductEntity product, Guid factoryId,
+        List<StageNode> graph, List<StageExecutionGroup> plan,
         Dictionary<Guid, Guid> stageTypes)
     {
-        try
+        var assemblyTypeId = _stageTypeIds["Сборка"];
+        var assemblyBrigades = (await _brigadeRepository.GetByStageTypeId(assemblyTypeId))
+            ?.Where(b => b.FactoryId == factoryId).ToList();
+        if (assemblyBrigades == null || !assemblyBrigades.Any())
         {
-            _logger.LogWarning($"Планирование продукта {product.Id} с этапами сборки");
-
-            var assemblyStageTypeId = _stageTypeIds.GetValueOrDefault("Сборка");
-            var assemblyBrigades = await _brigadeRepository.GetByStageTypeId(assemblyStageTypeId);
-            var factoryAssemblyBrigades = assemblyBrigades?
-                .Where(b => b.FactoryId == factoryId)
-                .ToList();
-
-            if (factoryAssemblyBrigades == null || !factoryAssemblyBrigades.Any())
-            {
-                _logger.LogError($"На фабрике {factoryId} нет бригад типа 'Сборка'");
-                return false;
-            }
-
-            DateTime productPlanningStartTimeUtc = await GetProductPlanningStartTimeAsync(product.Id);
-            _logger.LogWarning($"Продукт {product.Id} (с этапами сборки) начинает планирование с {productPlanningStartTimeUtc:dd.MM.yyyy HH:mm} UTC");
-
-            var bestAssemblyBrigade = await SelectBestAssemblyBrigadeAsync(
-                product, factoryAssemblyBrigades, stageGraph, executionPlan, stageTypes, factoryId);
-
-            if (!bestAssemblyBrigade.HasValue)
-            {
-                _logger.LogError($"Не удалось выбрать бригаду сборки для продукта {product.Id}");
-                return false;
-            }
-
-            var (assemblyBrigadeId, stageToBrigadeMapping, _, _) = bestAssemblyBrigade.Value;
-            _productAssemblyBrigadeMapping[product.Id] = assemblyBrigadeId;
-
-            var plannedStages = await PlanProductWithBrigadeMappingAsync(
-                product, stageGraph, executionPlan, stageToBrigadeMapping, productPlanningStartTimeUtc, factoryId);
-
-            if (plannedStages == null || !plannedStages.Any())
-            {
-                _logger.LogWarning($"Не удалось запланировать этапы для продукта {product.Id}");
-                return false;
-            }
-
-            await CreateWorkingPeriodAsync(product, plannedStages);
-            _logger.LogInformation($"Создан рабочий период для продукта {product.Id}");
-
-            if (plannedStages.Any())
-                await UpdateParentStageConstraintAsync(product, plannedStages.Last().EndTime);
-
-            _plannedProductIdsInThisRun.Add(product.Id);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при планировании продукта с этапами сборки {product.Id}");
+            _logger.LogError($"На фабрике {factoryId} нет бригад сборки");
             return false;
         }
+
+        var productStart = await GetProductPlanningStartTimeAsync(product.Id);
+        var best = await SelectBestAssemblyBrigadeAsync(product, assemblyBrigades, graph, plan, stageTypes, factoryId);
+        if (!best.HasValue) return false;
+
+        var (brigadeId, mapping, _, _) = best.Value;
+        var planned = await PlanProductWithBrigadeMappingAsync(product, graph, plan, mapping, productStart, factoryId);
+        if (!planned.Any()) return false;
+
+        await CreateWorkingPeriodAsync(product, planned);
+        if (planned.Any())
+            await UpdateParentStageConstraintAsync(product, planned.Last().EndTime);
+
+        _plannedProductIdsInThisRun.Add(product.Id);
+        return true;
     }
 
     private async Task<bool> PlanProductWithoutAssemblyStagesAsync(
-        ProductEntity product,
-        Guid factoryId,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
+        ProductEntity product, Guid factoryId,
+        List<StageNode> graph, List<StageExecutionGroup> plan,
         Dictionary<Guid, Guid> stageTypes)
     {
-        try
-        {
-            _logger.LogWarning($"Планирование продукта {product.Id} без этапов сборки");
+        var mapping = await CreateStageToBrigadeMappingAsync(product, graph, stageTypes, null, factoryId);
+        if (!mapping.Any()) return false;
 
-            var stageToBrigadeMapping = await CreateStageToBrigadeMappingAsync(
-                product, stageGraph, stageTypes, null, factoryId);
+        var productStart = await GetProductPlanningStartTimeAsync(product.Id);
+        var planned = await PlanProductWithBrigadeMappingAsync(product, graph, plan, mapping, productStart, factoryId);
+        if (!planned.Any()) return false;
 
-            if (!stageToBrigadeMapping.Any())
-            {
-                _logger.LogError($"Не удалось создать маппинг бригад для продукта {product.Id}");
-                return false;
-            }
+        await CreateWorkingPeriodAsync(product, planned);
+        if (planned.Any())
+            await UpdateParentStageConstraintAsync(product, planned.Last().EndTime);
 
-            DateTime productPlanningStartTimeUtc = await GetProductPlanningStartTimeAsync(product.Id);
-            _logger.LogWarning($"Продукт {product.Id} начинает планирование с {productPlanningStartTimeUtc:dd.MM.yyyy HH:mm} UTC");
-
-            var plannedStages = await PlanProductWithBrigadeMappingAsync(
-                product, stageGraph, executionPlan, stageToBrigadeMapping, productPlanningStartTimeUtc, factoryId);
-
-            if (plannedStages == null || !plannedStages.Any())
-            {
-                _logger.LogWarning($"Не удалось запланировать этапы для продукта {product.Id}");
-                return false;
-            }
-
-            await CreateWorkingPeriodAsync(product, plannedStages);
-            _logger.LogInformation($"Создан рабочий период для продукта {product.Id}");
-
-            if (plannedStages.Any())
-                await UpdateParentStageConstraintAsync(product, plannedStages.Last().EndTime);
-
-            _plannedProductIdsInThisRun.Add(product.Id);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при планировании продукта без этапов сборки {product.Id}");
-            return false;
-        }
+        _plannedProductIdsInThisRun.Add(product.Id);
+        return true;
     }
 
-    private async Task<(Guid BrigadeId, Dictionary<Guid, Guid> StageMapping, DateTime StartTime, DateTime EndTime)?>
-        SelectBestAssemblyBrigadeAsync(
-            ProductEntity product,
-            List<BrigadeEntity> assemblyBrigades,
-            List<StageNode> stageGraph,
-            List<StageExecutionGroup> executionPlan,
-            Dictionary<Guid, Guid> stageTypes,
-            Guid factoryId)
+    private async Task<(Guid, Dictionary<Guid, Guid>, DateTime, DateTime)?> SelectBestAssemblyBrigadeAsync(
+        ProductEntity product,
+        List<BrigadeEntity> candidates,
+        List<StageNode> graph,
+        List<StageExecutionGroup> plan,
+        Dictionary<Guid, Guid> stageTypes,
+        Guid factoryId)
     {
+        var productStart = await GetProductPlanningStartTimeAsync(product.Id);
         var evaluations = new List<AssemblyBrigadeEvaluation>();
-        DateTime productPlanningStartTimeUtc = await GetProductPlanningStartTimeAsync(product.Id);
 
-        foreach (var brigade in assemblyBrigades)
+        foreach (var b in candidates)
         {
-            try
+            var mapping = await CreateStageToBrigadeMappingAsync(product, graph, stageTypes, b.Id, factoryId);
+            if (!mapping.Any()) continue;
+
+            var time = await EstimateProductTimeWithMappingAsync(product, graph, plan, mapping, factoryId, productStart);
+            if (!time.HasValue) continue;
+
+            evaluations.Add(new AssemblyBrigadeEvaluation
             {
-                var stageToBrigadeMapping = await CreateStageToBrigadeMappingAsync(
-                    product, stageGraph, stageTypes, brigade.Id, factoryId);
-
-                if (!stageToBrigadeMapping.Any())
-                {
-                    _logger.LogDebug($"Не удалось создать маппинг для бригады {brigade.Id}");
-                    continue;
-                }
-
-                var timeEstimation = await EstimateProductTimeWithMappingAsync(
-                    product, stageGraph, executionPlan, stageToBrigadeMapping, factoryId, productPlanningStartTimeUtc);
-
-                if (!timeEstimation.HasValue)
-                {
-                    _logger.LogDebug($"Не удалось оценить время для бригады {brigade.Id}");
-                    continue;
-                }
-
-                var (startTime, endTime) = timeEstimation.Value;
-                evaluations.Add(new AssemblyBrigadeEvaluation
-                {
-                    BrigadeId = brigade.Id,
-                    StageToBrigadeMapping = stageToBrigadeMapping,
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    Duration = endTime - startTime,
-                    Score = CalculateBrigadeTimeScore(startTime, endTime, brigade)
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Ошибка при оценке бригады {brigade.Id}");
-            }
+                BrigadeId = b.Id,
+                StageToBrigadeMapping = mapping,
+                StartTime = time.Value.StartTime,
+                EndTime = time.Value.EndTime,
+                Duration = time.Value.EndTime - time.Value.StartTime,
+                Score = CalculateBrigadeTimeScore(time.Value.StartTime, time.Value.EndTime, b)
+            });
         }
 
-        if (!evaluations.Any())
-            return null;
-
-        var bestEvaluation = evaluations
-            .OrderBy(b => b.EndTime)
-            .ThenBy(b => b.Duration)
-            .First();
-
-        return (bestEvaluation.BrigadeId, bestEvaluation.StageToBrigadeMapping,
-                bestEvaluation.StartTime, bestEvaluation.EndTime);
+        if (!evaluations.Any()) return null;
+        var best = evaluations.OrderBy(e => e.EndTime).ThenBy(e => e.Duration).First();
+        return (best.BrigadeId, best.StageToBrigadeMapping, best.StartTime, best.EndTime);
     }
 
     private async Task<Dictionary<Guid, Guid>> CreateStageToBrigadeMappingAsync(
         ProductEntity product,
-        List<StageNode> stageGraph,
+        List<StageNode> graph,
         Dictionary<Guid, Guid> stageTypes,
         Guid? assemblyBrigadeId,
         Guid factoryId)
     {
-        var stageToBrigadeMapping = new Dictionary<Guid, Guid>();
-        var assemblyStageTypeId = _stageTypeIds.GetValueOrDefault("Сборка");
-
+        var mapping = new Dictionary<Guid, Guid>();
         var factoryBrigades = await _brigadeRepository.GetByFactoryId(factoryId);
-        if (factoryBrigades == null || !factoryBrigades.Any())
+        if (factoryBrigades == null) return mapping;
+
+        var byType = factoryBrigades.GroupBy(b => b.StageTypeId).ToDictionary(g => g.Key, g => g.ToList());
+        var assemblyTypeId = _stageTypeIds.GetValueOrDefault("Сборка");
+        var cache = new Dictionary<Guid, Guid>(); // тип -> выбранная бригада
+
+        foreach (var node in graph)
         {
-            _logger.LogError($"На фабрике {factoryId} нет бригад");
-            return stageToBrigadeMapping;
-        }
-
-        var brigadesByType = factoryBrigades
-            .GroupBy(b => b.StageTypeId)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        var brigadeForStageType = new Dictionary<Guid, Guid>();
-
-        foreach (var node in stageGraph)
-        {
-            var stageTypeId = stageTypes[node.Id];
-            Guid selectedBrigadeId;
-
-            if (stageTypeId == assemblyStageTypeId && assemblyBrigadeId.HasValue)
+            var typeId = stageTypes[node.Id];
+            if (typeId == assemblyTypeId && assemblyBrigadeId.HasValue)
             {
-                selectedBrigadeId = assemblyBrigadeId.Value;
+                mapping[node.Id] = assemblyBrigadeId.Value;
+                continue;
             }
-            else
+
+            if (!cache.TryGetValue(typeId, out var selected))
             {
-                if (!brigadeForStageType.ContainsKey(stageTypeId))
+                if (!byType.ContainsKey(typeId))
                 {
-                    if (!brigadesByType.ContainsKey(stageTypeId))
-                    {
-                        _logger.LogWarning($"Нет бригад типа {stageTypeId} на фабрике {factoryId}");
-                        if (assemblyBrigadeId.HasValue)
-                            selectedBrigadeId = assemblyBrigadeId.Value;
-                        else
-                        {
-                            _logger.LogError($"Не удалось найти бригаду для этапа {node.Id}");
-                            continue;
-                        }
-                    }
+                    if (assemblyBrigadeId.HasValue)
+                        selected = assemblyBrigadeId.Value;
                     else
                     {
-                        var suitableBrigades = brigadesByType[stageTypeId]
-                            .Where(b => b.CountEmployee >= node.Stage.StandartEmployee)
-                            .ToList();
-
-                        if (!suitableBrigades.Any())
-                        {
-                            _logger.LogWarning($"Нет подходящих бригад для этапа {node.Id} (требуется {node.Stage.StandartEmployee} сотрудников)");
-                            if (assemblyBrigadeId.HasValue)
-                                selectedBrigadeId = assemblyBrigadeId.Value;
-                            else
-                                continue;
-                        }
-                        else
-                        {
-                            var bestBrigade = suitableBrigades
-                                .OrderBy(b =>
-                                {
-                                    var availableTime = _brigadeNextAvailableTime.ContainsKey(b.Id)
-                                        ? _brigadeNextAvailableTime[b.Id]
-                                        : _planningStartTimeUtc;
-                                    return availableTime;
-                                })
-                                .ThenBy(b => b.CountEmployee)
-                                .First();
-
-                            brigadeForStageType[stageTypeId] = bestBrigade.Id;
-                            selectedBrigadeId = bestBrigade.Id;
-                        }
+                        _logger.LogError($"Нет бригад типа {typeId} для этапа {node.Id}");
+                        continue;
                     }
                 }
                 else
                 {
-                    selectedBrigadeId = brigadeForStageType[stageTypeId];
+                    var suitable = byType[typeId].Where(b => b.CountEmployee >= node.Stage.StandartEmployee).ToList();
+                    if (!suitable.Any())
+                    {
+                        if (assemblyBrigadeId.HasValue)
+                            selected = assemblyBrigadeId.Value;
+                        else
+                            continue;
+                    }
+                    else
+                    {
+                        selected = suitable
+                            .OrderBy(b => _brigadeNextAvailableTime.GetValueOrDefault(b.Id, _planningStartTimeUtc))
+                            .ThenBy(b => b.CountEmployee)
+                            .First().Id;
+                    }
                 }
+                cache[typeId] = selected;
             }
-
-            stageToBrigadeMapping[node.Id] = selectedBrigadeId;
+            mapping[node.Id] = selected;
         }
-
-        return stageToBrigadeMapping;
+        return mapping;
     }
 
     private async Task<(DateTime StartTime, DateTime EndTime)?> EstimateProductTimeWithMappingAsync(
         ProductEntity product,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
-        Dictionary<Guid, Guid> stageToBrigadeMapping,
+        List<StageNode> graph,
+        List<StageExecutionGroup> plan,
+        Dictionary<Guid, Guid> mapping,
         Guid factoryId,
-        DateTime productPlanningStartTimeUtc)
+        DateTime productStartUtc)
     {
-        try
+        var simBrigadeTimes = new Dictionary<Guid, DateTime>();
+        var simSlots = new Dictionary<Guid, List<BrigadeTimeSlot>>();
+        foreach (var bId in mapping.Values.Distinct())
         {
-            _logger.LogWarning($"Оценка времени для продукта {product.Id}, старт с {productPlanningStartTimeUtc:dd.MM.yyyy HH:mm} UTC");
+            simBrigadeTimes[bId] = productStartUtc;
+            simSlots[bId] = _brigadeTimeSlots.ContainsKey(bId)
+                ? new List<BrigadeTimeSlot>(_brigadeTimeSlots[bId])
+                : new List<BrigadeTimeSlot>();
+        }
 
-            var simulatedBrigadeTimes = new Dictionary<Guid, DateTime>();
-            var simulatedTimeSlots = new Dictionary<Guid, List<BrigadeTimeSlot>>();
+        var stageEnd = new Dictionary<Guid, DateTime>();
 
-            foreach (var brigadeId in stageToBrigadeMapping.Values.Distinct())
+        foreach (var group in plan.OrderBy(g => g.Level))
+        {
+            foreach (var stage in group.Stages)
             {
-                simulatedBrigadeTimes[brigadeId] = productPlanningStartTimeUtc;
-                simulatedTimeSlots[brigadeId] = _brigadeTimeSlots.ContainsKey(brigadeId)
-                    ? new List<BrigadeTimeSlot>(_brigadeTimeSlots[brigadeId])
-                    : new List<BrigadeTimeSlot>();
-            }
+                var node = graph.FirstOrDefault(n => n.Id == stage.Id);
+                if (node == null) continue;
 
-            var stageCompletionTimes = new Dictionary<Guid, DateTime>();
+                var bId = mapping[node.Id];
+                var current = simBrigadeTimes[bId];
 
-            foreach (var group in executionPlan.OrderBy(g => g.Level))
-            {
-                foreach (var stage in group.Stages)
+                // Учёт родителей
+                if (node.Parents.Any())
                 {
-                    var node = stageGraph.FirstOrDefault(n => n.Id == stage.Id);
-                    if (node == null) continue;
-
-                    var brigadeId = stageToBrigadeMapping[node.Id];
-                    var currentBrigadeTime = simulatedBrigadeTimes[brigadeId];
-
-                    bool hasDependencies = node.Parents.Any();
-                    if (hasDependencies)
-                    {
-                        var parentEndTimes = node.Parents
-                            .Where(parentId => stageCompletionTimes.ContainsKey(parentId))
-                            .Select(parentId => stageCompletionTimes[parentId])
-                            .ToList();
-
-                        if (parentEndTimes.Any())
-                        {
-                            var maxParentEndTime = parentEndTimes.Max();
-                            if (maxParentEndTime > currentBrigadeTime)
-                                currentBrigadeTime = maxParentEndTime;
-                        }
-                    }
-
-                    var stageDates = await GetStageDatesForWorkingPeriodSampleAsync(product.Id, node.Id);
-                    if (stageDates.Any())
-                    {
-                        var maxStageDate = stageDates.Max();
-                        if (maxStageDate > currentBrigadeTime)
-                            currentBrigadeTime = maxStageDate;
-                    }
-
-                    var duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
-                    var plannedTime = await FindAvailableTimeSlotForBrigadeAsync(
-                        currentBrigadeTime,
-                        duration,
-                        brigadeId,
-                        stage.StandartEmployee,
-                        simulatedTimeSlots[brigadeId],
-                        factoryId,
-                        hasDependencies);
-
-                    if (!plannedTime.HasValue)
-                    {
-                        _logger.LogWarning($"Не удалось найти время для этапа {stage.Id} в симуляции");
-                        return null;
-                    }
-
-                    var stageEndTime = plannedTime.Value.Add(duration);
-                    stageCompletionTimes[stage.Id] = stageEndTime;
-                    simulatedBrigadeTimes[brigadeId] = stageEndTime;
-
-                    simulatedTimeSlots[brigadeId].Add(new BrigadeTimeSlot
-                    {
-                        Start = plannedTime.Value,
-                        End = stageEndTime,
-                        ProductId = product.Id,
-                        StageId = stage.Id,
-                        BrigadeId = brigadeId,
-                        RequiredEmployees = stage.StandartEmployee
-                    });
+                    var parentEnds = node.Parents.Where(p => stageEnd.ContainsKey(p)).Select(p => stageEnd[p]).ToList();
+                    if (parentEnds.Any() && parentEnds.Max() > current)
+                        current = parentEnds.Max();
                 }
+
+                // Учёт Stage-дат
+                var stageDates = await GetStageDatesForWorkingPeriodSampleAsync(product.Id, node.Id);
+                if (stageDates.Any() && stageDates.Max() > current)
+                    current = stageDates.Max();
+
+                var duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
+                var slot = await FindAvailableTimeSlotForBrigadeAsync(
+                    current, duration, bId, stage.StandartEmployee, simSlots[bId], hasDependencies: node.Parents.Any());
+
+                if (!slot.HasValue) return null;
+
+                var end = slot.Value.Add(duration);
+                stageEnd[node.Id] = end;
+                simBrigadeTimes[bId] = end;
+                simSlots[bId].Add(new BrigadeTimeSlot
+                {
+                    Start = slot.Value,
+                    End = end,
+                    ProductId = product.Id,
+                    StageId = node.Id,
+                    BrigadeId = bId,
+                    RequiredEmployees = stage.StandartEmployee
+                });
             }
-
-            if (!stageCompletionTimes.Any())
-            {
-                _logger.LogWarning($"Не удалось оценить время для продукта {product.Id}");
-                return null;
-            }
-
-            var startTime = stageCompletionTimes.Values.Min();
-            var endTime = stageCompletionTimes.Values.Max();
-
-            _logger.LogWarning($"Оценка времени для продукта {product.Id}: {startTime:dd.MM.yyyy HH:mm} UTC - {endTime:HH:mm} UTC");
-            return (startTime, endTime);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при оценке времени с маппингом для продукта {product.Id}");
-            return null;
-        }
+
+        if (!stageEnd.Any()) return null;
+        return (stageEnd.Values.Min(), stageEnd.Values.Max());
     }
 
     private async Task<List<PlannedStage>> PlanProductWithBrigadeMappingAsync(
         ProductEntity product,
-        List<StageNode> stageGraph,
-        List<StageExecutionGroup> executionPlan,
-        Dictionary<Guid, Guid> stageToBrigadeMapping,
-        DateTime planningStartTimeUtc,
+        List<StageNode> graph,
+        List<StageExecutionGroup> plan,
+        Dictionary<Guid, Guid> mapping,
+        DateTime productStartUtc,
         Guid factoryId)
     {
-        try
+        var planned = new List<PlannedStage>();
+        var stageEnd = new Dictionary<Guid, DateTime>();
+
+        foreach (var group in plan.OrderBy(g => g.Level))
         {
-            _logger.LogWarning($"Планирование продукта {product.Id} с распределением по бригадам");
-
-            var plannedStages = new List<PlannedStage>();
-            var stageCompletionTimes = new Dictionary<Guid, DateTime>();
-
-            foreach (var group in executionPlan.OrderBy(g => g.Level))
+            var items = new List<(StageNode Node, Guid BrigadeId, int Emp, TimeSpan Dur, bool HasDep)>();
+            foreach (var s in group.Stages)
             {
-                _logger.LogWarning($"Планирование группы уровня {group.Level} с {group.Stages.Count} этапами");
-
-                var groupStages = new List<(StageNode Node, Guid BrigadeId, int RequiredEmployees, TimeSpan Duration, bool HasDependencies)>();
-
-                foreach (var stage in group.Stages)
-                {
-                    var node = stageGraph.FirstOrDefault(n => n.Id == stage.Id);
-                    if (node == null) continue;
-
-                    var brigadeId = stageToBrigadeMapping[node.Id];
-                    var duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
-                    var hasDependencies = node.Parents.Any();
-
-                    groupStages.Add((node, brigadeId, stage.StandartEmployee, duration, hasDependencies));
-                }
-
-                var sortedGroupStages = groupStages
-                    .OrderBy(s => s.HasDependencies ? 1 : 0)
-                    .ThenBy(s => s.Duration)
-                    .ToList();
-
-                foreach (var (node, brigadeId, requiredEmployees, duration, hasDependencies) in sortedGroupStages)
-                {
-                    DateTime searchStartTimeUtc = planningStartTimeUtc;
-
-                    if (hasDependencies)
-                    {
-                        var parentEndTimes = node.Parents
-                            .Where(parentId => stageCompletionTimes.ContainsKey(parentId))
-                            .Select(parentId => stageCompletionTimes[parentId])
-                            .ToList();
-
-                        if (parentEndTimes.Any())
-                        {
-                            var maxParentEndTime = parentEndTimes.Max();
-                            if (maxParentEndTime > searchStartTimeUtc)
-                                searchStartTimeUtc = maxParentEndTime;
-                        }
-                    }
-
-                    var stageDates = await GetStageDatesForWorkingPeriodSampleAsync(product.Id, node.Id);
-                    if (stageDates.Any())
-                    {
-                        var maxStageDate = stageDates.Max();
-                        if (maxStageDate > searchStartTimeUtc)
-                        {
-                            searchStartTimeUtc = maxStageDate;
-                            _logger.LogWarning($"Этап {node.Id} зависит от Stage с датой {maxStageDate:dd.MM.yyyy HH:mm} UTC");
-                        }
-                    }
-
-                    searchStartTimeUtc = AdjustToWorkHours(searchStartTimeUtc);
-
-                    _logger.LogWarning($"Этап {node.Id}: поиск с {searchStartTimeUtc:HH:mm} UTC, " +
-                                       $"длительность {duration.TotalMinutes} мин, " +
-                                       $"зависимости от родителей: {hasDependencies}, " +
-                                       $"зависимости от Stage: {stageDates.Count}");
-
-                    var plannedTime = await FindAvailableTimeSlotForBrigadeAsync(
-                        searchStartTimeUtc,
-                        duration,
-                        brigadeId,
-                        requiredEmployees,
-                        _brigadeTimeSlots.GetValueOrDefault(brigadeId, new List<BrigadeTimeSlot>()),
-                        factoryId,
-                        hasDependencies);
-
-                    if (!plannedTime.HasValue)
-                    {
-                        _logger.LogError($"Не удалось найти время для этапа {node.Id} на бригаде {brigadeId}");
-                        return new List<PlannedStage>();
-                    }
-
-                    var stageEndTime = plannedTime.Value.Add(duration);
-                    var stageTypeId = await GetStageTypeIdAsync(node.Id);
-
-                    var plannedStage = new PlannedStage
-                    {
-                        ProductId = product.Id,
-                        StageSampleId = node.Id,
-                        BrigadeId = brigadeId,
-                        StartTime = plannedTime.Value,
-                        EndTime = stageEndTime,
-                        StageTypeId = stageTypeId,
-                        RequiredEmployees = requiredEmployees
-                    };
-
-                    plannedStages.Add(plannedStage);
-                    stageCompletionTimes[node.Id] = stageEndTime;
-
-                    if (!_brigadeTimeSlots.ContainsKey(brigadeId))
-                        _brigadeTimeSlots[brigadeId] = new List<BrigadeTimeSlot>();
-
-                    _brigadeTimeSlots[brigadeId].Add(new BrigadeTimeSlot
-                    {
-                        Start = plannedStage.StartTime,
-                        End = plannedStage.EndTime,
-                        ProductId = product.Id,
-                        StageId = node.Id,
-                        BrigadeId = brigadeId,
-                        RequiredEmployees = requiredEmployees
-                    });
-
-                    _logger.LogWarning($"Запланирован этап {node.Id}: " +
-                        $"{plannedStage.StartTime:dd.MM.yyyy HH:mm} UTC - {plannedStage.EndTime:HH:mm} UTC " +
-                        $"на бригаде {brigadeId}");
-                }
+                var node = graph.FirstOrDefault(n => n.Id == s.Id);
+                if (node == null) continue;
+                items.Add((node, mapping[node.Id], s.StandartEmployee,
+                    ParseStandartTimeToTimeSpan(s.StandartTime), node.Parents.Any()));
             }
 
-            return plannedStages;
+            foreach (var (node, bId, emp, dur, hasDep) in items.OrderBy(x => x.HasDep ? 1 : 0).ThenBy(x => x.Dur))
+            {
+                var search = productStartUtc;
+                if (hasDep)
+                {
+                    var parents = node.Parents.Where(p => stageEnd.ContainsKey(p)).Select(p => stageEnd[p]).ToList();
+                    if (parents.Any() && parents.Max() > search)
+                        search = parents.Max();
+                }
+
+                var stageDates = await GetStageDatesForWorkingPeriodSampleAsync(product.Id, node.Id);
+                if (stageDates.Any() && stageDates.Max() > search)
+                {
+                    search = stageDates.Max();
+                    _logger.LogWarning($"Этап {node.Id} ограничен Stage {search:dd.MM.yyyy HH:mm} UTC");
+                }
+
+                search = AdjustToWorkHours(search);
+
+                var slot = await FindAvailableTimeSlotForBrigadeAsync(
+                    search, dur, bId, emp,
+                    _brigadeTimeSlots.GetValueOrDefault(bId, new List<BrigadeTimeSlot>()),
+                    hasDependencies: hasDep);
+
+                if (!slot.HasValue)
+                {
+                    _logger.LogError($"Не найден слот для этапа {node.Id} на бригаде {bId}");
+                    return new List<PlannedStage>();
+                }
+
+                var end = slot.Value.Add(dur);
+                var typeId = await GetStageTypeIdAsync(node.Id);
+                var ps = new PlannedStage
+                {
+                    ProductId = product.Id,
+                    StageSampleId = node.Id,
+                    BrigadeId = bId,
+                    StartTime = slot.Value,
+                    EndTime = end,
+                    StageTypeId = typeId,
+                    RequiredEmployees = emp
+                };
+                planned.Add(ps);
+                stageEnd[node.Id] = end;
+
+                if (!_brigadeTimeSlots.ContainsKey(bId))
+                    _brigadeTimeSlots[bId] = new List<BrigadeTimeSlot>();
+                _brigadeTimeSlots[bId].Add(new BrigadeTimeSlot
+                {
+                    Start = slot.Value,
+                    End = end,
+                    ProductId = product.Id,
+                    StageId = node.Id,
+                    BrigadeId = bId,
+                    RequiredEmployees = emp
+                });
+
+                _logger.LogWarning($"Этап {node.Id}: {slot.Value:HH:mm}–{end:HH:mm} UTC на бригаде {bId}");
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при планировании продукта {product.Id} с маппингом бригад");
-            return new List<PlannedStage>();
-        }
+        return planned;
     }
 
-    // ========== Поиск временного слота для бригады (полностью в UTC) ==========
+    // ========== Поиск временного слота ==========
     private async Task<DateTime?> FindAvailableTimeSlotForBrigadeAsync(
-        DateTime searchStartTimeUtc,
+        DateTime searchStartUtc,
         TimeSpan duration,
         Guid brigadeId,
         int requiredEmployees,
-        List<BrigadeTimeSlot> brigadeTimeSlotsUtc,
-        Guid factoryId,
+        List<BrigadeTimeSlot> existingSlotsUtc,
         bool hasDependencies)
     {
-        try
-        {
-            _logger.LogWarning($"Поиск слота для бригады {brigadeId}: " +
-                             $"поиск с {searchStartTimeUtc:dd.MM.yyyy HH:mm} UTC, " +
-                             $"длительность={duration.TotalMinutes} мин, " +
-                             $"сотрудников={requiredEmployees}, зависимости={hasDependencies}");
-
-            var brigade = await _brigadeRepository.GetById(brigadeId);
-            if (brigade == null)
-            {
-                _logger.LogError($"Бригада {brigadeId} не найдена");
-                return null;
-            }
-
-            if (requiredEmployees > brigade.CountEmployee)
-            {
-                _logger.LogError($"Бригада {brigadeId} имеет {brigade.CountEmployee} сотрудников, требуется {requiredEmployees}");
-                return null;
-            }
-
-            DateTime currentSearchTimeUtc = AdjustToWorkHours(searchStartTimeUtc);
-            int maxDaysToSearch = 30;
-            int daysSearched = 0;
-
-            while (daysSearched < maxDaysToSearch)
-            {
-                // Пропускаем выходные (по UTC, т.к. фабрики в одном поясе и мы работаем в UTC)
-                if (currentSearchTimeUtc.DayOfWeek == DayOfWeek.Saturday ||
-                    currentSearchTimeUtc.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    currentSearchTimeUtc = currentSearchTimeUtc.Date.AddDays(1).Add(WORKDAY_START);
-                    daysSearched++;
-                    _logger.LogWarning($"Пропускаем выходной, переходим к {currentSearchTimeUtc:dd.MM.yyyy HH:mm} UTC");
-                    continue;
-                }
-
-                DateTime workDayStartUtc = currentSearchTimeUtc.Date.Add(WORKDAY_START);
-                DateTime workDayEndUtc = currentSearchTimeUtc.Date.Add(WORKDAY_END);
-
-                var dayBusySlots = brigadeTimeSlotsUtc
-                    .Where(s => s.BrigadeId == brigadeId &&
-                                s.Start.Date == currentSearchTimeUtc.Date)
-                    .OrderBy(s => s.Start)
-                    .ToList();
-
-                _logger.LogWarning($"День {currentSearchTimeUtc.Date:yyyy-MM-dd} UTC: {dayBusySlots.Count} занятых слотов");
-
-                if (!dayBusySlots.Any())
-                {
-                    DateTime candidateStartUtc = currentSearchTimeUtc > workDayStartUtc
-                        ? currentSearchTimeUtc
-                        : workDayStartUtc;
-
-                    if (candidateStartUtc.Add(duration) <= workDayEndUtc)
-                    {
-                        _logger.LogWarning($"Найден свободный день: {candidateStartUtc:HH:mm} UTC - {candidateStartUtc.Add(duration):HH:mm} UTC");
-                        return candidateStartUtc;
-                    }
-                }
-                else
-                {
-                    var timePoints = new List<DateTime> { workDayStartUtc };
-                    foreach (var slot in dayBusySlots)
-                    {
-                        timePoints.Add(slot.Start);
-                        timePoints.Add(slot.End);
-                    }
-                    timePoints.Add(workDayEndUtc);
-                    timePoints = timePoints.OrderBy(t => t).Distinct().ToList();
-
-                    for (int i = 0; i < timePoints.Count - 1; i++)
-                    {
-                        DateTime intervalStartUtc = timePoints[i];
-                        DateTime intervalEndUtc = timePoints[i + 1];
-
-                        if (intervalEndUtc - intervalStartUtc <= TimeSpan.Zero) continue;
-
-                        DateTime actualStartUtc = intervalStartUtc;
-
-                        if (hasDependencies)
-                        {
-                            if (intervalEndUtc <= searchStartTimeUtc) continue;
-                            if (intervalStartUtc < searchStartTimeUtc)
-                                actualStartUtc = searchStartTimeUtc;
-                        }
-                        else
-                        {
-                            if (intervalStartUtc < currentSearchTimeUtc)
-                            {
-                                if (intervalEndUtc <= currentSearchTimeUtc) continue;
-                                actualStartUtc = currentSearchTimeUtc;
-                            }
-                        }
-
-                        if (actualStartUtc + duration <= intervalEndUtc)
-                        {
-                            bool hasEnoughEmployees = await CheckEmployeesAvailabilityInIntervalAsync(
-                                brigadeId, actualStartUtc, duration, requiredEmployees, dayBusySlots);
-
-                            if (hasEnoughEmployees)
-                            {
-                                _logger.LogWarning($"Найден подходящий промежуток: {actualStartUtc:HH:mm} UTC - {actualStartUtc.Add(duration):HH:mm} UTC");
-                                return actualStartUtc;
-                            }
-                        }
-                    }
-                }
-
-                daysSearched++;
-                currentSearchTimeUtc = currentSearchTimeUtc.Date.AddDays(1).Add(WORKDAY_START);
-                _logger.LogWarning($"Переходим к следующему дню: {currentSearchTimeUtc:dd.MM.yyyy HH:mm} UTC");
-            }
-
-            _logger.LogWarning($"Не удалось найти свободный слот за {daysSearched} дней для бригады {brigadeId}");
+        var brigade = await _brigadeRepository.GetById(brigadeId);
+        if (brigade == null || requiredEmployees > brigade.CountEmployee)
             return null;
-        }
-        catch (Exception ex)
+
+        var current = AdjustToWorkHours(searchStartUtc);
+        int maxDays = 30, days = 0;
+
+        while (days < maxDays)
         {
-            _logger.LogError(ex, "Ошибка при поиске свободного слота для бригады");
-            return null;
+            if (current.DayOfWeek == DayOfWeek.Saturday || current.DayOfWeek == DayOfWeek.Sunday)
+            {
+                current = current.Date.AddDays(1).Add(WORKDAY_START);
+                days++;
+                continue;
+            }
+
+            var dayStart = current.Date.Add(WORKDAY_START);
+            var dayEnd = current.Date.Add(WORKDAY_END);
+            var daySlots = existingSlotsUtc
+                .Where(s => s.BrigadeId == brigadeId && s.Start.Date == current.Date)
+                .OrderBy(s => s.Start).ToList();
+
+            if (!daySlots.Any())
+            {
+                var candidate = current > dayStart ? current : dayStart;
+                if (candidate.Add(duration) <= dayEnd)
+                    return candidate;
+            }
+            else
+            {
+                var points = new List<DateTime> { dayStart };
+                points.AddRange(daySlots.SelectMany(s => new[] { s.Start, s.End }));
+                points.Add(dayEnd);
+                points = points.OrderBy(t => t).Distinct().ToList();
+
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    var start = points[i];
+                    var end = points[i + 1];
+                    if (end - start <= TimeSpan.Zero) continue;
+
+                    var actual = start;
+                    if (hasDependencies)
+                    {
+                        if (end <= searchStartUtc) continue;
+                        if (start < searchStartUtc) actual = searchStartUtc;
+                    }
+                    else
+                    {
+                        if (start < current)
+                        {
+                            if (end <= current) continue;
+                            actual = current;
+                        }
+                    }
+
+                    if (actual + duration <= end && await HasEnoughEmployees(daySlots, actual, duration, requiredEmployees))
+                        return actual;
+                }
+            }
+
+            days++;
+            current = current.Date.AddDays(1).Add(WORKDAY_START);
         }
+        return null;
     }
 
-    private async Task<bool> CheckEmployeesAvailabilityInIntervalAsync(
-        Guid brigadeId,
-        DateTime intervalStartUtc,
+    private async Task<bool> HasEnoughEmployees(
+        List<BrigadeTimeSlot> daySlots,
+        DateTime startUtc,
         TimeSpan duration,
-        int requiredEmployees,
-        List<BrigadeTimeSlot> dayBusySlotsUtc)
+        int required)
     {
-        try
+        var brigade = await _brigadeRepository.GetById(daySlots.First().BrigadeId);
+        if (brigade == null) return false;
+        var total = brigade.CountEmployee;
+        var end = startUtc.Add(duration);
+
+        for (var t = startUtc; t < end; t = t.AddMinutes(1))
         {
-            var brigade = await _brigadeRepository.GetById(brigadeId);
-            if (brigade == null) return false;
+            var busy = daySlots.Where(s => t >= s.Start && t < s.End).Sum(s => s.RequiredEmployees);
+            if (total - busy < required) return false;
+        }
+        return true;
+    }
 
-            var totalEmployees = brigade.CountEmployee;
-            DateTime intervalEndUtc = intervalStartUtc.Add(duration);
+    // ========== Графы и типы ==========
+    private async Task<List<StageNode>> BuildStageDependencyGraphAsync(List<ProductSubTypeWorkingPeriodSampleEntity> stages)
+    {
+        var nodes = stages.ToDictionary(s => s.Id, s => new StageNode
+        {
+            Id = s.Id,
+            Stage = s,
+            Parents = new List<Guid>(),
+            Children = new List<Guid>()
+        });
 
-            DateTime checkTime = intervalStartUtc;
-            int checkPoints = (int)duration.TotalMinutes;
-
-            for (int i = 0; i <= checkPoints; i++)
-            {
-                int busyEmployees = 0;
-                foreach (var slot in dayBusySlotsUtc)
+        foreach (var s in stages)
+        {
+            var rels = await _workingPeriodRelationRepository.GetByChildProductSubTypeWorkingPeriodSampleId(s.Id);
+            if (rels == null) continue;
+            foreach (var r in rels)
+                if (nodes.ContainsKey(r.ParentProductSubTypeWorkingPeriodSampleId))
                 {
-                    if (checkTime >= slot.Start && checkTime < slot.End)
-                        busyEmployees += slot.RequiredEmployees;
+                    nodes[s.Id].Parents.Add(r.ParentProductSubTypeWorkingPeriodSampleId);
+                    nodes[r.ParentProductSubTypeWorkingPeriodSampleId].Children.Add(s.Id);
                 }
-
-                if (totalEmployees - busyEmployees < requiredEmployees)
-                    return false;
-
-                checkTime = checkTime.AddMinutes(1);
-            }
-
-            return true;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при проверке доступности сотрудников для бригады {brigadeId}");
-            return false;
-        }
-    }
-
-    // ========== Вспомогательные методы для графа и типов ==========
-    private async Task<Dictionary<Guid, Guid>> GetStageTypesForGraphAsync(List<StageNode> stageGraph)
-    {
-        var stageTypes = new Dictionary<Guid, Guid>();
-        foreach (var node in stageGraph)
-        {
-            var stageTypeId = await GetStageTypeIdAsync(node.Id);
-            if (stageTypeId.HasValue)
-                stageTypes[node.Id] = stageTypeId.Value;
-        }
-        return stageTypes;
-    }
-
-    private async Task<Guid?> GetStageTypeIdAsync(Guid stageSampleId)
-    {
-        try
-        {
-            var stageTypeRelations = await _workingPeriodStageTypeRelationRepository
-                .GetByProductSubTypeWorkingPeriodSampleId(stageSampleId);
-            return stageTypeRelations?.FirstOrDefault()?.StageTypeId;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при получении типа этапа для {stageSampleId}");
-            return null;
-        }
-    }
-
-    private double CalculateBrigadeTimeScore(DateTime startTimeUtc, DateTime endTimeUtc, BrigadeEntity brigade)
-    {
-        double score = (endTimeUtc - startTimeUtc).TotalMinutes * -1;
-        score += (10.0 / brigade.CountEmployee) * 100;
-        score += (DateTime.UtcNow - startTimeUtc).TotalMinutes * 0.1;
-        return score;
-    }
-
-    private async Task<List<StageNode>> BuildStageDependencyGraphAsync(
-        List<ProductSubTypeWorkingPeriodSampleEntity> stages)
-    {
-        var nodes = new Dictionary<Guid, StageNode>();
-
-        foreach (var stage in stages)
-        {
-            nodes[stage.Id] = new StageNode
-            {
-                Stage = stage,
-                Id = stage.Id,
-                Parents = new List<Guid>(),
-                Children = new List<Guid>(),
-                Status = StageStatus.Pending
-            };
-        }
-
-        foreach (var stage in stages)
-        {
-            var parentRelations = await _workingPeriodRelationRepository
-                .GetByChildProductSubTypeWorkingPeriodSampleId(stage.Id);
-
-            if (parentRelations != null)
-            {
-                foreach (var relation in parentRelations)
-                {
-                    if (nodes.ContainsKey(relation.ParentProductSubTypeWorkingPeriodSampleId))
-                    {
-                        nodes[stage.Id].Parents.Add(relation.ParentProductSubTypeWorkingPeriodSampleId);
-                        nodes[relation.ParentProductSubTypeWorkingPeriodSampleId].Children.Add(stage.Id);
-                    }
-                }
-            }
-        }
-
         return nodes.Values.ToList();
     }
 
-    private async Task<List<StageExecutionGroup>> GetStageExecutionPlanAsync(List<StageNode> stageGraph)
+    private async Task<List<StageExecutionGroup>> GetStageExecutionPlanAsync(List<StageNode> graph)
     {
-        var executionPlan = new List<StageExecutionGroup>();
-        var remainingNodes = stageGraph.ToList();
+        var plan = new List<StageExecutionGroup>();
+        var remaining = graph.ToList();
         int level = 0;
-
-        while (remainingNodes.Any())
+        while (remaining.Any())
         {
             level++;
-
-            var readyNodes = remainingNodes
-                .Where(node => !node.Parents.Any() ||
-                               node.Parents.All(parentId =>
-                                   !remainingNodes.Any(n => n.Id == parentId)))
-                .ToList();
-
-            if (!readyNodes.Any())
-                throw new InvalidOperationException("Обнаружен цикл в зависимостях этапов");
-
-            executionPlan.Add(new StageExecutionGroup
+            var ready = remaining.Where(n => !n.Parents.Any() || n.Parents.All(p => !remaining.Any(r => r.Id == p))).ToList();
+            if (!ready.Any()) throw new InvalidOperationException("Циклическая зависимость");
+            plan.Add(new StageExecutionGroup
             {
-                Stages = readyNodes.Select(n => n.Stage).ToList(),
-                CanExecuteInParallel = true,
+                Stages = ready.Select(n => n.Stage).ToList(),
                 Level = level
             });
-
-            foreach (var node in readyNodes)
-                remainingNodes.RemoveAll(n => n.Id == node.Id);
+            remaining.RemoveAll(n => ready.Contains(n));
         }
-
-        return executionPlan;
+        return plan;
     }
+
+    private async Task<Dictionary<Guid, Guid>> GetStageTypesForGraphAsync(List<StageNode> graph)
+    {
+        var result = new Dictionary<Guid, Guid>();
+        foreach (var n in graph)
+        {
+            var id = await GetStageTypeIdAsync(n.Id);
+            if (id.HasValue) result[n.Id] = id.Value;
+        }
+        return result;
+    }
+
+    private async Task<Guid?> GetStageTypeIdAsync(Guid sampleId)
+    {
+        var rels = await _workingPeriodStageTypeRelationRepository.GetByProductSubTypeWorkingPeriodSampleId(sampleId);
+        return rels?.FirstOrDefault()?.StageTypeId;
+    }
+
+    private double CalculateBrigadeTimeScore(DateTime startUtc, DateTime endUtc, BrigadeEntity brigade) =>
+        (endUtc - startUtc).TotalMinutes * -1 + (10.0 / brigade.CountEmployee) * 100 +
+        (DateTime.UtcNow - startUtc).TotalMinutes * 0.1;
 
     private async Task LoadStageTypeIds()
     {
-        try
-        {
-            _stageTypeIds = new Dictionary<string, Guid>();
-            var allStageTypes = await _stageTypeRepository.GetAll();
-            foreach (var stageType in allStageTypes)
-                _stageTypeIds[stageType.Name] = stageType.Id;
-            _logger.LogWarning($"Загружено {_stageTypeIds.Count} типов этапов");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при загрузке типов этапов");
-            throw;
-        }
+        _stageTypeIds = (await _stageTypeRepository.GetAll()).ToDictionary(st => st.Name, st => st.Id);
+        _logger.LogWarning($"Загружено {_stageTypeIds.Count} типов этапов");
     }
 
-    private TimeSpan ParseStandartTimeToTimeSpan(string standartTime)
+    private TimeSpan ParseStandartTimeToTimeSpan(string input)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(standartTime))
-                return TimeSpan.Zero;
-            if (int.TryParse(standartTime, out int minutes))
-                return TimeSpan.FromMinutes(minutes);
-            if (TimeSpan.TryParse(standartTime, out TimeSpan timeSpan))
-                return timeSpan;
-            return TimeSpan.Zero;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при преобразовании StandartTime: '{standartTime}'");
-            return TimeSpan.Zero;
-        }
+        if (string.IsNullOrWhiteSpace(input)) return TimeSpan.Zero;
+        if (int.TryParse(input, out int mins)) return TimeSpan.FromMinutes(mins);
+        if (TimeSpan.TryParse(input, out var ts)) return ts;
+        return TimeSpan.Zero;
     }
 
-    private DateTime AdjustToWorkHours(DateTime utcDateTime)
+    private DateTime AdjustToWorkHours(DateTime utc)
     {
-        if (utcDateTime.Kind != DateTimeKind.Utc)
-            utcDateTime = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc);
-
-        // Если время уже в рабочем интервале UTC
-        if (utcDateTime.TimeOfDay >= WORKDAY_START && utcDateTime.TimeOfDay < WORKDAY_END)
-            return utcDateTime;
-
-        // Если до начала рабочего дня
-        if (utcDateTime.TimeOfDay < WORKDAY_START)
-            return utcDateTime.Date.Add(WORKDAY_START);
-
-        // Если после окончания – следующий рабочий день
-        var nextDay = utcDateTime.Date.AddDays(1).Add(WORKDAY_START);
-        while (nextDay.DayOfWeek == DayOfWeek.Saturday || nextDay.DayOfWeek == DayOfWeek.Sunday)
-            nextDay = nextDay.AddDays(1);
-        return nextDay;
+        if (utc.Kind != DateTimeKind.Utc) utc = DateTime.SpecifyKind(utc, DateTimeKind.Utc);
+        if (utc.TimeOfDay >= WORKDAY_START && utc.TimeOfDay < WORKDAY_END) return utc;
+        if (utc.TimeOfDay < WORKDAY_START) return utc.Date.Add(WORKDAY_START);
+        var next = utc.Date.AddDays(1).Add(WORKDAY_START);
+        while (next.DayOfWeek == DayOfWeek.Saturday || next.DayOfWeek == DayOfWeek.Sunday)
+            next = next.AddDays(1);
+        return next;
     }
 
-    private async Task CreateWorkingPeriodAsync(ProductEntity product, List<PlannedStage> plannedStages)
+    private async Task CreateWorkingPeriodAsync(ProductEntity product, List<PlannedStage> planned)
     {
-        if (!plannedStages.Any()) return;
-
-        try
+        if (!planned.Any()) return;
+        var wp = new WorkingPeriodEntity
         {
-            _logger.LogWarning($"Создание рабочего периода для продукта {product.Id} с {plannedStages.Count} этапами");
+            Id = Guid.NewGuid(),
+            Name = $"Период для продукта {product.Number}",
+            Status = "В работе",
+            ProductId = product.Id,
+            DateFrom = planned.First().StartTime,
+            DateTo = planned.Last().EndTime,
+            CreateTime = DateTime.UtcNow,
+            UpdateTime = DateTime.UtcNow
+        };
+        await _workingPeriodRepository.Add(wp);
+        _allWorkingPeriods.Add(wp);
 
-            var firstStartTimeUtc = plannedStages.First().StartTime;
-            var lastEndTimeUtc = plannedStages.Last().EndTime;
-
-            var workingPeriod = new WorkingPeriodEntity
+        foreach (var ps in planned)
+        {
+            var wps = new WorkingPeriodStageEntity
             {
                 Id = Guid.NewGuid(),
-                Name = $"Период для продукта {product.Number}",
+                WorkingPeriodId = wp.Id,
+                DateFrom = ps.StartTime,
+                DateTo = ps.EndTime,
                 Status = "В работе",
-                ProductId = product.Id,
-                DateFrom = firstStartTimeUtc,
-                DateTo = lastEndTimeUtc,
+                ProductSubTypeWorkingPeriodSampleId = ps.StageSampleId,
                 CreateTime = DateTime.UtcNow,
                 UpdateTime = DateTime.UtcNow
             };
+            await _workingPeriodStageRepository.Add(wps);
+            _allWorkingPeriodStages.Add(wps);
 
-            _logger.LogWarning($"Создан WorkingPeriod: {workingPeriod.Id}");
-            await _workingPeriodRepository.Add(workingPeriod);
-            _allWorkingPeriods.Add(workingPeriod);
-
-            foreach (var plannedStage in plannedStages)
+            var rel = new WorkingPeriodStageBrigadeRelationEntity
             {
-                var workingPeriodStage = new WorkingPeriodStageEntity
-                {
-                    Id = Guid.NewGuid(),
-                    WorkingPeriodId = workingPeriod.Id,
-                    DateFrom = plannedStage.StartTime,
-                    DateTo = plannedStage.EndTime,
-                    Status = "В работе",
-                    Recycling = null,
-                    ProductSubTypeWorkingPeriodSampleId = plannedStage.StageSampleId,
-                    CreateTime = DateTime.UtcNow,
-                    UpdateTime = DateTime.UtcNow
-                };
-
-                _logger.LogWarning($"Создан WorkingPeriodStage: {workingPeriodStage.Id}");
-                await _workingPeriodStageRepository.Add(workingPeriodStage);
-                _allWorkingPeriodStages.Add(workingPeriodStage);
-
-                var brigadeRelation = new WorkingPeriodStageBrigadeRelationEntity
-                {
-                    Id = Guid.NewGuid(),
-                    WorkingPeriodStageId = workingPeriodStage.Id,
-                    BrigadeId = plannedStage.BrigadeId
-                };
-
-                _logger.LogWarning($"Создана связь с бригадой: {brigadeRelation.Id}");
-                await _workingPeriodStageBrigadeRelationRepository.Add(brigadeRelation);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Ошибка при создании рабочего периода для продукта {product.Id}");
-            throw;
+                Id = Guid.NewGuid(),
+                WorkingPeriodStageId = wps.Id,
+                BrigadeId = ps.BrigadeId
+            };
+            await _workingPeriodStageBrigadeRelationRepository.Add(rel);
         }
     }
 
-    private void SortProductsByEndDate()
-    {
-        _products?.Sort((p1, p2) =>
+    private void SortProductsByEndDate() =>
+        _products?.Sort((a, b) =>
         {
-            if (p1.EndDate == p2.EndDate) return 0;
-            if (p1.EndDate == null) return 1;
-            if (p2.EndDate == null) return -1;
-            return p1.EndDate.Value.CompareTo(p2.EndDate.Value);
+            if (a.EndDate == b.EndDate) return 0;
+            if (a.EndDate == null) return 1;
+            if (b.EndDate == null) return -1;
+            return a.EndDate.Value.CompareTo(b.EndDate.Value);
         });
-    }
 
     private async Task TestStandartTimeParsing()
     {
-        try
+        var samples = await _productSubTypeWorkingPeriodSampleRepository.GetAll();
+        if (samples?.Any() == true)
         {
-            var sampleStages = await _productSubTypeWorkingPeriodSampleRepository.GetAll();
-            if (sampleStages != null && sampleStages.Any())
-            {
-                _logger.LogWarning("Тестирование преобразования StandartTime:");
-                foreach (var stage in sampleStages.Take(5))
-                {
-                    TimeSpan duration = ParseStandartTimeToTimeSpan(stage.StandartTime);
-                    _logger.LogWarning($"  Этап {stage.Id}: '{stage.StandartTime}' -> {duration.TotalMinutes} минут");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при тестировании преобразования StandartTime");
+            _logger.LogWarning("Тест StandartTime:");
+            foreach (var s in samples.Take(5))
+                _logger.LogWarning($"  {s.Id}: '{s.StandartTime}' -> {ParseStandartTimeToTimeSpan(s.StandartTime).TotalMinutes} мин");
         }
     }
 
-    // ========== Вспомогательные классы (без изменений) ==========
+    // ========== Вспомогательные классы ==========
     private class BrigadeTimeSlot
     {
         public DateTime Start { get; set; }
@@ -1575,22 +917,11 @@ public class CoreService
         public ProductSubTypeWorkingPeriodSampleEntity Stage { get; set; } = null!;
         public List<Guid> Parents { get; set; } = new();
         public List<Guid> Children { get; set; } = new();
-        public StageStatus Status { get; set; }
-    }
-
-    private enum StageStatus
-    {
-        Pending,
-        Planned,
-        InProgress,
-        Completed
     }
 
     private class StageExecutionGroup
     {
         public List<ProductSubTypeWorkingPeriodSampleEntity> Stages { get; set; } = new();
-        public bool CanExecuteInParallel { get; set; }
-        public DateTime? EarliestStartTime { get; set; }
         public int Level { get; set; }
     }
 
@@ -1602,45 +933,5 @@ public class CoreService
         public DateTime EndTime { get; set; }
         public TimeSpan Duration { get; set; }
         public double Score { get; set; }
-    }
-
-    private class BrigadeScheduler
-    {
-        private readonly Dictionary<Guid, BrigadeWorkload> _brigadeWorkloads;
-        private readonly ILogger<CoreService> _logger;
-
-        public BrigadeScheduler(ILogger<CoreService> logger)
-        {
-            _brigadeWorkloads = new Dictionary<Guid, BrigadeWorkload>();
-            _logger = logger;
-        }
-
-        public void InitializeBrigades(List<BrigadeEntity> brigades)
-        {
-            foreach (var brigade in brigades)
-            {
-                _brigadeWorkloads[brigade.Id] = new BrigadeWorkload
-                {
-                    BrigadeId = brigade.Id,
-                    TotalEmployees = brigade.CountEmployee,
-                    AvailableEmployees = brigade.CountEmployee,
-                    NextAvailableTime = null,
-                    ScheduledSlots = new List<BrigadeTimeSlot>(),
-                    StageTypeId = brigade.StageTypeId
-                };
-            }
-            _logger.LogWarning($"Инициализировано {_brigadeWorkloads.Count} бригад");
-        }
-    }
-
-    private class BrigadeWorkload
-    {
-        public Guid BrigadeId { get; set; }
-        public Guid StageTypeId { get; set; }
-        public int TotalEmployees { get; set; }
-        public int AvailableEmployees { get; set; }
-        public DateTime? NextAvailableTime { get; set; }
-        public List<BrigadeTimeSlot> ScheduledSlots { get; set; } = new();
-        public double UtilizationRate { get; set; }
     }
 }
