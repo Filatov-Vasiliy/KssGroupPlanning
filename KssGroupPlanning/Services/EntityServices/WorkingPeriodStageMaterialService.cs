@@ -18,6 +18,10 @@ public class WorkingPeriodStageMaterialService
         return await _workingPeriodStageMaterialRepository.GetAll();
     }
 
+    public async Task<WorkingPeriodStageMaterialEntity?> GetByComplexKey(Guid ProductId, Guid GroupMaterialId)
+    { 
+        return await _workingPeriodStageMaterialRepository.GetByComplexKey(ProductId, GroupMaterialId);
+    }
     public async Task<WorkingPeriodStageMaterialEntity?> GetById(Guid id)
     {
         return await _workingPeriodStageMaterialRepository.GetById(id);
