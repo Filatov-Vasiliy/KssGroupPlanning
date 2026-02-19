@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning.Infrastuction.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260211100858_initial2")]
+    partial class initial2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -647,31 +650,35 @@ namespace KssGroupPlanning.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly?>("CreateDate")
+                    b.Property<DateOnly>("CreateDate")
                         .HasColumnType("date");
 
-                    b.Property<decimal?>("CurrentQty")
+                    b.Property<decimal>("CurrentQty")
                         .HasColumnType("numeric");
 
-                    b.Property<DateOnly?>("ForAdmissionDate")
+                    b.Property<DateOnly>("ForAdmissionDate")
                         .HasColumnType("date");
 
                     b.Property<string>("MaterialGroup")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("MaterialName")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("PostedDate")
+                    b.Property<DateOnly>("PostedDate")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly?>("ProductOrderDate")
+                    b.Property<DateOnly>("ProductOrderDate")
                         .HasColumnType("date");
 
                     b.Property<string>("ProductOrderName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ProductOrderNameChild")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ProductOrderNameChildDate")
@@ -693,42 +700,48 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Contragent")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("CreateDate")
+                    b.Property<DateOnly>("CreateDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Dogovor")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("LogisticDate")
+                    b.Property<DateOnly>("LogisticDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Manager")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("OrderDate")
+                    b.Property<DateOnly>("OrderDate")
                         .HasColumnType("date");
 
                     b.Property<string>("OrderName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("OrderNumber")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("PaymentAmount")
+                    b.Property<decimal>("PaymentAmount")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal?>("PaymentCurrent")
+                    b.Property<decimal>("PaymentCurrent")
                         .HasColumnType("numeric");
 
-                    b.Property<int?>("Qty")
+                    b.Property<int>("Qty")
                         .HasColumnType("integer");
 
-                    b.Property<DateOnly?>("SchemeDate")
+                    b.Property<DateOnly>("SchemeDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -743,33 +756,39 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Comment")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("CreateDate")
+                    b.Property<DateOnly>("CreateDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Factory")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("OrderDate")
+                    b.Property<DateOnly>("OrderDate")
                         .HasColumnType("date");
 
                     b.Property<string>("OrderNumber")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ProductName")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("ProductOrderDate")
+                    b.Property<DateOnly>("ProductOrderDate")
                         .HasColumnType("date");
 
                     b.Property<string>("ProductOrderName")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("Qty")
+                    b.Property<int>("Qty")
                         .HasColumnType("integer");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

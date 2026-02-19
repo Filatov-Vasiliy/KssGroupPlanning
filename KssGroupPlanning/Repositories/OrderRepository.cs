@@ -22,6 +22,11 @@ public class OrderRepository : IOrderRepository
         return await _dbcontext.Order.AsNoTracking().OrderBy(c => c.Number).ToListAsync();
 
     }
+    public async Task<List<OrderEntity>> GetAllDetailed()
+    {
+        return await _dbcontext.Order.AsNoTracking().Include(o => o.Products).ThenInclude(p => p.Stages).Include(o => o.Products).ThenInclude(p1 => p1.ProductSubType).ThenInclude(pst => pst.ProductType).Include(o => o.Products).ThenInclude(p => p.WorkingPeriods).ThenInclude(p => p.WorkingPeriodStages).OrderBy(c => c.Number).ToListAsync();
+        //мне тогда надо Order+product + product sub type + productType + stage + workingPeriod + ... + workingPeriodStage
+    }
 
     public async Task<OrderEntity?> GetById(Guid id)
     {

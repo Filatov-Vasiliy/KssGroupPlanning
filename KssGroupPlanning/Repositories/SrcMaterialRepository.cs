@@ -26,6 +26,7 @@ public class SrcMaterialRepository(ProjectDbContext context) : ISrcMaterialRepos
                 ForAdmissionDate = srcMaterial.ForAdmissionDate,
                 CreateDate = srcMaterial.CreateDate,
                 ProductOrderNameChild = srcMaterial.ProductOrderNameChild,
+                ProductOrderNameChildDate = srcMaterial.ProductOrderNameChildDate,
             };
             await _dbcontext.SrcMaterial.AddAsync(srcMaterialEntity);
         }

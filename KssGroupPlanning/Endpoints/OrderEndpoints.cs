@@ -8,6 +8,7 @@ public static class OrderEndpoints
     public static IEndpointRouteBuilder MapOrderEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("order/", GetAll);
+        app.MapGet("orderDetailed/", GetAllDetailed);
         app.MapGet("order/{id::guid}", GetById);
         app.MapGet("orderByNumber/{number}", GetByNumber);
         app.MapPost("order/", Create);
@@ -18,6 +19,11 @@ public static class OrderEndpoints
     private static async Task<IResult> GetAll(OrderService orderService)
     {
         var orders = await orderService.GetAll();
+        return Results.Ok(orders);
+    }
+    private static async Task<IResult> GetAllDetailed(OrderService orderService)
+    {
+        var orders = await orderService.GetAllDetailed();
         return Results.Ok(orders);
     }
     private static async Task<IResult> GetById(Guid id, OrderService orderService)
