@@ -25,7 +25,6 @@
   <ItemGroup>
     <Folder Include="docs\diagrams\usecases\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Services\IntergrationServices\" />
   </ItemGroup>
 
 </Project>

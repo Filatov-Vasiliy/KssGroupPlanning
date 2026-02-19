@@ -13,6 +13,7 @@ using KssGroupPlanning.Interfaces.EntityInterfaces;
 using KssGroupPlanning.Infrastuction.auth;
 using KssGroupPlanning.Infrastuction.Db;
 using System.Text.Json.Serialization;
+using KssGroupPlanning.Services;
 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -62,6 +63,9 @@ services.AddScoped<WorkingPeriodStageMaterialService>();
 services.AddScoped<WorkingPeriodStageService>();
 services.AddScoped<WorkingPeriodStageTypeRelationService>();
 
+services.AddScoped<SrcOrderService>();
+services.AddScoped<SrcProductService>();
+services.AddScoped<SrcMaterialService>();
 services.AddScoped<CoreService>(); //?!?!?!?!
 
 services.AddScoped<IProductTypeRepository,ProductTypeRepository>();

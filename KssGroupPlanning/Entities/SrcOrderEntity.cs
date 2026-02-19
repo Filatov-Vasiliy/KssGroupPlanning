@@ -4,37 +4,38 @@ namespace KssGroupPlanning.Entities;
 
 public class SrcOrderEntity
 {
+    [Ignore]
     public Guid Id { get; set; }
     [Name("order_name")]
-    public string OrderName { get; set; }
+    public string? OrderName { get; set; }
     [Name("status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
     [Name("contragent")]
-    public string Contragent { get; set; }
+    public string? Contragent { get; set; }
     [Name("dogovor")]
-    public string Dogovor { get; set; }
+    public string? Dogovor { get; set; }
     [Name("manager")]
-    public string Manager { get; set; }
+    public string? Manager { get; set; }
     [Name("order_number")]
-    public string OrderNumber { get; set; }
+    public string? OrderNumber { get; set; }
     [Name("order_date")]
     [Format("dd.mm.yyyy")]
-    public DateOnly OrderDate { get; set; }
+    public DateOnly? OrderDate { get; set; }
     [Name("scheme_date")]
     [Format("dd.mm.yyyy")]
-    public DateOnly SchemeDate { get; set; }
+    public DateOnly? SchemeDate { get; set; }
     [Name("logistic_date")]
     [Format("dd.mm.yyyy")]
-    public DateOnly LogisticDate { get; set; }
+    public DateOnly? LogisticDate { get; set; }
     [Name("create_date")]
     [Format("dd.mm.yyyy")]
-    public DateOnly CreateDate { get; set; }
+    public DateOnly? CreateDate { get; set; }
     [Name("payment_amount")]
-    public decimal PaymentAmount { get; set; }
+    public decimal? PaymentAmount { get; set; }
     [Name("payment_current")]
-    public decimal PaymentCurrent { get; set; }
+    public decimal? PaymentCurrent { get; set; }
     [Name("qty")]
-    public int Qty { get; set; }
+    public int? Qty { get; set; }
     //public DateTime? UploadTime { get; set; } = DateTime.Now;
     
 }

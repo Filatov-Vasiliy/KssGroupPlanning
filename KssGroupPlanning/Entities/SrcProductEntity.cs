@@ -3,29 +3,30 @@ namespace KssGroupPlanning.Entities;
 
 public class SrcProductEntity
 {
+    [Ignore]
     public Guid Id { get; set; }
-    [Name("product_order_name")]
-    public string ProductOrderName { get; set; }
-    [Name("productorderdate")]
+    [Name("Product order name")]
+    public string? ProductOrderName { get; set; }
+    [Name("product_order_date")]
     [Format("dd.mm.yyyy")]
-    public DateOnly ProductOrderDate { get; set; }
+    public DateOnly? ProductOrderDate { get; set; }
     [Name("comment")]
-    public string Comment { get; set; }
+    public string? Comment { get; set; }
     [Name("factory")]
-    public string Factory { get; set; }
+    public string? Factory { get; set; }
     [Name("status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
     [Name("create_date")]
     [Format("dd.mm.yyyy")]
-    public DateOnly CreateDate { get; set; }
+    public DateOnly? CreateDate { get; set; }
     [Name("order_number")]
-    public string OrderNumber { get; set; }
+    public string? OrderNumber { get; set; }
     [Name("order_date")]
     [Format("dd.mm.yyyy")]
-    public DateOnly OrderDate { get; set; }
+    public DateOnly? OrderDate { get; set; }
     [Name("product_name")]
-    public string ProductName { get; set; }
+    public string? ProductName { get; set; }
     [Name("qty")]
-    public int Qty { get; set; }
+    public int? Qty { get; set; }
 //public DateTime? UploadTime { get; set; } = DateTime.Now;
 }

@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning.Infrastuction.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260204135645_src")]
+    partial class src
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -174,9 +177,6 @@ namespace KssGroupPlanning.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("SubProductStageId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("UpdateTime")
                         .HasColumnType("timestamp without time zone");
 
@@ -189,9 +189,6 @@ namespace KssGroupPlanning.Migrations
                     b.HasIndex("ParentProductId");
 
                     b.HasIndex("ProductSubTypeId");
-
-                    b.HasIndex("SubProductStageId")
-                        .IsUnique();
 
                     b.ToTable("Product");
                 });
@@ -674,11 +671,7 @@ namespace KssGroupPlanning.Migrations
                     b.Property<string>("ProductOrderNameChild")
                         .HasColumnType("text");
 
-                    b.Property<string>("ProductOrderNameChildDate")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("Qty")
+                    b.Property<decimal?>("Qty")
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
@@ -1064,10 +1057,6 @@ namespace KssGroupPlanning.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("KssGroupPlanning.Entities.StageEntity", "SubProductStage")
-                        .WithOne("SubProduct")
-                        .HasForeignKey("KssGroupPlanning.Entities.ProductEntity", "SubProductStageId");
-
                     b.Navigation("Factory");
 
                     b.Navigation("Order");
@@ -1075,8 +1064,6 @@ namespace KssGroupPlanning.Migrations
                     b.Navigation("ParentProduct");
 
                     b.Navigation("ProductSubType");
-
-                    b.Navigation("SubProductStage");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeEntity", b =>
@@ -1336,11 +1323,6 @@ namespace KssGroupPlanning.Migrations
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductTypeEntity", b =>
                 {
                     b.Navigation("ProductSubTypes");
-                });
-
-            modelBuilder.Entity("KssGroupPlanning.Entities.StageEntity", b =>
-                {
-                    b.Navigation("SubProduct");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.StageTypeEntity", b =>

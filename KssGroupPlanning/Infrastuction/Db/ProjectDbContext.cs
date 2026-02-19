@@ -125,6 +125,19 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
                 new ProductSubTypeEntity { Id = Guid.Parse("32fed513-1b3c-49cb-9e06-ddfaaa82a488"),Name = "Подтип Б", ProductTypeId = Guid.Parse("edf5834b-a1a0-42a7-8b55-84de08280fd7") },
                 new ProductSubTypeEntity { Id = Guid.Parse("f2a48405-4728-4e50-b99e-54ee9f9235ac"),Name = "Подтип Б", ProductTypeId = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b") },
             });
+        modelBuilder.Entity<GroupMaterialEntity>().HasData(
+            new GroupMaterialEntity[]
+            {
+                new GroupMaterialEntity { Id = Guid.Parse("28539a79-0747-4d57-9e1e-a2e63adff951"), Name = "Черный металл" },
+                new GroupMaterialEntity { Id = Guid.Parse("d20b1bfc-3752-44b5-b671-448e9308ba54"), Name = "Нержавейка" },
+                new GroupMaterialEntity { Id = Guid.Parse("b037956e-2af1-4d26-a2c6-f8b8cd5ce09e"), Name = "Метизы" },
+                new GroupMaterialEntity { Id = Guid.Parse("46496326-7bc8-4935-8a9c-c319e1ed81e8"), Name = "УПМ" },
+                new GroupMaterialEntity { Id = Guid.Parse("78b76136-bd49-4a8b-b867-77d16fc98d7a"), Name = "Насосы" },
+                new GroupMaterialEntity { Id = Guid.Parse("95d41135-a72b-4386-9734-d579fa0947fe"), Name = "Электрика" },
+                new GroupMaterialEntity { Id = Guid.Parse("2a62b9a4-d1eb-4bce-b8fb-903736e8ea81"), Name = "ШУ" },
+                new GroupMaterialEntity { Id = Guid.Parse("8a01b1ce-4413-4174-b303-c20801699408"), Name = "Арматура" },
+                new GroupMaterialEntity { Id = Guid.Parse("02b7c3de-753f-45dd-8f23-c451eceaffae"), Name = "Другое" },
+            });
 
         base.OnModelCreating(modelBuilder);
     }
