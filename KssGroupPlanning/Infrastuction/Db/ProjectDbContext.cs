@@ -34,7 +34,7 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<MaterialStageEntity> MaterialStage { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
+
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new ProductTypeConfiguration());
@@ -81,11 +81,13 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
                 new ProductTypeEntity { Id = Guid.Parse("3d747667-d70c-436c-8856-4f56a38a19ea"),Name = "КГН"},
                 new ProductTypeEntity { Id = Guid.Parse("edf5834b-a1a0-42a7-8b55-84de08280fd7"),Name = "КП"},
                 new ProductTypeEntity { Id = Guid.Parse("bf5381ed-4534-4ec5-87f7-8b28eaa22f9d"),Name = "КГН"},
-                new ProductTypeEntity { Id = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b"),Name = "ВНС"}
+                new ProductTypeEntity { Id = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b"),Name = "ВНС"},
+                new ProductTypeEntity { Id = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f"),Name = "Неопределено"},
+
             });
         modelBuilder.Entity<ProductSubTypeEntity>().HasData(
             new ProductSubTypeEntity[]
-            { 
+            {
                 new ProductSubTypeEntity { Id = Guid.Parse("41bfadaa-08ee-4a09-ab66-4c53d72c9959"),Name = "Подтип А", ProductTypeId = Guid.Parse("0cb6cef3-948e-426e-b655-a481772a84ca") },
                 new ProductSubTypeEntity { Id = Guid.Parse("eaeda842-4989-4a5d-9755-0090f45db54f"),Name = "Подтип Б", ProductTypeId = Guid.Parse("0cb6cef3-948e-426e-b655-a481772a84ca") },
                 new ProductSubTypeEntity { Id = Guid.Parse("0a283d26-f089-410e-8fdd-08135ba9b999"),Name = "Подтип В", ProductTypeId = Guid.Parse("0cb6cef3-948e-426e-b655-a481772a84ca") },
@@ -124,6 +126,7 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
                 new ProductSubTypeEntity { Id = Guid.Parse("e0a9c3e6-3102-4892-a44b-8bec8bfcdf1c"),Name = "Подтип А", ProductTypeId = Guid.Parse("edf5834b-a1a0-42a7-8b55-84de08280fd7") },
                 new ProductSubTypeEntity { Id = Guid.Parse("32fed513-1b3c-49cb-9e06-ddfaaa82a488"),Name = "Подтип Б", ProductTypeId = Guid.Parse("edf5834b-a1a0-42a7-8b55-84de08280fd7") },
                 new ProductSubTypeEntity { Id = Guid.Parse("f2a48405-4728-4e50-b99e-54ee9f9235ac"),Name = "Подтип Б", ProductTypeId = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b") },
+                new ProductSubTypeEntity { Id = Guid.Parse("0ea947d9-3af7-40dd-83ae-35cc07c5a068"),Name = "Неопределено", ProductTypeId = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f") },
             });
         modelBuilder.Entity<GroupMaterialEntity>().HasData(
             new GroupMaterialEntity[]
@@ -138,7 +141,16 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
                 new GroupMaterialEntity { Id = Guid.Parse("8a01b1ce-4413-4174-b303-c20801699408"), Name = "Арматура" },
                 new GroupMaterialEntity { Id = Guid.Parse("02b7c3de-753f-45dd-8f23-c451eceaffae"), Name = "Другое" },
             });
-
+        modelBuilder.Entity<FactoryEntity>().HasData(
+            new FactoryEntity[]
+            {
+                new FactoryEntity { Id = Guid.Parse("0ea947d9-3af7-40dd-83ae-35cc07c5a068"), Name = "Бершанская" },
+                new FactoryEntity { Id = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f "), Name = "Другое" },
+                new FactoryEntity { Id = Guid.Parse("ed3f7875-2760-4853-8c6b-554657503449"), Name = "Новороссийская" },
+                new FactoryEntity { Id = Guid.Parse("7e64daa0-2c53-4840-8b73-7fcd16718f78"), Name = "Тихорецкая" },
+                new FactoryEntity { Id = Guid.Parse("1a3fa20a-992a-4487-a114-fd65444704d2"), Name = "Кореновск" },
+                new FactoryEntity { Id = Guid.Parse("4baad45d-a632-40d5-82ef-3bee797ddef8"), Name = "Васюринская" },
+            });
         base.OnModelCreating(modelBuilder);
     }
 }
