@@ -3,15 +3,18 @@ using Microsoft.EntityFrameworkCore;
 using System.Xml.Linq;
 using KssGroupPlanning.Entities;
 using KssGroupPlanning.Interfaces.EntityInterfaces;
+using System.Text.Json;
 
 namespace KssGroupPlanning.Services.EntityServices;
 
 public class OrderService
 {
     private readonly IOrderRepository _orderRepository;
-    public OrderService(IOrderRepository orderRepository)
+    private readonly ILogger<OrderService> _logger;
+    public OrderService(IOrderRepository orderRepository, ILogger<OrderService> logger)
     {
         _orderRepository = orderRepository;
+        _logger = logger;
     }
     public async Task<List<OrderEntity>> GetAll()
     {
@@ -35,7 +38,8 @@ public class OrderService
     {
         var orderEntity = new OrderEntity
         {
-            Id = Guid.NewGuid(),
+            //Id = Guid.NewGuid(),
+            Id  = order.Id,
             Number = order.Number,
             Manager = order.Manager,
             Contragent = order.Contragent,
@@ -45,6 +49,7 @@ public class OrderService
             CreateTime = DateTime.Now,
             UpdateTime = DateTime.Now,
         };
+        _logger.LogWarning($" ORDERSERVICE: {JsonSerializer.Serialize(order)}");
         await _orderRepository.Add(orderEntity);
     }
     public async Task Update(OrderEntity order)

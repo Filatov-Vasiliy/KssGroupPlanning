@@ -1,7 +1,11 @@
 ﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Interfaces.EntityInterfaces;
 using KssGroupPlanning.Services.EntityServices;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace KssGroupPlanning.Services.IntergrationServices
@@ -65,15 +69,14 @@ namespace KssGroupPlanning.Services.IntergrationServices
         public async Task<Guid> ProductSubTypeIdForProduct(string productName) 
         {
             var types = await _productTypeService.GetAll();
-            ProductTypeEntity currentType = new ProductTypeEntity();
             foreach (var type in types) {
                 if (productName.Contains(type.Name))
                 {
-                    currentType = type;
+                    var seektype = await _productSubTypeService.GetByProductTypeId(type.Id);
+                    return seektype[0].Id;
                 }
             }
-            var a =  await _productSubTypeService.GetByProductTypeId(currentType.Id);
-            return a[0].Id;
+            return Guid.Parse("0ea947d9-3af7-40dd-83ae-35cc07c5a068");
         }
         public async Task LoadSrcToMain()
         { 
@@ -95,7 +98,6 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 entity.PaymentCurrent = order.PaymentCurrent ?? 0;
                 entity.PaymentAmount = order.PaymentAmount ?? 0;
                 entity.Number = order.OrderName ?? "Пусто";
-                orderDict.Add(order.OrderNumber?? "Пусто", order);
                 var orderOld = await _orderService.GetByNumber(entity.Number);
                 if (orderOld != null)
                 {
@@ -106,35 +108,79 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 {
                     await _orderService.Add(entity);
                 }
+                var orderNew = await _orderService.GetByNumber(entity.Number);
+                order.Id = orderNew.Id;
+                orderDict.Add(order.OrderNumber ?? "Пусто", order);
+
             }
+            _logger.LogWarning($"Началась обработка Продуктов");
+
             foreach (var product in products)
             {
+                if (product.OrderNumber == "")
+                {
+                    _logger.LogWarning($" ГОВНИЩЕ {JsonSerializer.Serialize(product)}");
+                    continue;
+                }
                 var productOrder = orderDict[product.OrderNumber];
+
                 ProductEntity entity = new ProductEntity();
                 entity.Id = Guid.NewGuid();
                 entity.Status = product.Status ?? "Пусто";
-                entity.FactoryId = _factoryService.GetByName(product.Factory.Trim().Split(" ")[0]).Result.Id; // возможно добавить ToLower
+                var factory = await _factoryService.GetByName(product.Factory.Trim().Split(" ")[0]);
+                Guid factoryId = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f");
+                if (factory != null)
+                {
+                    factoryId = factory.Id;
+                }
+                entity.FactoryId = factoryId; // возможно добавить ToLower
                 entity.OrderId = productOrder.Id;
                 entity.ParentProductId = null;
                 entity.StartDate = productOrder.SchemeDate;
                 entity.EndDate = productOrder.LogisticDate;
                 entity.Number =  ClearProductNumber(product.Comment);
                 entity.ProductSubTypeId = await ProductSubTypeIdForProduct(product.Comment ?? "КНС");
-
+                
                 var productOld =  await _productService.GetByNumber(entity.Number);
                 if (productOld != null)
                 {
                     entity.Id = productOld.Id;
+                    _logger.LogWarning($"Апдейтим Текущий Продукт: {JsonSerializer.Serialize(entity)}");
+                    _logger.LogWarning($"Апдейтим Текущий Продукт: {JsonSerializer.Serialize(entity)}");
                     await _productService.Update(entity);
                 }
                 else
                 {
+                    _logger.LogWarning($"Инсертим Текущий Продукт: {JsonSerializer.Serialize(entity)}");
+                    _logger.LogWarning($"Апдейтим Текущий ордер: {JsonSerializer.Serialize(orderDict[product.OrderNumber])}");
+
                     await _productService.Add(entity);
                 }
-                productDict.Add(entity.Number, product);
-                productTrueDict.Add(entity.Number, entity);
+                
+                try
+                {
+                    productDict.Add(product.ProductOrderName, product);
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"Ключ {entity.Number} уже существует.");
+                    continue;
+                }
+                try
+                {
+                    productTrueDict.Add(product.ProductOrderName, entity);
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"Ключ {entity.Number} уже существует.");
+                    continue;
+                }
              }
             List<WorkingPeriodStageMaterialEntity> materialsFinish   = new List<WorkingPeriodStageMaterialEntity>();
+            _logger.LogWarning($"Началась обработка материалов");
+            _logger.LogWarning($"ne true {productDict["ПКНФ-001204"]}");
+            _logger.LogWarning($"true {productTrueDict["ПКНФ-001204"]}");
+
             foreach (var material in materials) 
             {
                 WorkingPeriodStageMaterialEntity entity = new WorkingPeriodStageMaterialEntity();
@@ -142,65 +188,72 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 // Разделить по productOrderNameChild 
                 // 1. Если не нулл то убрать из обработки, но найти в словаре продуктов и добавить ссылку на родителя
                 // 2. Если нулл, то оставить в списке и определить материал групп, сгруппировать по материал груп и найти максимальную дату доставки. вставить запись в хуятину
-                if (material.ProductOrderNameChild != null) // Реализация нахождения родительского изделия
+                if (material.ProductOrderNameChild != "") // Реализация нахождения родительского изделия
                 {
-                    var parentProductId = productTrueDict[material.ProductOrderNameChild].Id;
-                    var product = productTrueDict[material.ProductOrderName];
+                    Guid parentProductId;
+                    try
+                    {
+                        parentProductId = productTrueDict[material.ProductOrderNameChild].Id;
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+                        Console.WriteLine($"Ключ {material.ProductOrderNameChild} уже существует.");
+                        continue;
+                    }
+                    ProductEntity product = new ProductEntity();
+                    try
+                    {
+                        product = productTrueDict[material.ProductOrderName];
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+                        Console.WriteLine($"Ключ {material.ProductOrderName} уже существует.");
+                        continue;
+                    }
                     product.ParentProductId = parentProductId;
                     await _productService.Update(product);
                     continue;
                 }
                 entity.Id = Guid.NewGuid();
-                entity.ProductId = productDict[material.ProductOrderName].Id;
-                entity.DateDelivery = material.PostedDate ?? material.ForAdmissionDate ?? DateOnly.Parse("01.01.2049");
-                // Определение группы материала
-                // Черный металл
-                // Нержавейка 
-                // Метизы
-                // УПМ
-                // Насосы
-                // Электрика
-                // Арматура?
-                // Оборудование
-                // Шкаф управления
-                // Другое
+                entity.ProductId = productTrueDict[material.ProductOrderName].Id;
+                entity.DateDelivery = material.PostedDate ?? material.ForAdmissionDate ?? DateOnly.Parse("01.01.2000");
                 var groupMaterial = await _groupMaterialService.GetAll();
                 Dictionary<string, Guid> groupsNew = new Dictionary<string, Guid>();
                 foreach (var group in groupMaterial)
                 {
                     List<string> strings = new List<string>();
-                    switch (group.Name)
+                    switch (group.Name.ToLower())
                     {
-                        case "Черный металл":
+                        case "черный металл":
                             groupsNew.Add("Черн", group.Id);
                             break;
-                        case "Нержавейка":
+                        case "нержавейка":
                             groupsNew.Add("Нержав", group.Id);
                             break;
-                        case "Метизы":
+                        case "метизы":
                             groupsNew.Add("Метиз", group.Id);
                             groupsNew.Add("Крепеж", group.Id);
                             break;
-                        case "УПМ":
+                        case "упм":
                             groupsNew.Add("УПМ", group.Id);
                             break;
-                        case "Насосы":
+                        case "насосы":
                             groupsNew.Add("Насос", group.Id);
                             break;
-                        case "Электрика":
+                        case "электрика":
                             groupsNew.Add("Электро", group.Id);
                             groupsNew.Add("Датчики", group.Id);
                             break;
-                        case "ШУ":
+                        case "шу":
                             groupsNew.Add("ШУ", group.Id);
                             groupsNew.Add("Шкафы управления", group.Id);
                             break;
-                        case "Оборудование":
+                        case "оборудование":
                             groupsNew.Add("Расходомеры, манометры", group.Id);
                             groupsNew.Add("Инструмент", group.Id);
                             groupsNew.Add("Дробилки", group.Id);
                             break;
-                        case "Арматура":
+                        case "арматура":
                             groupsNew.Add("Арматур", group.Id);
                             break;
                         default:
@@ -208,12 +261,13 @@ namespace KssGroupPlanning.Services.IntergrationServices
                             break;
                     }
                 }
+                _logger.LogWarning($"Группы {JsonSerializer.Serialize(groupsNew)}");
                 var keys = groupsNew.Keys;
                 if (keys != null)
                 {
                     foreach (var key in keys)
                     {
-                        if (material.MaterialGroup.Contains(key))
+                        if (material.MaterialGroup.ToLower().Contains(key.ToLower()))
                         {
                             entity.GroupMaterialId = groupsNew[key];
                         }
@@ -233,6 +287,9 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 (Guid, Guid) complexKey = (entity.ProductId, entity.GroupMaterialId); // Составной ключ для словаря
                 if (preparedMaterials2.ContainsKey(complexKey))
                 {
+                    // Если текущая дата = 2049 и новая дата 2049 или вообще нет, то оставляем 2049
+                    // Если тек дата = 2049, а приход новый, то ставим новую дату
+                    // Если тек дата меньше новой даты, то ставим новую дату
                     if (preparedMaterials2[complexKey] < entity.DateDelivery)
                     {
                         preparedMaterials2[complexKey] = entity.DateDelivery;
