@@ -47,4 +47,9 @@ public class SrcMaterialRepository(ProjectDbContext context) : ISrcMaterialRepos
             _dbcontext.SaveChanges();
         }
     }
+    public async Task TruncateTable()
+    {
+        await _dbcontext.SrcMaterial.ExecuteDeleteAsync();
+
+    }
 }

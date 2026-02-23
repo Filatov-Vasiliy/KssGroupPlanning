@@ -36,29 +36,15 @@ namespace KssGroupPlanning.Services.IntergrationServices
             _productService = productService;
             _workingPeriodStageMaterialService = workingPeriodStageMaterialService;
             _groupMaterialService = groupMaterialService;
+            
         }
-        public List<SrcOrderEntity> ClearOrderNumber (List<SrcOrderEntity> orders) 
+        // Функция чистит строку, достает внутренний номер изделия/заказа
+        public string ClearNumber(string str)
         {
-            foreach (var order in orders) 
-            {
-                if ((order.OrderName != null) || (!order.OrderName[1].ToString().Any(char.IsLetter)))
-                {
-                    order.OrderName = order.OrderName.Trim().Split(" ")[0];
-                    order.OrderName.Replace("-", "");
-                }
-                else 
-                {
-                    orders.Remove(order);
-                }
-            }
-            return orders;
-        }
-        public string ClearProductNumber(string str)
-        {
-            if ((str != null) || (!str[1].ToString().Any(char.IsLetter)))
+            if ((str != null) && (!str[1].ToString().Any(char.IsLetter)))
             {
                 str = str.Trim().Split(" ")[0];
-                str.Replace("-", "");
+                str = str.Split("-")[0];
             }
             else 
             {
@@ -66,7 +52,8 @@ namespace KssGroupPlanning.Services.IntergrationServices
             }
             return str;
         }
-        public async Task<Guid> ProductSubTypeIdForProduct(string productName) 
+        // Функция поиска подходящего ProductType
+        public async Task<Guid> ProductSubTypeIdForProduct1(string productName) 
         {
             var types = await _productTypeService.GetAll();
             foreach (var type in types) {
@@ -78,26 +65,49 @@ namespace KssGroupPlanning.Services.IntergrationServices
             }
             return Guid.Parse("0ea947d9-3af7-40dd-83ae-35cc07c5a068");
         }
+        public async Task<Guid> ProductSubTypeIdForProduct(List<ProductTypeEntity> types, string productName)
+        {
+            foreach (var type in types)
+            {
+                if (productName.Contains(type.Name))
+                {
+                    //var seektype = await _productSubTypeService.GetByProductTypeId(type.Id);
+                    var seektype = type.ProductSubTypes[0].Id;
+                    return seektype;
+                }
+            }
+            return Guid.Parse("0ea947d9-3af7-40dd-83ae-35cc07c5a068");
+        }
         public async Task LoadSrcToMain()
-        { 
+        {
+            var jsonOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Используйте этот параметр для отключения экранирования
+            };
             var orders = await _srcOrderService.GetAll();
-            orders = ClearOrderNumber(orders);
-            Dictionary<string, SrcOrderEntity> orderDict = new Dictionary<string, SrcOrderEntity>();
-            Dictionary<string, SrcProductEntity> productDict = new Dictionary<string, SrcProductEntity>();
-            Dictionary<string, ProductEntity> productTrueDict = new Dictionary<string, ProductEntity>(); // либо реализовать метод накидываения родителя
-            Dictionary<(Guid, Guid), DateOnly> preparedMaterials2 = new Dictionary<(Guid, Guid), DateOnly>();
             var products = await _srcProductService.GetAll();
             var materials = await _srcMaterialService.GetAll();
+            Dictionary<string, SrcOrderEntity> orderDict = new Dictionary<string, SrcOrderEntity>();
+            Dictionary<string, SrcProductEntity> productDict = new Dictionary<string, SrcProductEntity>();
+            Dictionary<string, ProductEntity> productTrueDict = new Dictionary<string, ProductEntity>();
+            Dictionary<(Guid, Guid), DateOnly> preparedMaterials = new Dictionary<(Guid, Guid), DateOnly>();
+            
             foreach (var order in orders)
             {
                 OrderEntity entity = new OrderEntity();
+                var orderName = ClearNumber(order.OrderName);
+                if (orderName == "Failed") 
+                {
+                    continue;
+                }
                 entity.Id = Guid.NewGuid();
                 entity.Status = order.Status ?? "Пусто";
                 entity.Manager = order.Manager ?? "Пусто";
                 entity.Contragent = order.Contragent ?? "Пусто";
                 entity.PaymentCurrent = order.PaymentCurrent ?? 0;
                 entity.PaymentAmount = order.PaymentAmount ?? 0;
-                entity.Number = order.OrderName ?? "Пусто";
+                entity.Number = orderName;
                 var orderOld = await _orderService.GetByNumber(entity.Number);
                 if (orderOld != null)
                 {
@@ -113,50 +123,54 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 orderDict.Add(order.OrderNumber ?? "Пусто", order);
 
             }
+            
             _logger.LogWarning($"Началась обработка Продуктов");
 
+            var types = await _productTypeService.GetAllDetailed();
             foreach (var product in products)
             {
+                // Обработка Дерьмого номера
                 if (product.OrderNumber == "")
                 {
                     _logger.LogWarning($" ГОВНИЩЕ {JsonSerializer.Serialize(product)}");
                     continue;
                 }
                 var productOrder = orderDict[product.OrderNumber];
-
+                var productNumber = ClearNumber(product.Comment);
+                if (productNumber == "Failed")
+                {
+                    continue;
+                }
                 ProductEntity entity = new ProductEntity();
                 entity.Id = Guid.NewGuid();
                 entity.Status = product.Status ?? "Пусто";
                 var factory = await _factoryService.GetByName(product.Factory.Trim().Split(" ")[0]);
+                // Если нет подходящего производства накидывается неопределено
                 Guid factoryId = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f");
                 if (factory != null)
                 {
                     factoryId = factory.Id;
                 }
-                entity.FactoryId = factoryId; // возможно добавить ToLower
+                entity.FactoryId = factoryId;
                 entity.OrderId = productOrder.Id;
                 entity.ParentProductId = null;
                 entity.StartDate = productOrder.SchemeDate;
                 entity.EndDate = productOrder.LogisticDate;
-                entity.Number =  ClearProductNumber(product.Comment);
-                entity.ProductSubTypeId = await ProductSubTypeIdForProduct(product.Comment ?? "КНС");
+                entity.Number = productNumber; 
+                entity.ProductSubTypeId = await ProductSubTypeIdForProduct(types,product.Comment ?? "КНС");
                 
                 var productOld =  await _productService.GetByNumber(entity.Number);
+                // В случае если изделие с таким номером уже существует - мы его обновляем, в случае если нет такого номера мы инсертим строку
                 if (productOld != null)
                 {
                     entity.Id = productOld.Id;
-                    _logger.LogWarning($"Апдейтим Текущий Продукт: {JsonSerializer.Serialize(entity)}");
-                    _logger.LogWarning($"Апдейтим Текущий Продукт: {JsonSerializer.Serialize(entity)}");
                     await _productService.Update(entity);
                 }
                 else
                 {
-                    _logger.LogWarning($"Инсертим Текущий Продукт: {JsonSerializer.Serialize(entity)}");
-                    _logger.LogWarning($"Апдейтим Текущий ордер: {JsonSerializer.Serialize(orderDict[product.OrderNumber])}");
-
                     await _productService.Add(entity);
                 }
-                
+                // Формируем мапки с изделиями для мержа с материалами
                 try
                 {
                     productDict.Add(product.ProductOrderName, product);
@@ -176,20 +190,65 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     continue;
                 }
              }
+            
+            // Загрузка материалов
+
             List<WorkingPeriodStageMaterialEntity> materialsFinish   = new List<WorkingPeriodStageMaterialEntity>();
-            _logger.LogWarning($"Началась обработка материалов");
-            _logger.LogWarning($"ne true {productDict["ПКНФ-001204"]}");
-            _logger.LogWarning($"true {productTrueDict["ПКНФ-001204"]}");
+
+            // Сборка груп материалов по алиасам для последующего определения материала и группировки
+            var groupMaterial = await _groupMaterialService.GetAll();
+            Dictionary<string, Guid> groupsNew = new Dictionary<string, Guid>();
+            foreach (var group in groupMaterial)
+            {
+                List<string> strings = new List<string>();
+                switch (group.Name.ToLower())
+                {
+                    case "черный металл":
+                        groupsNew.Add("Черн", group.Id);
+                        break;
+                    case "нержавейка":
+                        groupsNew.Add("Нержав", group.Id);
+                        break;
+                    case "метизы":
+                        groupsNew.Add("Метиз", group.Id);
+                        groupsNew.Add("Крепеж", group.Id);
+                        break;
+                    case "упм":
+                        groupsNew.Add("УПМ", group.Id);
+                        break;
+                    case "насосы":
+                        groupsNew.Add("Насос", group.Id);
+                        break;
+                    case "электрика":
+                        groupsNew.Add("Электро", group.Id);
+                        groupsNew.Add("Датчики", group.Id);
+                        break;
+                    case "шу":
+                        groupsNew.Add("ШУ", group.Id);
+                        groupsNew.Add("Шкафы управления", group.Id);
+                        break;
+                    case "оборудование":
+                        groupsNew.Add("Расходомеры, манометры", group.Id);
+                        groupsNew.Add("Инструмент", group.Id);
+                        groupsNew.Add("Дробилки", group.Id);
+                        break;
+                    case "арматура":
+                        groupsNew.Add("Арматур", group.Id);
+                        break;
+                    default:
+                        groupsNew.Add("Другое", group.Id);
+                        break;
+                }
+            }
+            // Обработка всех материалов
+
 
             foreach (var material in materials) 
             {
                 WorkingPeriodStageMaterialEntity entity = new WorkingPeriodStageMaterialEntity();
-
-                // Разделить по productOrderNameChild 
-                // 1. Если не нулл то убрать из обработки, но найти в словаре продуктов и добавить ссылку на родителя
-                // 2. Если нулл, то оставить в списке и определить материал групп, сгруппировать по материал груп и найти максимальную дату доставки. вставить запись в хуятину
                 if (material.ProductOrderNameChild != "") // Реализация нахождения родительского изделия
                 {
+                    // Пытаемся найти изделия под которое заведен материал
                     Guid parentProductId;
                     try
                     {
@@ -197,7 +256,6 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     }
                     catch (KeyNotFoundException ex)
                     {
-                        Console.WriteLine($"Ключ {material.ProductOrderNameChild} уже существует.");
                         continue;
                     }
                     ProductEntity product = new ProductEntity();
@@ -207,61 +265,23 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     }
                     catch (KeyNotFoundException ex)
                     {
-                        Console.WriteLine($"Ключ {material.ProductOrderName} уже существует.");
                         continue;
                     }
-                    product.ParentProductId = parentProductId;
-                    await _productService.Update(product);
-                    continue;
+                    if (product.Id != parentProductId)
+                    {
+                        product.ParentProductId = parentProductId;
+                        await _productService.Update(product);
+                        continue;
+                    }
+                    else 
+                    {
+                        continue;                    
+                    }
                 }
                 entity.Id = Guid.NewGuid();
                 entity.ProductId = productTrueDict[material.ProductOrderName].Id;
                 entity.DateDelivery = material.PostedDate ?? material.ForAdmissionDate ?? DateOnly.Parse("01.01.2000");
-                var groupMaterial = await _groupMaterialService.GetAll();
-                Dictionary<string, Guid> groupsNew = new Dictionary<string, Guid>();
-                foreach (var group in groupMaterial)
-                {
-                    List<string> strings = new List<string>();
-                    switch (group.Name.ToLower())
-                    {
-                        case "черный металл":
-                            groupsNew.Add("Черн", group.Id);
-                            break;
-                        case "нержавейка":
-                            groupsNew.Add("Нержав", group.Id);
-                            break;
-                        case "метизы":
-                            groupsNew.Add("Метиз", group.Id);
-                            groupsNew.Add("Крепеж", group.Id);
-                            break;
-                        case "упм":
-                            groupsNew.Add("УПМ", group.Id);
-                            break;
-                        case "насосы":
-                            groupsNew.Add("Насос", group.Id);
-                            break;
-                        case "электрика":
-                            groupsNew.Add("Электро", group.Id);
-                            groupsNew.Add("Датчики", group.Id);
-                            break;
-                        case "шу":
-                            groupsNew.Add("ШУ", group.Id);
-                            groupsNew.Add("Шкафы управления", group.Id);
-                            break;
-                        case "оборудование":
-                            groupsNew.Add("Расходомеры, манометры", group.Id);
-                            groupsNew.Add("Инструмент", group.Id);
-                            groupsNew.Add("Дробилки", group.Id);
-                            break;
-                        case "арматура":
-                            groupsNew.Add("Арматур", group.Id);
-                            break;
-                        default:
-                            groupsNew.Add("Другое", group.Id);
-                            break;
-                    }
-                }
-                _logger.LogWarning($"Группы {JsonSerializer.Serialize(groupsNew)}");
+                
                 var keys = groupsNew.Keys;
                 if (keys != null)
                 {
@@ -270,6 +290,7 @@ namespace KssGroupPlanning.Services.IntergrationServices
                         if (material.MaterialGroup.ToLower().Contains(key.ToLower()))
                         {
                             entity.GroupMaterialId = groupsNew[key];
+                            break;
                         }
                         else
                         {
@@ -282,25 +303,21 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     var group = await _groupMaterialService.GetByName("Другое");
                     entity.GroupMaterialId = group.Id;
                 }
-
                 // Определение даты доставки
                 (Guid, Guid) complexKey = (entity.ProductId, entity.GroupMaterialId); // Составной ключ для словаря
-                if (preparedMaterials2.ContainsKey(complexKey))
+                if (preparedMaterials.ContainsKey(complexKey))
                 {
-                    // Если текущая дата = 2049 и новая дата 2049 или вообще нет, то оставляем 2049
-                    // Если тек дата = 2049, а приход новый, то ставим новую дату
-                    // Если тек дата меньше новой даты, то ставим новую дату
-                    if (preparedMaterials2[complexKey] < entity.DateDelivery)
+                    if (preparedMaterials[complexKey] < entity.DateDelivery)
                     {
-                        preparedMaterials2[complexKey] = entity.DateDelivery;
+                        preparedMaterials[complexKey] = entity.DateDelivery;
                     }
                 }
                 else 
                 { 
-                    preparedMaterials2.Add(complexKey, entity.DateDelivery);
+                    preparedMaterials.Add(complexKey, entity.DateDelivery);
                 }
             }
-            foreach (var material in preparedMaterials2)
+            foreach (var material in preparedMaterials)
             {
                 WorkingPeriodStageMaterialEntity entity = new WorkingPeriodStageMaterialEntity();
                 entity.ProductId = material.Key.Item1;
