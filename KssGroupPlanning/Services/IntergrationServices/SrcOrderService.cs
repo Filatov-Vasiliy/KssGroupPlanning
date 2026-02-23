@@ -53,4 +53,9 @@ public class SrcOrderService
         _logger.LogInformation("Удаляем дупликаты по заказам полученые из csv");
         await _srcOrderRepository.RemoveDuplicates();
     }
+    public async Task TruncateTable()
+    {
+        _logger.LogInformation("Очищаем SrcOrder");
+        await _srcOrderRepository.TruncateTable();
+    }
 }

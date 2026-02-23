@@ -19,7 +19,10 @@ public class ProductTypeRepository : IProductTypeRepository
     {
         return await _dbcontext.ProductType.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
     }
-
+    public async Task<List<ProductTypeEntity>> GetAllDetailed()
+    {
+        return await _dbcontext.ProductType.AsNoTracking().Include(pt => pt.ProductSubTypes).OrderBy(c => c.Name).ToListAsync();
+    }
     public async Task<ProductTypeEntity?> GetById(Guid id)
     {
         return await _dbcontext.ProductType.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);

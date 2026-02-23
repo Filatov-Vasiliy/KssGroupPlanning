@@ -48,4 +48,8 @@ public class SrcOrderRepository(ProjectDbContext context) : ISrcOrderRepository
             _dbcontext.SaveChanges();
         }
     }
+    public async Task TruncateTable()
+    {
+        await _dbcontext.SrcOrder.ExecuteDeleteAsync();
+    }
 }

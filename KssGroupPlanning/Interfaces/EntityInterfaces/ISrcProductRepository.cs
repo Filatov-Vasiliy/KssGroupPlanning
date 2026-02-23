@@ -1,14 +1,15 @@
 ﻿using KssGroupPlanning.Entities;
 
 
-namespace KssGroupPlanning.Interfaces.EntityInterfaces
+namespace KssGroupPlanning.Interfaces.EntityInterfaces;
+
+public interface ISrcProductRepository
 {
-    public interface ISrcProductRepository
-    {
-        Task Add(List<SrcProductEntity> srcProducts);
+    Task Add(List<SrcProductEntity> srcProducts);
 
-        Task<List<SrcProductEntity>> GetSrcProducts();
+    Task<List<SrcProductEntity>> GetSrcProducts();
 
-        Task RemoveDuplicates();
-    }
+    Task RemoveDuplicates();
+    Task TruncateTable();
+
 }

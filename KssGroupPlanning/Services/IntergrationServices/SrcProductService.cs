@@ -53,4 +53,9 @@ public class SrcProductService
         _logger.LogInformation("Удаляем дупликаты по продуктам полученые из csv");
         await _srcProductRepository.RemoveDuplicates();
     }
+    public async Task TruncateTable()
+    {
+        _logger.LogInformation("Очищаем таблицу SrcProduct");
+        await _srcProductRepository.TruncateTable();
+    }
 }

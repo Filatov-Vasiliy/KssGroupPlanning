@@ -1,24 +1,20 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
-using CsvHelper;
-using System.Globalization;
-using CsvHelper.Configuration;
-using KssGroupPlanning.Repositories;
-using Microsoft.AspNetCore.Diagnostics;
+using System.Text.Json.Serialization;
 using KssGroupPlanning.Extentions;
-using KssGroupPlanning.Entities;
-using KssGroupPlanning.Interfaces.Infrastruction;
-using KssGroupPlanning.Services.EntityServices;
-using KssGroupPlanning.Interfaces.EntityInterfaces;
 using KssGroupPlanning.Infrastuction.auth;
 using KssGroupPlanning.Infrastuction.Db;
-using System.Text.Json.Serialization;
+using KssGroupPlanning.Interfaces.EntityInterfaces;
+using KssGroupPlanning.Interfaces.Infrastruction;
+using KssGroupPlanning.Repositories;
 using KssGroupPlanning.Services;
+
+using KssGroupPlanning.Services.EntityServices;
 using KssGroupPlanning.Services.IntergrationServices;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 services.AddEndpointsApiExplorer();
@@ -40,8 +36,6 @@ static void orderScvReader()
 }
 orderScvReader();
 */
-//services.AddTransient<ExceptionHandlerMiddleware>();
-
 services.AddScoped<UserService>();
 services.AddScoped<ProductTypeService>();
 services.AddScoped<BrigadeService>();
@@ -68,9 +62,10 @@ services.AddScoped<SrcOrderService>();
 services.AddScoped<SrcProductService>();
 services.AddScoped<SrcMaterialService>();
 services.AddScoped<IntegrationService>();
+services.AddTransient<IntegrationJob>();
 services.AddScoped<CoreService>(); //?!?!?!?!
 
-services.AddScoped<IProductTypeRepository,ProductTypeRepository>();
+services.AddScoped<IProductTypeRepository, ProductTypeRepository>();
 services.AddScoped<IUsersRepository, UsersRepository>();
 services.AddScoped<IJwtProvider, JwtProvider>();
 services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -97,9 +92,7 @@ services.AddScoped<ISrcOrderRepository, SrcOrderRepository>();
 services.AddScoped<ISrcProductRepository, SrcProductRepository>();
 services.AddScoped<ISrcMaterialRepository, SrcMaterialRepository>();
 
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
 services.AddDbContext<ProjectDbContext>(
     options =>
@@ -111,10 +104,22 @@ services.Configure<JwtOptions>(configuration.GetSection("JwtOptions"));
 services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    // Optional: Add other options as needed, e.g.,
     options.SerializerOptions.WriteIndented = true;
-
 });
+// Настройка Quartz
+services.AddQuartz(q =>
+{    
+    var jobKey = new JobKey("IntegrationJob");
+    q.AddJob<IntegrationJob>(opts => opts.WithIdentity(jobKey));
+
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity("IntegrationJobTrigger")
+        .WithCronSchedule("0 0 19 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Etc/GMT-3")))
+        .StartNow());
+});
+
+services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 var app = builder.Build();
 
@@ -124,7 +129,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-//app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.AddMappedEndpoints();
 

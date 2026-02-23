@@ -53,4 +53,9 @@ public class SrcMaterialService
         _logger.LogInformation("Удаляем дупликаты по материалам полученые из csv");
         await _srcMaterialRepository.RemoveDuplicates();
     }
+    public async Task TruncateTable()
+    {
+        _logger.LogInformation("Очищаем таблицу SrcMaterial");
+        await _srcMaterialRepository.TruncateTable();
+    }
 }

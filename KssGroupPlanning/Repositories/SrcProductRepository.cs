@@ -46,4 +46,8 @@ public class SrcProductRepository(ProjectDbContext context) : ISrcProductReposit
             _dbcontext.SaveChanges();
         }
     }
+    public async Task TruncateTable()
+    {
+        await _dbcontext.SrcProduct.ExecuteDeleteAsync();
+    }
 }
