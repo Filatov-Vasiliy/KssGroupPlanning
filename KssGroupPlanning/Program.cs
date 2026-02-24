@@ -12,10 +12,20 @@ using KssGroupPlanning.Services.IntergrationServices;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
+using Serilog;
 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Application", "KssGroupPlanning");
+});
+
 var services = builder.Services;
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
@@ -123,6 +133,9 @@ services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 var app = builder.Build();
 
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("===== Приложение запущено в окружении {Environment} =====", app.Environment.EnvironmentName);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -138,4 +151,16 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    logger.LogCritical(ex, "Приложение упало с критической ошибкой");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

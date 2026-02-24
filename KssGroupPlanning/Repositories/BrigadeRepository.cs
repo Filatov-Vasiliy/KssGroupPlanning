@@ -11,13 +11,16 @@ namespace KssGroupPlanning.Repositories;
 public class BrigadeRepository : IBrigadeRepository
 {
     private readonly ProjectDbContext _dbcontext;
+    private readonly ILogger<BrigadeRepository> _logger;
 
-    public BrigadeRepository(ProjectDbContext context)
+    public BrigadeRepository(ProjectDbContext context, ILogger<BrigadeRepository> logger)
     {
         _dbcontext = context;
+        _logger = logger;
     }
     public async Task<List<BrigadeEntity>> GetAll()
     {
+        _logger.LogWarning("ТЕСТИРУЕМСЯ");
         return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).ToListAsync();
     }
 
