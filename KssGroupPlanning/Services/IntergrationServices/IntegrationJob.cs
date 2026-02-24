@@ -46,6 +46,19 @@ namespace KssGroupPlanning.Services.IntergrationServices
             {
                 _logger.LogError(ex, "Ошибка при выполнении очистки Src слоя");
             }
+
+            try
+            {
+                _logger.LogInformation("Удаляем дубликаты", DateTime.Now);
+                await _srcOrderService.RemoveDuplicates();
+                await _srcProductService.RemoveDuplicates();
+                await _srcMaterialService.RemoveDuplicates(); 
+                _logger.LogInformation("Удаление дубликатов успешно завершено");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при выполнении удалений дубликатов");
+            }
             try
             {
                 _logger.LogInformation("Запуск IntegrationService.LoadSrcToMain() в {time}", DateTime.Now);

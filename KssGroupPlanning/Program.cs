@@ -115,7 +115,7 @@ services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(jobKey)
         .WithIdentity("IntegrationJobTrigger")
-        .WithCronSchedule("0 0 19 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Etc/GMT-3")))
+        .WithCronSchedule("0 0 18 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Etc/GMT-3")))
         .StartNow());
 });
 

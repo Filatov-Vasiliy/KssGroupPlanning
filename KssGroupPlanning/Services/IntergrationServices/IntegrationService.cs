@@ -198,6 +198,7 @@ namespace KssGroupPlanning.Services.IntergrationServices
             // Сборка груп материалов по алиасам для последующего определения материала и группировки
             var groupMaterial = await _groupMaterialService.GetAll();
             Dictionary<string, Guid> groupsNew = new Dictionary<string, Guid>();
+
             foreach (var group in groupMaterial)
             {
                 List<string> strings = new List<string>();
