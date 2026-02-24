@@ -20,7 +20,6 @@ public class BrigadeRepository : IBrigadeRepository
     }
     public async Task<List<BrigadeEntity>> GetAll()
     {
-        _logger.LogWarning("ТЕСТИРУЕМСЯ");
         return await _dbcontext.Brigade.AsNoTracking().OrderBy(c => c.CountEmployee).ToListAsync();
     }
 
