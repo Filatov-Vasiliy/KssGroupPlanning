@@ -26,7 +26,7 @@ public class WorkingPeriodService
     {
         return await _workingPeriodRepository.GetByName(name);
     }
-    public async Task<WorkingPeriodEntity?> GetByProductId(Guid productId)
+    public async Task<List<WorkingPeriodEntity?>> GetByProductId(Guid productId)
     {
         return await _workingPeriodRepository.GetByProductId(productId);
     }

@@ -25,13 +25,13 @@ public class StageRepository : IStageRepository
 
         return await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
 	}
-	public async Task<StageEntity?> GetByProductId(Guid productId)
+	public async Task<List<StageEntity?>> GetByProductId(Guid productId)
 	{
-        return await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
+        return await _dbcontext.Stage.AsNoTracking().Where(c => c.ProductId == productId).ToListAsync();
 	}
-    public async Task<StageEntity?> GetByProductSubTypeStageSampleId(Guid productSubTypeStageSampleId)
+    public async Task<List<StageEntity?>> GetByProductSubTypeStageSampleId(Guid productSubTypeStageSampleId)
     {
-        return await _dbcontext.Stage.AsNoTracking().FirstOrDefaultAsync(c => c.ProductSubTypeStageSampleId == productSubTypeStageSampleId);
+        return await _dbcontext.Stage.AsNoTracking().Where(c => c.ProductSubTypeStageSampleId == productSubTypeStageSampleId).ToListAsync();
     }
 
     public async Task Add(StageEntity stage)
