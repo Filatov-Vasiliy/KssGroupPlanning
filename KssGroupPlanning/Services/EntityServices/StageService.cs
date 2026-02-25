@@ -22,11 +22,11 @@ public class StageService
     {
         return await _StageRepository.GetById(id);
     }
-    public async Task<StageEntity?> GetByProductId(Guid productId)
+    public async Task<List<StageEntity?>> GetByProductId(Guid productId)
     {
         return await _StageRepository.GetByProductId(productId);
     }
-    public async Task<StageEntity?> GetByProductSubTypeStageSampleId(Guid productSubTypeStageSampleId)
+    public async Task<List<StageEntity?>> GetByProductSubTypeStageSampleId(Guid productSubTypeStageSampleId)
     {
         return await _StageRepository.GetByProductSubTypeStageSampleId(productSubTypeStageSampleId);
     }
