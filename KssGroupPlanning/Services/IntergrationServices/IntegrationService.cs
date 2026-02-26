@@ -236,11 +236,11 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     case "арматура":
                         groupsNew.Add("Арматур", group.Id);
                         break;
-                    case "расходные материалы": // Добавить
+                    case "станции": //Сделать для этой группы
                         groupsNew.Add("Туду", group.Id);
                         break;
-                    case "станция": // Добавить
-                        groupsNew.Add("Туду тоже", group.Id);
+                    case "Расходные материалы": //Сделать для этой группы
+                        groupsNew.Add("Тудуду", group.Id);
                         break;
                     default:
                         groupsNew.Add("Другое", group.Id);
