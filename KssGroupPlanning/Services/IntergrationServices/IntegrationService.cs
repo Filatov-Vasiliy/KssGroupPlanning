@@ -204,10 +204,10 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 List<string> strings = new List<string>();
                 switch (group.Name.ToLower())
                 {
-                    case "черный металл":
+                    case "металл":
                         groupsNew.Add("Черн", group.Id);
                         break;
-                    case "нержавейка":
+                    case "нержа":
                         groupsNew.Add("Нержав", group.Id);
                         break;
                     case "метизы":
@@ -235,6 +235,12 @@ namespace KssGroupPlanning.Services.IntergrationServices
                         break;
                     case "арматура":
                         groupsNew.Add("Арматур", group.Id);
+                        break;
+                    case "станции": //Сделать для этой группы
+                        groupsNew.Add("Туду", group.Id);
+                        break;
+                    case "Расходные материалы": //Сделать для этой группы
+                        groupsNew.Add("Тудуду", group.Id);
                         break;
                     default:
                         groupsNew.Add("Другое", group.Id);
