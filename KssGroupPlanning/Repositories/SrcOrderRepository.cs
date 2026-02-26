@@ -38,4 +38,18 @@ public class SrcOrderRepository(ProjectDbContext context) : ISrcOrderRepository
     {
         return await _dbcontext.SrcOrder.AsNoTracking().ToListAsync();
     }
+    public async Task RemoveDuplicates()
+    {
+        var orders = await _dbcontext.SrcOrder.ToListAsync();
+        var duplicates =  orders.GroupBy(p => p.OrderNumber).Where(g => g.Count() > 1).SelectMany(g => g.Skip(1)).ToList();
+        if (duplicates.Any())
+        {
+            _dbcontext.SrcOrder.RemoveRange(duplicates);
+            _dbcontext.SaveChanges();
+        }
+    }
+    public async Task TruncateTable()
+    {
+        await _dbcontext.SrcOrder.ExecuteDeleteAsync();
+    }
 }

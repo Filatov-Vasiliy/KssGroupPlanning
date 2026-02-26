@@ -17,6 +17,10 @@ public class ProductTypeService
     {
         return await _productTypeRepository.GetAll();
     }
+    public async Task<List<ProductTypeEntity>> GetAllDetailed()
+    {
+        return await _productTypeRepository.GetAllDetailed();
+    }
 
     public async Task<ProductTypeEntity> GetById(Guid id)
     {

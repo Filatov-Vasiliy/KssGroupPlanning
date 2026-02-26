@@ -1,13 +1,14 @@
 ﻿using KssGroupPlanning.Entities;
 
 
-namespace KssGroupPlanning.Interfaces.EntityInterfaces
+namespace KssGroupPlanning.Interfaces.EntityInterfaces;
+
+public interface ISrcOrderRepository
 {
-    public interface ISrcOrderRepository
-    {
-        Task Add(List<SrcOrderEntity> srcOrders);
+    Task Add(List<SrcOrderEntity> srcOrders);
 
-        Task<List<SrcOrderEntity>> GetSrcOrders();
+    Task<List<SrcOrderEntity>> GetSrcOrders();
+    Task RemoveDuplicates();
+    Task TruncateTable();
 
-    }
 }

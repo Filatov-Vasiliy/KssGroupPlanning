@@ -1,5 +1,6 @@
 ﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Interfaces.EntityInterfaces;
+using KssGroupPlanning.Repositories;
 
 public class CoreService
 {
@@ -18,6 +19,7 @@ public class CoreService
     private readonly IMaterialStageRepository _materialStageRepository;
     private readonly IProductSubTypeStageSampleRepository _stageSampleRepository;
     private readonly IProductSubTypeGroupMaterialRelationRepository _groupMaterialRepository;
+    private readonly IWorkingPeriodStageMaterialRepository _workingPeriodStageMaterialRepository;
     private readonly ILogger<CoreService> _logger;
 
     // Загруженные данные (кэш)
@@ -45,6 +47,8 @@ public class CoreService
     private Dictionary<Guid, List<ProductEntity>> _childrenByParentId = null!;
     private Dictionary<Guid, DateTime> _productStageConstraintDates = null!; // StageId -> макс. дата завершения детей (UTC)
 
+    private Dictionary<Guid, MaterialStageEntity> _materialStageById = new();
+
     // Константы рабочего времени (UTC)
     private readonly TimeSpan WORKDAY_START = new(8, 0, 0);
     private readonly TimeSpan WORKDAY_END = new(20, 0, 0);
@@ -70,6 +74,7 @@ public class CoreService
         IMaterialStageRepository materialStageRepository,
         IProductSubTypeStageSampleRepository stageSampleRepository,
         IProductSubTypeGroupMaterialRelationRepository groupMaterialRepository,
+        IWorkingPeriodStageMaterialRepository workingPeriodStageMaterialRepository,
         ILogger<CoreService> logger)
     {
         _productRepository = productRepository;
@@ -86,6 +91,7 @@ public class CoreService
         _materialStageRepository = materialStageRepository;
         _stageSampleRepository = stageSampleRepository;
         _groupMaterialRepository = groupMaterialRepository;
+        _workingPeriodStageMaterialRepository = workingPeriodStageMaterialRepository;
         _logger = logger;
     }
 
@@ -175,43 +181,195 @@ public class CoreService
     // Загрузка всех справочников в память для быстрого доступа
     private async Task LoadAllReferenceDataAsync()
     {
-        _logger.LogDebug("\n Загрузка справочных данных... \n");
+        _logger.LogDebug("Загрузка справочных данных...");
 
-        // Типы этапов по образцу этапа
         var stageTypeRelations = await _wpStageTypeRepository.GetAll();
-        _stageTypeBySample = stageTypeRelations.ToDictionary(r => r.ProductSubTypeWorkingPeriodSampleId, r => r.StageTypeId);
+        _stageTypeBySample = stageTypeRelations?.ToDictionary(r => r.ProductSubTypeWorkingPeriodSampleId, r => r.StageTypeId)
+                             ?? new Dictionary<Guid, Guid>();
 
-        // MaterialStage по GroupMaterial (только с непустым GroupMaterialId)
         var materialStages = await _materialStageRepository.GetAll();
-        _materialStagesByGroup = materialStages
+        _materialStageById = materialStages?.ToDictionary(ms => ms.Id, ms => ms)
+                             ?? new Dictionary<Guid, MaterialStageEntity>();
+        _materialStagesByGroup = materialStages?
             .Where(ms => ms.GroupMaterialId.HasValue)
             .GroupBy(ms => ms.GroupMaterialId.Value)
-            .ToDictionary(g => g.Key, g => g.Select(ms => ms.Id).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(ms => ms.Id).ToList())
+            ?? new Dictionary<Guid, List<Guid>>();
 
-        // ProductSubTypeStageSample по MaterialStage
         var stageSamples = await _stageSampleRepository.GetAll();
-        _stageSamplesByMaterial = stageSamples
+        _stageSamplesByMaterial = stageSamples?
             .GroupBy(ss => ss.MaterialStageId)
-            .ToDictionary(g => g.Key, g => g.Select(ss => ss.Id).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(ss => ss.Id).ToList())
+            ?? new Dictionary<Guid, List<Guid>>();
 
-        // Stage по ProductSubTypeStageSample
         var allStages = await _stageRepository.GetAll();
-        _stagesBySample = allStages
+        _stagesBySample = allStages?
             .GroupBy(s => s.ProductSubTypeStageSampleId)
-            .ToDictionary(g => g.Key, g => g.Select(s => s.Id).ToList());
-
-        // Stages по продукту
-        _stagesByProduct = allStages
+            .ToDictionary(g => g.Key, g => g.Select(s => s.Id).ToList())
+            ?? new Dictionary<Guid, List<Guid>>();
+        _stagesByProduct = allStages?
             .GroupBy(s => s.ProductId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+            .ToDictionary(g => g.Key, g => g.ToList())
+            ?? new Dictionary<Guid, List<StageEntity>>();
 
-        // GroupMaterial по образцу этапа
         var groupMaterialRelations = await _groupMaterialRepository.GetAll();
-        _groupMaterialsBySample = groupMaterialRelations
+        _groupMaterialsBySample = groupMaterialRelations?
             .GroupBy(r => r.ProductSubTypeWorkingPeriodSampleId)
-            .ToDictionary(g => g.Key, g => g.Select(r => r.GroupMaterialId).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(r => r.GroupMaterialId).ToList())
+            ?? new Dictionary<Guid, List<Guid>>();
 
-        _logger.LogDebug("\n Справочные данные загружены \n");
+        _logger.LogDebug("Справочные данные загружены");
+    }
+
+    private async Task<bool> CreateStagesForProductAsync(ProductEntity product)
+    {
+        _logger.LogDebug($"Создание Stage для продукта {product.Id}");
+
+        // Проверка инициализации справочников
+        if (_materialStageById == null)
+        {
+            _logger.LogError("Справочник _materialStageById не инициализирован.");
+            return false;
+        }
+
+        if (!product.StartDate.HasValue)
+        {
+            _logger.LogError($"Продукт {product.Id} не имеет StartDate, невозможно создать стадии");
+            return false;
+        }
+
+        // Получаем образцы стадий для подтипа продукта
+        var samples = await _stageSampleRepository.GetByProductSubTypeId(product.ProductSubTypeId);
+        if (samples == null)
+        {
+            _logger.LogError($"Ошибка при получении образцов стадий для подтипа {product.ProductSubTypeId} (репозиторий вернул null)");
+            return false;
+        }
+
+        if (!samples.Any())
+        {
+            _logger.LogWarning($"Для подтипа {product.ProductSubTypeId} продукта {product.Id} нет образцов стадий. Продукт не будет запланирован.");
+            return false; // Корректный выход без исключения
+        }
+
+        // Загружаем поставки материалов для этого продукта
+        var allDeliveries = await _workingPeriodStageMaterialRepository.GetByProductId(product.Id);
+        var deliveriesByGroup = allDeliveries?.ToLookup(d => d.GroupMaterialId)
+                                ?? Enumerable.Empty<WorkingPeriodStageMaterialEntity>().ToLookup(d => d.GroupMaterialId);
+
+        var stagesToCreate = new List<StageEntity>();
+        DateTime? cStageDate = null;
+
+        // Поиск стадии "С"
+        foreach (var sample in samples)
+        {
+            if (!_materialStageById.TryGetValue(sample.MaterialStageId, out var materialStage))
+            {
+                _logger.LogError($"MaterialStage с Id {sample.MaterialStageId} не найдена в кэше");
+                return false;
+            }
+
+            if (materialStage.StageName == "С")
+            {
+                cStageDate = product.StartDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+                var stage = new StageEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ProductSubTypeStageSampleId = sample.Id,
+                    ProductId = product.Id,
+                    Status = "Готов",
+                    Date = cStageDate.Value,
+                    CreateTime = DateTime.UtcNow,
+                    UpdateTime = DateTime.UtcNow
+                };
+                stagesToCreate.Add(stage);
+                break;
+            }
+        }
+
+        if (!cStageDate.HasValue)
+        {
+            _logger.LogError($"Для продукта {product.Id} не найдена стадия с именем 'С'");
+            return false;
+        }
+
+        // Обработка остальных стадий
+        foreach (var sample in samples)
+        {
+            if (stagesToCreate.Any(s => s.ProductSubTypeStageSampleId == sample.Id))
+                continue;
+
+            if (!_materialStageById.TryGetValue(sample.MaterialStageId, out var materialStage))
+            {
+                _logger.LogError($"MaterialStage с Id {sample.MaterialStageId} не найдена в кэше");
+                return false;
+            }
+
+            DateTime stageDate;
+
+            if (materialStage.StageName == "П")
+            {
+                // Парсинг норматива в часах
+                if (!double.TryParse(sample.StandartTime, out double hours))
+                {
+                    _logger.LogError($"Не удалось распарсить StandartTime как число: '{sample.StandartTime}' для образца {sample.Id}");
+                    return false;
+                }
+                stageDate = cStageDate.Value.AddHours(hours);
+            }
+            else
+            {
+                if (!materialStage.GroupMaterialId.HasValue)
+                {
+                    _logger.LogError($"Для стадии с именем {materialStage.StageName} (sample {sample.Id}) не указан GroupMaterialId");
+                    return false;
+                }
+
+                var groupDeliveries = deliveriesByGroup[materialStage.GroupMaterialId.Value].ToList();
+                if (!groupDeliveries.Any())
+                {
+                    _logger.LogError($"Для продукта {product.Id} и группы материалов {materialStage.GroupMaterialId} нет записей о поставке");
+                    return false;
+                }
+
+                var maxDeliveryDate = groupDeliveries.Max(d => d.DateDelivery);
+                stageDate = maxDeliveryDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            }
+
+            var newStage = new StageEntity
+            {
+                Id = Guid.NewGuid(),
+                ProductSubTypeStageSampleId = sample.Id,
+                ProductId = product.Id,
+                Status = "Готов",
+                Date = stageDate,
+                CreateTime = DateTime.UtcNow,
+                UpdateTime = DateTime.UtcNow
+            };
+            stagesToCreate.Add(newStage);
+        }
+
+        // Сохранение в БД
+        foreach (var stage in stagesToCreate)
+        {
+            await _stageRepository.Add(stage);
+            _logger.LogDebug($"Создана Stage {stage.Id} для продукта {product.Id}");
+        }
+
+        // Обновление кэша
+        if (!_stagesByProduct.ContainsKey(product.Id))
+            _stagesByProduct[product.Id] = new List<StageEntity>();
+        _stagesByProduct[product.Id].AddRange(stagesToCreate);
+
+        foreach (var stage in stagesToCreate)
+        {
+            if (!_stagesBySample.ContainsKey(stage.ProductSubTypeStageSampleId))
+                _stagesBySample[stage.ProductSubTypeStageSampleId] = new List<Guid>();
+            _stagesBySample[stage.ProductSubTypeStageSampleId].Add(stage.Id);
+        }
+
+        _logger.LogInformation($"Для продукта {product.Id} создано {stagesToCreate.Count} стадий");
+        return true;
     }
 
     private async Task LoadFactoryBrigadesAsync()
@@ -421,7 +579,34 @@ public class CoreService
     private async Task<bool> PlanProductWithBrigadeSelectionAsync(ProductEntity product, Guid factoryId)
     {
         if (_allWorkingPeriods.Any(wp => wp.ProductId == product.Id))
+        {
+            _logger.LogWarning($"У продукта {product.Id} уже есть рабочий период");
             return false;
+        }
+
+        // Создание стадий, если их ещё нет
+        var existingStages = await _stageRepository.GetByProductId(product.Id);
+        if (existingStages == null || !existingStages.Any())
+        {
+            var created = await CreateStagesForProductAsync(product);
+            if (!created)
+            {
+                _logger.LogError($"Не удалось создать стадии для продукта {product.Id}");
+                return false;
+            }
+        }
+        else
+        {
+            _logger.LogDebug($"Для продукта {product.Id} уже есть стадии, пропускаем создание");
+        }
+
+        // ---------- НОВАЯ ПРОВЕРКА ----------
+        var pDates = await GetStageDatesWithMaterialStageNamePAsync(product.Id);
+        if (!pDates.Any())
+        {
+            _logger.LogWarning($"Продукт {product.Id} не имеет дат 'П' (MaterialStage.Name = 'П'), планирование пропущено.");
+            return false;
+        }
 
         var stages = await _sampleRepository.GetByProductSubTypeId(product.ProductSubTypeId);
         if (stages == null || !stages.Any())
@@ -847,6 +1032,13 @@ public class CoreService
             current = NextWorkDay(current.Date.AddDays(1));
         }
         return null;
+    }
+
+    private TimeSpan ParseHoursToTimeSpan(string hoursStr)
+    {
+        if (double.TryParse(hoursStr, out double hours))
+            return TimeSpan.FromHours(hours);
+        throw new InvalidOperationException($"Не удалось распарсить норматив как часы: {hoursStr}");
     }
 
     private bool HasEnoughEmployeesFast(

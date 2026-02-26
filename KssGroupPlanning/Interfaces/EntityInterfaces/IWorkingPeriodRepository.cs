@@ -7,7 +7,7 @@ namespace KssGroupPlanning.Interfaces.EntityInterfaces
     {
         Task<List<WorkingPeriodEntity>> GetAll();
         Task<WorkingPeriodEntity?> GetById(Guid id);
-        Task<WorkingPeriodEntity?> GetByProductId(Guid productId);
+        Task<List<WorkingPeriodEntity?>> GetByProductId(Guid productId);
         Task<WorkingPeriodEntity?> GetByName(string name);
         Task Add(WorkingPeriodEntity workingPeriod);
         Task Update(WorkingPeriodEntity workingPeriod);

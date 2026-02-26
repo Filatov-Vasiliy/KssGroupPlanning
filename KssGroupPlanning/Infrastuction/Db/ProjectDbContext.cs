@@ -34,7 +34,7 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<MaterialStageEntity> MaterialStage { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
+
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new ProductTypeConfiguration());
@@ -81,10 +81,13 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
                 new ProductTypeEntity { Id = Guid.Parse("3d747667-d70c-436c-8856-4f56a38a19ea"),Name = "КГН"},
                 new ProductTypeEntity { Id = Guid.Parse("edf5834b-a1a0-42a7-8b55-84de08280fd7"),Name = "КП"},
                 new ProductTypeEntity { Id = Guid.Parse("bf5381ed-4534-4ec5-87f7-8b28eaa22f9d"),Name = "КГН"},
-                new ProductTypeEntity { Id = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b"),Name = "ВНС"}
+                new ProductTypeEntity { Id = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b"),Name = "ВНС"},
+                new ProductTypeEntity { Id = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f"),Name = "Неопределено"},
+
             });
         modelBuilder.Entity<ProductSubTypeEntity>().HasData(
             new ProductSubTypeEntity[]
+
             { 
                 new ProductSubTypeEntity { Id = Guid.Parse("4373dba9-30ac-4f46-8d51-cd79edd9d649"),Name = "Подтип А", ProductTypeId = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b") },
                 new ProductSubTypeEntity { Id = Guid.Parse("41bfadaa-08ee-4a09-ab66-4c53d72c9959"),Name = "Подтип А", ProductTypeId = Guid.Parse("0cb6cef3-948e-426e-b655-a481772a84ca") },
@@ -125,8 +128,34 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
                 new ProductSubTypeEntity { Id = Guid.Parse("e0a9c3e6-3102-4892-a44b-8bec8bfcdf1c"),Name = "Подтип А", ProductTypeId = Guid.Parse("edf5834b-a1a0-42a7-8b55-84de08280fd7") },
                 new ProductSubTypeEntity { Id = Guid.Parse("32fed513-1b3c-49cb-9e06-ddfaaa82a488"),Name = "Подтип Б", ProductTypeId = Guid.Parse("edf5834b-a1a0-42a7-8b55-84de08280fd7") },
                 new ProductSubTypeEntity { Id = Guid.Parse("f2a48405-4728-4e50-b99e-54ee9f9235ac"),Name = "Подтип Б", ProductTypeId = Guid.Parse("f102fb2a-b3af-462f-9989-9d1f3169d44b") },
+                new ProductSubTypeEntity { Id = Guid.Parse("0ea947d9-3af7-40dd-83ae-35cc07c5a068"),Name = "Неопределено", ProductTypeId = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f") },
             });
-
+        modelBuilder.Entity<GroupMaterialEntity>().HasData(
+            new GroupMaterialEntity[]
+            {
+                new GroupMaterialEntity { Id = Guid.Parse("8f2c0980-ac80-4c04-94d7-b8dc3982a77d"), Name = "Металл" },
+                new GroupMaterialEntity { Id = Guid.Parse("50a6096e-585a-4d84-a71f-3d1b7d934774"), Name = "Нержа" },
+                new GroupMaterialEntity { Id = Guid.Parse("99efee09-84ad-446c-b154-2c18de67adf4"), Name = "Метизы" },
+                new GroupMaterialEntity { Id = Guid.Parse("37db04d9-37f0-4fbd-9359-8ba5f7354d03"), Name = "УПМ" },
+                new GroupMaterialEntity { Id = Guid.Parse("7d1ab87a-3926-404a-85c3-aaf38f6251f0"), Name = "Насосы" },
+                new GroupMaterialEntity { Id = Guid.Parse("708187ca-51c1-4366-bcb1-a212b6b003d9"), Name = "Электрика" },
+                new GroupMaterialEntity { Id = Guid.Parse("2fc07976-bc8c-43b0-aba0-48e3bfb5cbc3"), Name = "ШУ" },
+                new GroupMaterialEntity { Id = Guid.Parse("8a4a43c7-6fa1-46c9-9863-ecc296f65b7f"), Name = "Арматура" },
+                new GroupMaterialEntity { Id = Guid.Parse("2f76a3c8-8e69-4c7c-a922-ef92b87e36e5"), Name = "Оборудование" },
+                new GroupMaterialEntity { Id = Guid.Parse("8a0f97a4-a490-474d-aaba-ef5f5f5e31bb"), Name = "Станция" },
+                new GroupMaterialEntity { Id = Guid.Parse("364de2b0-c161-4093-9e5c-43e43f28ae2d"), Name = "Расходные материалы" },
+                new GroupMaterialEntity { Id = Guid.Parse("02b7c3de-753f-45dd-8f23-c451eceaffae"), Name = "Другое" },
+            });
+        modelBuilder.Entity<FactoryEntity>().HasData(
+            new FactoryEntity[]
+            {
+                new FactoryEntity { Id = Guid.Parse("0ea947d9-3af7-40dd-83ae-35cc07c5a068"), Name = "Бершанская" },
+                new FactoryEntity { Id = Guid.Parse("019c765b-e572-7a27-84ca-277461509d9f "), Name = "Другое" },
+                new FactoryEntity { Id = Guid.Parse("ed3f7875-2760-4853-8c6b-554657503449"), Name = "Новороссийская" },
+                new FactoryEntity { Id = Guid.Parse("7e64daa0-2c53-4840-8b73-7fcd16718f78"), Name = "Тихорецкая" },
+                new FactoryEntity { Id = Guid.Parse("1a3fa20a-992a-4487-a114-fd65444704d2"), Name = "Кореновск" },
+                new FactoryEntity { Id = Guid.Parse("4baad45d-a632-40d5-82ef-3bee797ddef8"), Name = "Васюринская" },
+            });
         base.OnModelCreating(modelBuilder);
     }
 }

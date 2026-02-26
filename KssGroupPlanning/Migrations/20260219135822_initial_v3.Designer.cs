@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning.Infrastuction.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260219135822_initial_v3")]
+    partial class initial_v3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,38 +66,6 @@ namespace KssGroupPlanning.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Factory");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("0ea947d9-3af7-40dd-83ae-35cc07c5a068"),
-                            Name = "Бершанская"
-                        },
-                        new
-                        {
-                            Id = new Guid("019c765b-e572-7a27-84ca-277461509d9f"),
-                            Name = "Другое"
-                        },
-                        new
-                        {
-                            Id = new Guid("ed3f7875-2760-4853-8c6b-554657503449"),
-                            Name = "Новороссийская"
-                        },
-                        new
-                        {
-                            Id = new Guid("7e64daa0-2c53-4840-8b73-7fcd16718f78"),
-                            Name = "Тихорецкая"
-                        },
-                        new
-                        {
-                            Id = new Guid("1a3fa20a-992a-4487-a114-fd65444704d2"),
-                            Name = "Кореновск"
-                        },
-                        new
-                        {
-                            Id = new Guid("4baad45d-a632-40d5-82ef-3bee797ddef8"),
-                            Name = "Васюринская"
-                        });
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.GroupMaterialEntity", b =>
@@ -522,12 +493,6 @@ namespace KssGroupPlanning.Migrations
                             Id = new Guid("f2a48405-4728-4e50-b99e-54ee9f9235ac"),
                             Name = "Подтип Б",
                             ProductTypeId = new Guid("f102fb2a-b3af-462f-9989-9d1f3169d44b")
-                        },
-                        new
-                        {
-                            Id = new Guid("0ea947d9-3af7-40dd-83ae-35cc07c5a068"),
-                            Name = "Неопределено",
-                            ProductTypeId = new Guid("019c765b-e572-7a27-84ca-277461509d9f")
                         });
                 });
 
@@ -723,11 +688,6 @@ namespace KssGroupPlanning.Migrations
                         {
                             Id = new Guid("f102fb2a-b3af-462f-9989-9d1f3169d44b"),
                             Name = "ВНС"
-                        },
-                        new
-                        {
-                            Id = new Guid("019c765b-e572-7a27-84ca-277461509d9f"),
-                            Name = "Неопределено"
                         });
                 });
 

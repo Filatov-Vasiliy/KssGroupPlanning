@@ -42,7 +42,8 @@ public class ProductService
     {
         var productEntity = new ProductEntity
         {
-            Id = Guid.NewGuid(),
+            //Id = Guid.NewGuid(),
+            Id = product.Id,
             Number = product.Number,
             ProductSubTypeId = product.ProductSubTypeId,
             OrderId = product.OrderId,

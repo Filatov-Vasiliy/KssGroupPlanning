@@ -26,7 +26,7 @@ public class SrcMaterialRepository(ProjectDbContext context) : ISrcMaterialRepos
                 ForAdmissionDate = srcMaterial.ForAdmissionDate,
                 CreateDate = srcMaterial.CreateDate,
                 ProductOrderNameChild = srcMaterial.ProductOrderNameChild,
-                ProductOrderNameChildDate = srcMaterial.ProductOrderNameChildDate,
+                ProductOrderDateChild = srcMaterial.ProductOrderDateChild,
             };
             await _dbcontext.SrcMaterial.AddAsync(srcMaterialEntity);
         }
@@ -36,5 +36,20 @@ public class SrcMaterialRepository(ProjectDbContext context) : ISrcMaterialRepos
     public async Task<List<SrcMaterialEntity>> GetSrcMaterials()
     {
         return await _dbcontext.SrcMaterial.AsNoTracking().ToListAsync();
+    }
+    public async Task RemoveDuplicates()
+    {
+        var materials = await _dbcontext.SrcMaterial.ToListAsync();
+        var duplicates = materials.GroupBy(p => new {p.MaterialGroup,p.MaterialName,p.ProductOrderName }).Where(g => g.Count() > 1).SelectMany(g => g.Skip(1)).ToList();
+        if (duplicates.Any())
+        {
+            _dbcontext.SrcMaterial.RemoveRange(duplicates);
+            _dbcontext.SaveChanges();
+        }
+    }
+    public async Task TruncateTable()
+    {
+        await _dbcontext.SrcMaterial.ExecuteDeleteAsync();
+
     }
 }

@@ -3,6 +3,7 @@ using System;
 using KssGroupPlanning.Infrastuction.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KssGroupPlanning.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260204135645_src")]
+    partial class src
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,38 +66,6 @@ namespace KssGroupPlanning.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Factory");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("0ea947d9-3af7-40dd-83ae-35cc07c5a068"),
-                            Name = "Бершанская"
-                        },
-                        new
-                        {
-                            Id = new Guid("019c765b-e572-7a27-84ca-277461509d9f"),
-                            Name = "Другое"
-                        },
-                        new
-                        {
-                            Id = new Guid("ed3f7875-2760-4853-8c6b-554657503449"),
-                            Name = "Новороссийская"
-                        },
-                        new
-                        {
-                            Id = new Guid("7e64daa0-2c53-4840-8b73-7fcd16718f78"),
-                            Name = "Тихорецкая"
-                        },
-                        new
-                        {
-                            Id = new Guid("1a3fa20a-992a-4487-a114-fd65444704d2"),
-                            Name = "Кореновск"
-                        },
-                        new
-                        {
-                            Id = new Guid("4baad45d-a632-40d5-82ef-3bee797ddef8"),
-                            Name = "Васюринская"
-                        });
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.GroupMaterialEntity", b =>
@@ -110,53 +81,6 @@ namespace KssGroupPlanning.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GroupMaterial");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("28539a79-0747-4d57-9e1e-a2e63adff951"),
-                            Name = "Черный металл"
-                        },
-                        new
-                        {
-                            Id = new Guid("d20b1bfc-3752-44b5-b671-448e9308ba54"),
-                            Name = "Нержавейка"
-                        },
-                        new
-                        {
-                            Id = new Guid("b037956e-2af1-4d26-a2c6-f8b8cd5ce09e"),
-                            Name = "Метизы"
-                        },
-                        new
-                        {
-                            Id = new Guid("46496326-7bc8-4935-8a9c-c319e1ed81e8"),
-                            Name = "УПМ"
-                        },
-                        new
-                        {
-                            Id = new Guid("78b76136-bd49-4a8b-b867-77d16fc98d7a"),
-                            Name = "Насосы"
-                        },
-                        new
-                        {
-                            Id = new Guid("95d41135-a72b-4386-9734-d579fa0947fe"),
-                            Name = "Электрика"
-                        },
-                        new
-                        {
-                            Id = new Guid("2a62b9a4-d1eb-4bce-b8fb-903736e8ea81"),
-                            Name = "ШУ"
-                        },
-                        new
-                        {
-                            Id = new Guid("8a01b1ce-4413-4174-b303-c20801699408"),
-                            Name = "Арматура"
-                        },
-                        new
-                        {
-                            Id = new Guid("02b7c3de-753f-45dd-8f23-c451eceaffae"),
-                            Name = "Другое"
-                        });
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.MaterialStageEntity", b =>
@@ -253,9 +177,6 @@ namespace KssGroupPlanning.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("SubProductStageId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("UpdateTime")
                         .HasColumnType("timestamp without time zone");
 
@@ -268,9 +189,6 @@ namespace KssGroupPlanning.Migrations
                     b.HasIndex("ParentProductId");
 
                     b.HasIndex("ProductSubTypeId");
-
-                    b.HasIndex("SubProductStageId")
-                        .IsUnique();
 
                     b.ToTable("Product");
                 });
@@ -522,12 +440,6 @@ namespace KssGroupPlanning.Migrations
                             Id = new Guid("f2a48405-4728-4e50-b99e-54ee9f9235ac"),
                             Name = "Подтип Б",
                             ProductTypeId = new Guid("f102fb2a-b3af-462f-9989-9d1f3169d44b")
-                        },
-                        new
-                        {
-                            Id = new Guid("0ea947d9-3af7-40dd-83ae-35cc07c5a068"),
-                            Name = "Неопределено",
-                            ProductTypeId = new Guid("019c765b-e572-7a27-84ca-277461509d9f")
                         });
                 });
 
@@ -723,11 +635,6 @@ namespace KssGroupPlanning.Migrations
                         {
                             Id = new Guid("f102fb2a-b3af-462f-9989-9d1f3169d44b"),
                             Name = "ВНС"
-                        },
-                        new
-                        {
-                            Id = new Guid("019c765b-e572-7a27-84ca-277461509d9f"),
-                            Name = "Неопределено"
                         });
                 });
 
@@ -756,9 +663,6 @@ namespace KssGroupPlanning.Migrations
                         .HasColumnType("date");
 
                     b.Property<DateOnly?>("ProductOrderDate")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly?>("ProductOrderDateChild")
                         .HasColumnType("date");
 
                     b.Property<string>("ProductOrderName")
@@ -1153,10 +1057,6 @@ namespace KssGroupPlanning.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("KssGroupPlanning.Entities.StageEntity", "SubProductStage")
-                        .WithOne("SubProduct")
-                        .HasForeignKey("KssGroupPlanning.Entities.ProductEntity", "SubProductStageId");
-
                     b.Navigation("Factory");
 
                     b.Navigation("Order");
@@ -1164,8 +1064,6 @@ namespace KssGroupPlanning.Migrations
                     b.Navigation("ParentProduct");
 
                     b.Navigation("ProductSubType");
-
-                    b.Navigation("SubProductStage");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductSubTypeEntity", b =>
@@ -1425,11 +1323,6 @@ namespace KssGroupPlanning.Migrations
             modelBuilder.Entity("KssGroupPlanning.Entities.ProductTypeEntity", b =>
                 {
                     b.Navigation("ProductSubTypes");
-                });
-
-            modelBuilder.Entity("KssGroupPlanning.Entities.StageEntity", b =>
-                {
-                    b.Navigation("SubProduct");
                 });
 
             modelBuilder.Entity("KssGroupPlanning.Entities.StageTypeEntity", b =>

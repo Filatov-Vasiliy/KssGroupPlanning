@@ -27,7 +27,7 @@ public class ProductSubTypeService
     {
         return await _productSubTypeRepository.GetByName(name);
     }
-    public async Task<ProductSubTypeEntity?> GetByProductTypeId(Guid productTypeId)
+    public async Task<List<ProductSubTypeEntity?>> GetByProductTypeId(Guid productTypeId)
     {
         return await _productSubTypeRepository.GetByProductTypeId(productTypeId);
     }

@@ -28,6 +28,10 @@ public class WorkingPeriodStageMaterialRepository : IWorkingPeriodStageMaterialR
 
         return await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
     }
+    public async Task<WorkingPeriodStageMaterialEntity?> GetByComplexKey(Guid ProductId,Guid GroupMaterialId)
+    {
+        return await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == ProductId && c.GroupMaterialId == GroupMaterialId);
+    }
     public async Task<List<WorkingPeriodStageMaterialEntity?>> GetByGroupMaterialId(Guid groupMaterialId)
     {
         return await _dbcontext.WorkingPeriodStageMaterial.AsNoTracking().Where(c => c.GroupMaterialId == groupMaterialId).ToListAsync();
