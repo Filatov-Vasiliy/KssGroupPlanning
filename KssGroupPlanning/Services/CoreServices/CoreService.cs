@@ -231,12 +231,16 @@ public class CoreService
             _logger.LogError("Справочник _materialStageById не инициализирован.");
             return false;
         }
-
-        if (!product.StartDate.HasValue)
+        if (_workingPeriodStageMaterialRepository == null)
         {
-            _logger.LogError($"Продукт {product.Id} не имеет StartDate, невозможно создать стадии");
+            _logger.LogError("Репозиторий _workingPeriodStageMaterialRepository не инициализирован.");
             return false;
         }
+
+        // Получаем или вычисляем дату старта (UTC)
+        DateTime? startDateUtc = await GetStartDateUtcAsync(product);
+        if (!startDateUtc.HasValue)
+            return false; // ошибка уже залогирована внутри метода
 
         // Получаем образцы стадий для подтипа продукта
         var samples = await _stageSampleRepository.GetByProductSubTypeId(product.ProductSubTypeId);
@@ -245,22 +249,23 @@ public class CoreService
             _logger.LogError($"Ошибка при получении образцов стадий для подтипа {product.ProductSubTypeId} (репозиторий вернул null)");
             return false;
         }
-
         if (!samples.Any())
         {
             _logger.LogWarning($"Для подтипа {product.ProductSubTypeId} продукта {product.Id} нет образцов стадий. Продукт не будет запланирован.");
-            return false; // Корректный выход без исключения
+            return false;
         }
 
-        // Загружаем поставки материалов для этого продукта
+        // Загружаем все поставки материалов для этого продукта
         var allDeliveries = await _workingPeriodStageMaterialRepository.GetByProductId(product.Id);
-        var deliveriesByGroup = allDeliveries?.ToLookup(d => d.GroupMaterialId)
-                                ?? Enumerable.Empty<WorkingPeriodStageMaterialEntity>().ToLookup(d => d.GroupMaterialId);
+        var deliveriesByGroup = allDeliveries?
+            .Where(d => d.DateDelivery != new DateOnly(2000, 1, 1)) // игнорируем "мусорные" даты
+            .ToLookup(d => d.GroupMaterialId)
+            ?? Enumerable.Empty<WorkingPeriodStageMaterialEntity>().ToLookup(d => d.GroupMaterialId);
 
         var stagesToCreate = new List<StageEntity>();
         DateTime? cStageDate = null;
 
-        // Поиск стадии "С"
+        // 1. Обработка стадии "С" (старт)
         foreach (var sample in samples)
         {
             if (!_materialStageById.TryGetValue(sample.MaterialStageId, out var materialStage))
@@ -271,7 +276,7 @@ public class CoreService
 
             if (materialStage.StageName == "С")
             {
-                cStageDate = product.StartDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+                cStageDate = startDateUtc.Value;
                 var stage = new StageEntity
                 {
                     Id = Guid.NewGuid(),
@@ -293,7 +298,7 @@ public class CoreService
             return false;
         }
 
-        // Обработка остальных стадий
+        // 2. Обработка остальных стадий
         foreach (var sample in samples)
         {
             if (stagesToCreate.Any(s => s.ProductSubTypeStageSampleId == sample.Id))
@@ -328,7 +333,7 @@ public class CoreService
                 var groupDeliveries = deliveriesByGroup[materialStage.GroupMaterialId.Value].ToList();
                 if (!groupDeliveries.Any())
                 {
-                    _logger.LogError($"Для продукта {product.Id} и группы материалов {materialStage.GroupMaterialId} нет записей о поставке");
+                    _logger.LogError($"Для продукта {product.Id} и группы материалов {materialStage.GroupMaterialId} нет корректных записей о поставке (все отфильтрованы или отсутствуют)");
                     return false;
                 }
 
@@ -370,6 +375,23 @@ public class CoreService
 
         _logger.LogInformation($"Для продукта {product.Id} создано {stagesToCreate.Count} стадий");
         return true;
+    }
+
+    private async Task<DateTime?> GetStartDateUtcAsync(ProductEntity product)
+    {
+        if (product.StartDate.HasValue)
+            return product.StartDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+
+        if (!product.EndDate.HasValue)
+        {
+            _logger.LogError($"Продукт {product.Id} не имеет ни StartDate, ни EndDate. Невозможно определить дату старта.");
+            return null;
+        }
+
+        // EndDate - 14 дней
+        var computedStartDate = product.EndDate.Value.AddDays(-14);
+        _logger.LogWarning($"Продукт {product.Id} не имеет StartDate. Используем вычисленную дату: {computedStartDate} (EndDate - 14 дней)");
+        return computedStartDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
     }
 
     private async Task LoadFactoryBrigadesAsync()

@@ -236,10 +236,10 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     case "арматура":
                         groupsNew.Add("Арматур", group.Id);
                         break;
-                    case "станции": //Сделать для этой группы
+                    case "станция": //Сделать для этой группы
                         groupsNew.Add("Туду", group.Id);
                         break;
-                    case "Расходные материалы": //Сделать для этой группы
+                    case "расходные материалы": //Сделать для этой группы
                         groupsNew.Add("Тудуду", group.Id);
                         break;
                     default:
@@ -286,7 +286,14 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     }
                 }
                 entity.Id = Guid.NewGuid();
-                entity.ProductId = productTrueDict[material.ProductOrderName].Id;
+                try
+                {
+                    entity.ProductId = productTrueDict[material.ProductOrderName].Id;
+                }
+                catch (KeyNotFoundException ex)
+                {
+                    continue;
+                }
                 entity.DateDelivery = material.PostedDate ?? material.ForAdmissionDate ?? DateOnly.Parse("01.01.2000");
                 
                 var keys = groupsNew.Keys;
