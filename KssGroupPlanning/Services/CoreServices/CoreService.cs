@@ -237,10 +237,10 @@ public class CoreService
             return false;
         }
 
-        // Получаем или вычисляем дату старта (UTC)
+        // Определяем дату старта (UTC)
         DateTime? startDateUtc = await GetStartDateUtcAsync(product);
         if (!startDateUtc.HasValue)
-            return false; // ошибка уже залогирована внутри метода
+            return false;
 
         // Получаем образцы стадий для подтипа продукта
         var samples = await _stageSampleRepository.GetByProductSubTypeId(product.ProductSubTypeId);
@@ -255,17 +255,17 @@ public class CoreService
             return false;
         }
 
-        // Загружаем все поставки материалов для этого продукта
+        // Загружаем все поставки материалов для этого продукта, исключая "мусорную" дату 2000-01-01
         var allDeliveries = await _workingPeriodStageMaterialRepository.GetByProductId(product.Id);
         var deliveriesByGroup = allDeliveries?
-            .Where(d => d.DateDelivery != new DateOnly(2000, 1, 1)) // игнорируем "мусорные" даты
+            .Where(d => d.DateDelivery != new DateOnly(2000, 1, 1))
             .ToLookup(d => d.GroupMaterialId)
             ?? Enumerable.Empty<WorkingPeriodStageMaterialEntity>().ToLookup(d => d.GroupMaterialId);
 
         var stagesToCreate = new List<StageEntity>();
-        DateTime? cStageDate = null;
 
-        // 1. Обработка стадии "С" (старт)
+        // ---- 1. Обработка стадии "С" (старт) ----
+        StageEntity? stageC = null;
         foreach (var sample in samples)
         {
             if (!_materialStageById.TryGetValue(sample.MaterialStageId, out var materialStage))
@@ -273,34 +273,72 @@ public class CoreService
                 _logger.LogError($"MaterialStage с Id {sample.MaterialStageId} не найдена в кэше");
                 return false;
             }
-
             if (materialStage.StageName == "С")
             {
-                cStageDate = startDateUtc.Value;
-                var stage = new StageEntity
+                stageC = new StageEntity
                 {
                     Id = Guid.NewGuid(),
                     ProductSubTypeStageSampleId = sample.Id,
                     ProductId = product.Id,
                     Status = "Готов",
-                    Date = cStageDate.Value,
+                    Date = startDateUtc.Value,
                     CreateTime = DateTime.UtcNow,
                     UpdateTime = DateTime.UtcNow
                 };
-                stagesToCreate.Add(stage);
+                stagesToCreate.Add(stageC);
                 break;
             }
         }
-
-        if (!cStageDate.HasValue)
+        if (stageC == null)
         {
             _logger.LogError($"Для продукта {product.Id} не найдена стадия с именем 'С'");
             return false;
         }
 
-        // 2. Обработка остальных стадий
+        // ---- 2. Обработка стадии "П" ----
+        StageEntity? stageP = null;
         foreach (var sample in samples)
         {
+            if (stagesToCreate.Any(s => s.ProductSubTypeStageSampleId == sample.Id))
+                continue;
+
+            if (!_materialStageById.TryGetValue(sample.MaterialStageId, out var materialStage))
+            {
+                _logger.LogError($"MaterialStage с Id {sample.MaterialStageId} не найдена в кэше");
+                return false;
+            }
+            if (materialStage.StageName == "П")
+            {
+                if (!double.TryParse(sample.StandartTime, out double hours))
+                {
+                    _logger.LogError($"Не удалось распарсить StandartTime как число: '{sample.StandartTime}' для образца {sample.Id}");
+                    return false;
+                }
+                var stageDate = stageC.Date.AddHours(hours);
+                stageP = new StageEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ProductSubTypeStageSampleId = sample.Id,
+                    ProductId = product.Id,
+                    Status = "Готов",
+                    Date = stageDate,
+                    CreateTime = DateTime.UtcNow,
+                    UpdateTime = DateTime.UtcNow
+                };
+                stagesToCreate.Add(stageP);
+                break;
+            }
+        }
+        if (stageP == null)
+        {
+            _logger.LogError($"Для продукта {product.Id} не найдена стадия с именем 'П'");
+            return false;
+        }
+
+        // ---- 3. Обработка остальных стадий ----
+        foreach (var sample in samples)
+        {
+            // Пропускаем уже созданные "С" и "П"
             if (stagesToCreate.Any(s => s.ProductSubTypeStageSampleId == sample.Id))
                 continue;
 
@@ -312,33 +350,38 @@ public class CoreService
 
             DateTime stageDate;
 
-            if (materialStage.StageName == "П")
+            // Пытаемся получить дату из материалов, если есть GroupMaterialId и поставки
+            if (materialStage.GroupMaterialId.HasValue)
             {
-                // Парсинг норматива в часах
+                var groupDeliveries = deliveriesByGroup[materialStage.GroupMaterialId.Value].ToList();
+                if (groupDeliveries.Any())
+                {
+                    var maxDeliveryDate = groupDeliveries.Max(d => d.DateDelivery);
+                    stageDate = maxDeliveryDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+                    _logger.LogDebug($"Для стадии {sample.Id} использована максимальная дата поставки: {maxDeliveryDate}");
+                }
+                else
+                {
+                    // Группа материалов есть, но поставок нет – используем норматив от даты "П"
+                    if (!double.TryParse(sample.StandartTime, out double hours))
+                    {
+                        _logger.LogError($"Не удалось распарсить StandartTime как число: '{sample.StandartTime}' для образца {sample.Id}");
+                        return false;
+                    }
+                    stageDate = stageP.Date.AddHours(hours);
+                    _logger.LogDebug($"Для стадии {sample.Id} использован норматив {hours}ч от даты 'П' (нет поставок)");
+                }
+            }
+            else
+            {
+                // Нет группы материалов – используем норматив от даты "П"
                 if (!double.TryParse(sample.StandartTime, out double hours))
                 {
                     _logger.LogError($"Не удалось распарсить StandartTime как число: '{sample.StandartTime}' для образца {sample.Id}");
                     return false;
                 }
-                stageDate = cStageDate.Value.AddHours(hours);
-            }
-            else
-            {
-                if (!materialStage.GroupMaterialId.HasValue)
-                {
-                    _logger.LogError($"Для стадии с именем {materialStage.StageName} (sample {sample.Id}) не указан GroupMaterialId");
-                    return false;
-                }
-
-                var groupDeliveries = deliveriesByGroup[materialStage.GroupMaterialId.Value].ToList();
-                if (!groupDeliveries.Any())
-                {
-                    _logger.LogError($"Для продукта {product.Id} и группы материалов {materialStage.GroupMaterialId} нет корректных записей о поставке (все отфильтрованы или отсутствуют)");
-                    return false;
-                }
-
-                var maxDeliveryDate = groupDeliveries.Max(d => d.DateDelivery);
-                stageDate = maxDeliveryDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+                stageDate = stageP.Date.AddHours(hours);
+                _logger.LogDebug($"Для стадии {sample.Id} использован норматив {hours}ч от даты 'П' (нет GroupMaterialId)");
             }
 
             var newStage = new StageEntity
@@ -377,6 +420,7 @@ public class CoreService
         return true;
     }
 
+    // Вспомогательный метод для определения даты старта
     private async Task<DateTime?> GetStartDateUtcAsync(ProductEntity product)
     {
         if (product.StartDate.HasValue)
@@ -388,11 +432,12 @@ public class CoreService
             return null;
         }
 
-        // EndDate - 14 дней
         var computedStartDate = product.EndDate.Value.AddDays(-14);
         _logger.LogWarning($"Продукт {product.Id} не имеет StartDate. Используем вычисленную дату: {computedStartDate} (EndDate - 14 дней)");
         return computedStartDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
     }
+
+   
 
     private async Task LoadFactoryBrigadesAsync()
     {
@@ -530,11 +575,8 @@ public class CoreService
         foreach (var stage in stages)
         {
             if (!_stageSamplesByMaterial.TryGetValue(stage.ProductSubTypeStageSampleId, out var sampleIds)) continue;
-            // На самом деле нам нужно от stage перейти к MaterialStage через ProductSubTypeStageSample
-            // Но проще: у stage есть ProductSubTypeStageSampleId, по нему получить MaterialStageId через наш кэш
-            // Сделаем словарь MaterialStageId по ProductSubTypeStageSampleId
         }
-        // Для упрощения оставим как было, но с использованием кэша:
+
         foreach (var stage in stages)
         {
             var sample = await _stageSampleRepository.GetById(stage.ProductSubTypeStageSampleId);
