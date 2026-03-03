@@ -1,5 +1,5 @@
 ﻿using CsvHelper.Configuration.Attributes;
-namespace KssGroupPlanning.Entities;
+namespace KssGroupPlanning.Entities.Src;
 
 public class SrcProductEntity
 {

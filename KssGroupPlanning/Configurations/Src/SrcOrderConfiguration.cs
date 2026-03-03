@@ -1,12 +1,12 @@
-﻿using KssGroupPlanning.Entities;
+﻿using KssGroupPlanning.Entities.Src;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KssGroupPlanning.Configurations;
+namespace KssGroupPlanning.Configurations.Src;
 
 public class SrcOrderConfiguration : IEntityTypeConfiguration<SrcOrderEntity>
 {
-    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SrcOrderEntity> builder)
+    public void Configure(EntityTypeBuilder<SrcOrderEntity> builder)
     {
         builder.HasKey(so => so.Id);
 

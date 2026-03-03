@@ -1,7 +1,11 @@
 ﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using KssGroupPlanning.Configurations;
+using KssGroupPlanning.Configurations.DQ;
+using KssGroupPlanning.Configurations.Src;
 using KssGroupPlanning.Entities;
+using KssGroupPlanning.Entities.Src;
+using KssGroupPlanning.Entities.DQ;
 
 
 namespace KssGroupPlanning.Infrastuction.Db;
@@ -17,9 +21,6 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<ProductSubTypeWorkingPeriodSampleEntity> ProductSubTypeWorkingPeriodSample { get; set; }
     public DbSet<OrderEntity> Order { get; set; }
     public DbSet<FactoryEntity> Factory { get; set; }
-    public DbSet<SrcOrderEntity> SrcOrder { get; set; }
-    public DbSet<SrcProductEntity> SrcProduct { get; set; }
-    public DbSet<SrcMaterialEntity> SrcMaterial { get; set; }
     public DbSet<StageEntity> Stage { get; set; }
     public DbSet<StageTypeEntity> StageType { get; set; }
     public DbSet<WorkingPeriodEntity> WorkingPeriod { get; set; }
@@ -32,6 +33,15 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
     public DbSet<ProductSubTypeGroupMaterialRelationEntity> ProductSubTypeGroupMaterialRelation { get; set; }
     public DbSet<WorkingPeriodStageBrigadeRelationEntity> WorkingPeriodStageBrigadeRelation { get; set; }
     public DbSet<MaterialStageEntity> MaterialStage { get; set; }
+
+    public DbSet<SrcOrderEntity> SrcOrder { get; set; }
+    public DbSet<SrcProductEntity> SrcProduct { get; set; }
+    public DbSet<SrcMaterialEntity> SrcMaterial { get; set; }
+
+    public DbSet<DQSrcOrderEntity> DQSrcOrder { get; set; }
+    public DbSet<DQSrcProductEntity> DQSrcProduct { get; set; }
+    public DbSet<DQSrcMaterialEntity> DQSrcMaterial { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
@@ -43,9 +53,6 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new ProductSubTypeWorkingPeriodSampleConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
         modelBuilder.ApplyConfiguration(new FactoryConfiguration());
-        modelBuilder.ApplyConfiguration(new SrcOrderConfiguration());
-        modelBuilder.ApplyConfiguration(new SrcProductConfiguration());
-        modelBuilder.ApplyConfiguration(new SrcMaterialConfiguration());
         modelBuilder.ApplyConfiguration(new StageConfiguration());
         modelBuilder.ApplyConfiguration(new StageTypeConfiguration());
         modelBuilder.ApplyConfiguration(new WorkingPeriodConfiguration());
@@ -59,6 +66,14 @@ public class ProjectDbContext(DbContextOptions<ProjectDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new WorkingPeriodStageBrigadeRelationConfiguration());
         modelBuilder.ApplyConfiguration(new MaterialStageConfiguration());
 
+        modelBuilder.ApplyConfiguration(new SrcOrderConfiguration());
+        modelBuilder.ApplyConfiguration(new SrcProductConfiguration());
+        modelBuilder.ApplyConfiguration(new SrcMaterialConfiguration());
+
+
+        modelBuilder.ApplyConfiguration(new DQSrcOrderConfiguration());
+        modelBuilder.ApplyConfiguration(new DQSrcProductConfiguration());
+        modelBuilder.ApplyConfiguration(new DQSrcMaterialConfiguration());
 
         modelBuilder.Entity<ProductTypeEntity>().HasData(
             new ProductTypeEntity[]

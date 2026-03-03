@@ -1,12 +1,12 @@
-﻿using KssGroupPlanning.Entities;
+﻿using KssGroupPlanning.Entities.Src;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KssGroupPlanning.Configurations;
+namespace KssGroupPlanning.Configurations.Src;
 
 public class SrcMaterialConfiguration : IEntityTypeConfiguration<SrcMaterialEntity>
 {
-    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SrcMaterialEntity> builder)
+    public void Configure(EntityTypeBuilder<SrcMaterialEntity> builder)
     {
         builder.HasKey(so => so.Id);
 

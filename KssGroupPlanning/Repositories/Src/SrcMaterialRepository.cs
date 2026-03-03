@@ -1,8 +1,7 @@
-﻿using KssGroupPlanning.Entities;
-
-using Microsoft.EntityFrameworkCore;
-using KssGroupPlanning.Interfaces.EntityInterfaces;
+﻿using Microsoft.EntityFrameworkCore;
 using KssGroupPlanning.Infrastuction.Db;
+using KssGroupPlanning.Entities.Src;
+using KssGroupPlanning.Interfaces.EntityInterfaces.Src;
 
 public class SrcMaterialRepository(ProjectDbContext context) : ISrcMaterialRepository
 {

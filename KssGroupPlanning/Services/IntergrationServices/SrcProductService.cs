@@ -1,8 +1,8 @@
-﻿using KssGroupPlanning.Interfaces.EntityInterfaces;
-using KssGroupPlanning.Entities;
-using CsvHelper.Configuration;
+﻿using CsvHelper.Configuration;
 using CsvHelper;
 using System.Globalization;
+using KssGroupPlanning.Entities.Src;
+using KssGroupPlanning.Interfaces.EntityInterfaces.Src;
 
 namespace KssGroupPlanning.Services;
 

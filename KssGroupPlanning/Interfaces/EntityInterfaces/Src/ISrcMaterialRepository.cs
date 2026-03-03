@@ -1,6 +1,6 @@
-﻿using KssGroupPlanning.Entities;
+﻿using KssGroupPlanning.Entities.Src;
 
-namespace KssGroupPlanning.Interfaces.EntityInterfaces;
+namespace KssGroupPlanning.Interfaces.EntityInterfaces.Src;
 
 public interface ISrcMaterialRepository
 {
