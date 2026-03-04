@@ -33,9 +33,9 @@ public class WorkingPeriodRepository : IWorkingPeriodRepository
 
         return await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
     }
-    public async Task<WorkingPeriodEntity?> GetByProductId(Guid productId)
+    public async Task<List<WorkingPeriodEntity?>> GetByProductId(Guid productId)
     {
-        return await _dbcontext.WorkingPeriod.AsNoTracking().FirstOrDefaultAsync(c => c.ProductId == productId);
+        return await _dbcontext.WorkingPeriod.AsNoTracking().Where(c => c.ProductId == productId).ToListAsync();
     }
     public async Task Add(WorkingPeriodEntity workingPeriod)
     {

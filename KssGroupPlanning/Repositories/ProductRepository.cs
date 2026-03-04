@@ -1,8 +1,6 @@
 ﻿using KssGroupPlanning.Entities;
 using KssGroupPlanning.Infrastuction.Db;
 using KssGroupPlanning.Interfaces.EntityInterfaces;
-
-
 using Microsoft.EntityFrameworkCore;
 
 namespace KssGroupPlanning.Repositories;
