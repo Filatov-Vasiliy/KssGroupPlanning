@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
+using Serilog.Events;
 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -21,6 +22,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 {
     loggerConfiguration
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Fatal)
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database", LogEventLevel.Fatal)
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Fatal)
         .ReadFrom.Configuration(context.Configuration)
         .Enrich.FromLogContext()
         .Enrich.WithProperty("Application", "KssGroupPlanning");
