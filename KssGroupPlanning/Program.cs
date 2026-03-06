@@ -3,10 +3,13 @@ using KssGroupPlanning.Extentions;
 using KssGroupPlanning.Infrastuction.auth;
 using KssGroupPlanning.Infrastuction.Db;
 using KssGroupPlanning.Interfaces.EntityInterfaces;
+using KssGroupPlanning.Interfaces.EntityInterfaces.Src;
+using KssGroupPlanning.Interfaces.EntityInterfaces.DQ;
 using KssGroupPlanning.Interfaces.Infrastruction;
 using KssGroupPlanning.Repositories;
+using KssGroupPlanning.Repositories.DQ;
 using KssGroupPlanning.Services;
-
+using KssGroupPlanning.Services.DQServices;
 using KssGroupPlanning.Services.EntityServices;
 using KssGroupPlanning.Services.IntergrationServices;
 using Microsoft.AspNetCore.Diagnostics;
@@ -14,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
 using Serilog.Events;
+using KssGroupPlanning.Jobs.Integration;
 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -37,21 +41,7 @@ services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 // Add services to the container.
 var configuration = builder.Configuration;
-/*
-static void orderScvReader()
-{
-    List<string> badRecord = new List<string>();
-    var config = new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" , BadDataFound = context => badRecord.Add(context.RawRecord) };
-    using (var streamReader = new StreamReader(@"./csv/Order.xls"))
-    {
-        using (var csvReader = new CsvReader(streamReader, config))
-        {
-            var records = csvReader.GetRecords<SrcOrderEntity>().ToList();
-        }
-    }
-}
-orderScvReader();
-*/
+
 services.AddScoped<UserService>();
 services.AddScoped<ProductTypeService>();
 services.AddScoped<BrigadeService>();
@@ -77,6 +67,12 @@ services.AddScoped<WorkingPeriodStageTypeRelationService>();
 services.AddScoped<SrcOrderService>();
 services.AddScoped<SrcProductService>();
 services.AddScoped<SrcMaterialService>();
+services.AddScoped<LoadSrcService>();
+
+services.AddScoped<DQSrcOrderService>();
+services.AddScoped<DQSrcProductService>();
+services.AddScoped<DQSrcMaterialService>();
+
 services.AddScoped<IntegrationService>();
 services.AddTransient<IntegrationJob>();
 services.AddScoped<CoreService>(); //?!?!?!?!
@@ -104,9 +100,14 @@ services.AddScoped<IWorkingPeriodStageBrigadeRelationRepository, WorkingPeriodSt
 services.AddScoped<IWorkingPeriodStageMaterialRepository, WorkingPeriodStageMaterialRepository>();
 services.AddScoped<IWorkingPeriodStageRepository, WorkingPeriodStageRepository>();
 services.AddScoped<IWorkingPeriodStageTypeRelationRepository, NewWorkingPeriodStageTypeRelationRepository>();
+
 services.AddScoped<ISrcOrderRepository, SrcOrderRepository>();
 services.AddScoped<ISrcProductRepository, SrcProductRepository>();
 services.AddScoped<ISrcMaterialRepository, SrcMaterialRepository>();
+
+services.AddScoped<IDQSrcOrderRepository, DQSrcOrderRepository>();
+services.AddScoped<IDQSrcProductRepository, DQSrcProductRepository>();
+services.AddScoped<IDQSrcMaterialRepository, DQSrcMaterialRepository>();
 
 builder.Services.AddControllers();
 

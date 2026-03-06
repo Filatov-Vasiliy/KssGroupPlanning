@@ -188,6 +188,180 @@ namespace KssGroupPlanning.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KssGroupPlanning.Entities.DQ.DQSrcMaterialEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("CreateDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("CreateTime")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<decimal?>("CurrentQty")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateOnly?>("ForAdmissionDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("GroupMaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("LoadStatus")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MaterialGroup")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MaterialName")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("PostedDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("ProductOrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ProductOrderDateChild")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ProductOrderName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProductOrderNameChild")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("Qty")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DQSrcMaterial");
+                });
+
+            modelBuilder.Entity("KssGroupPlanning.Entities.DQ.DQSrcOrderEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Contragent")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("CreateDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("CreateTime")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Dogovor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("LoadStatus")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly?>("LogisticDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Manager")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("OrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OrderName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrderNumber")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("PaymentAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("PaymentCurrent")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("Qty")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("SchemeDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DQSrcOrder");
+                });
+
+            modelBuilder.Entity("KssGroupPlanning.Entities.DQ.DQSrcProductEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("CreateDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("CreateTime")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Factory")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("LoadStatus")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly?>("OrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OrderNumber")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("ProductOrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ProductOrderName")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Qty")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DQSrcProduct");
+                });
+
             modelBuilder.Entity("KssGroupPlanning.Entities.FactoryEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3686,7 +3860,7 @@ namespace KssGroupPlanning.Migrations
                         });
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.SrcMaterialEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.Src.SrcMaterialEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -3730,7 +3904,7 @@ namespace KssGroupPlanning.Migrations
                     b.ToTable("SrcMaterial");
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.SrcOrderEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.Src.SrcOrderEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -3780,7 +3954,7 @@ namespace KssGroupPlanning.Migrations
                     b.ToTable("SrcOrder");
                 });
 
-            modelBuilder.Entity("KssGroupPlanning.Entities.SrcProductEntity", b =>
+            modelBuilder.Entity("KssGroupPlanning.Entities.Src.SrcProductEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

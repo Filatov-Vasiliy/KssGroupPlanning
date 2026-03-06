@@ -1,0 +1,103 @@
+2026-02-25 15:39:05.870 +03:00 [INF] Program ===== Приложение запущено в окружении Development =====
+2026-02-25 15:39:06.195 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.DefaultActionDescriptorCollectionProvider No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
+2026-02-25 15:39:06.289 +03:00 [INF] Quartz.Core.SchedulerSignalerImpl Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2026-02-25 15:39:06.290 +03:00 [INF] Quartz.Core.QuartzScheduler Quartz Scheduler created
+2026-02-25 15:39:06.291 +03:00 [INF] Quartz.Core.QuartzScheduler JobFactory set to: Quartz.Simpl.MicrosoftDependencyInjectionJobFactory
+2026-02-25 15:39:06.294 +03:00 [INF] Quartz.Simpl.RAMJobStore RAMJobStore initialized.
+2026-02-25 15:39:06.295 +03:00 [INF] Quartz.Impl.StdSchedulerFactory Quartz Scheduler 3.15.1.0 - 'QuartzScheduler' with instanceId 'NON_CLUSTERED' initialized
+2026-02-25 15:39:06.302 +03:00 [INF] Quartz.Impl.StdSchedulerFactory Using thread pool 'Quartz.Simpl.DefaultThreadPool', size: 10
+2026-02-25 15:39:06.303 +03:00 [INF] Quartz.Impl.StdSchedulerFactory Using job store 'Quartz.Simpl.RAMJobStore', supports persistence: False, clustered: False
+2026-02-25 15:39:06.312 +03:00 [INF] Quartz.ContainerConfigurationProcessor Adding 1 jobs, 1 triggers.
+2026-02-25 15:39:06.315 +03:00 [INF] Quartz.ContainerConfigurationProcessor Adding job: DEFAULT.IntegrationJob
+2026-02-25 15:39:06.708 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: http://localhost:5037
+2026-02-25 15:39:06.739 +03:00 [INF] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
+2026-02-25 15:39:06.746 +03:00 [INF] Microsoft.Hosting.Lifetime Hosting environment: Development
+2026-02-25 15:39:06.746 +03:00 [INF] Quartz.Core.QuartzScheduler Scheduler QuartzScheduler_$_NON_CLUSTERED started.
+2026-02-25 15:39:06.747 +03:00 [INF] Microsoft.Hosting.Lifetime Content root path: C:\projects\KssGroupPlanning\KssGroupPlanning
+2026-02-25 15:39:07.571 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger - null null
+2026-02-25 15:39:07.835 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger - 301 0 null 269.8183ms
+2026-02-25 15:39:07.844 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger/index.html - null null
+2026-02-25 15:39:07.900 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger/index.html - 200 null text/html;charset=utf-8 56.4817ms
+2026-02-25 15:39:07.928 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger/swagger-ui.css - null null
+2026-02-25 15:39:07.935 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/_vs/browserLink - null null
+2026-02-25 15:39:07.932 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/_framework/aspnetcore-browser-refresh.js - null null
+2026-02-25 15:39:07.928 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger/swagger-ui-standalone-preset.js - null null
+2026-02-25 15:39:07.949 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/_framework/aspnetcore-browser-refresh.js - 200 16517 application/javascript; charset=utf-8 17.1465ms
+2026-02-25 15:39:07.928 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger/swagger-ui-bundle.js - null null
+2026-02-25 15:39:07.974 +03:00 [INF] Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware Sending file. Request path: '/swagger-ui-standalone-preset.js'. Physical path: 'N/A'
+2026-02-25 15:39:07.975 +03:00 [INF] Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware Sending file. Request path: '/swagger-ui.css'. Physical path: 'N/A'
+2026-02-25 15:39:07.978 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger/swagger-ui-standalone-preset.js - 200 230280 text/javascript 50.3979ms
+2026-02-25 15:39:07.980 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger/swagger-ui.css - 200 152034 text/css 52.5506ms
+2026-02-25 15:39:07.988 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/_vs/browserLink - 200 null text/javascript; charset=UTF-8 56.8866ms
+2026-02-25 15:39:07.994 +03:00 [INF] Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware Sending file. Request path: '/swagger-ui-bundle.js'. Physical path: 'N/A'
+2026-02-25 15:39:07.997 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger/swagger-ui-bundle.js - 200 1456926 text/javascript 69.3474ms
+2026-02-25 15:39:08.113 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger/v1/swagger.json - null null
+2026-02-25 15:39:08.147 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 33.6625ms
+2026-02-25 15:39:13.307 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/orderDetailed - null null
+2026-02-25 15:39:13.317 +03:00 [WRN] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware Failed to determine the https port for redirect.
+2026-02-25 15:39:13.321 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'HTTP: GET orderDetailed/ => GetAllDetailed'
+2026-02-25 15:39:14.751 +03:00 [WRN] Microsoft.EntityFrameworkCore.Query Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-02-25 15:39:15.182 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (37ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT o."Id", o."Contragent", o."CreateTime", o."Manager", o."Number", o."PaymentAmount", o."PaymentCurrent", o."Status", o."UpdateTime", s1."Id", s1."CreateTime", s1."EndDate", s1."FactoryId", s1."Number", s1."OrderId", s1."ParentProductId", s1."ProductSubTypeId", s1."StartDate", s1."Status", s1."SubProductStageId", s1."UpdateTime", s1."Id0", s1."Id1", s1."Id2", s1."CreateTime0", s1."Date", s1."ProductId", s1."ProductSubTypeStageSampleId", s1."Status0", s1."UpdateTime0", s1."Name", s1."ProductTypeId", s1."Name0", s1."Id3", s1."CreateTime1", s1."DateFrom", s1."DateTo", s1."Name1", s1."ProductId0", s1."Status1", s1."UpdateTime1", s1."Id00", s1."CreateTime00", s1."DateFrom0", s1."DateTo0", s1."ProductSubTypeWorkingPeriodSampleId", s1."Recycling", s1."Status00", s1."UpdateTime00", s1."WorkingPeriodId"
+FROM "Order" AS o
+LEFT JOIN (
+    SELECT p."Id", p."CreateTime", p."EndDate", p."FactoryId", p."Number", p."OrderId", p."ParentProductId", p."ProductSubTypeId", p."StartDate", p."Status", p."SubProductStageId", p."UpdateTime", p0."Id" AS "Id0", p1."Id" AS "Id1", s."Id" AS "Id2", s."CreateTime" AS "CreateTime0", s."Date", s."ProductId", s."ProductSubTypeStageSampleId", s."Status" AS "Status0", s."UpdateTime" AS "UpdateTime0", p0."Name", p0."ProductTypeId", p1."Name" AS "Name0", s0."Id" AS "Id3", s0."CreateTime" AS "CreateTime1", s0."DateFrom", s0."DateTo", s0."Name" AS "Name1", s0."ProductId" AS "ProductId0", s0."Status" AS "Status1", s0."UpdateTime" AS "UpdateTime1", s0."Id0" AS "Id00", s0."CreateTime0" AS "CreateTime00", s0."DateFrom0", s0."DateTo0", s0."ProductSubTypeWorkingPeriodSampleId", s0."Recycling", s0."Status0" AS "Status00", s0."UpdateTime0" AS "UpdateTime00", s0."WorkingPeriodId"
+    FROM "Product" AS p
+    INNER JOIN "ProductSubType" AS p0 ON p."ProductSubTypeId" = p0."Id"
+    INNER JOIN "ProductType" AS p1 ON p0."ProductTypeId" = p1."Id"
+    LEFT JOIN "Stage" AS s ON p."Id" = s."ProductId"
+    LEFT JOIN (
+        SELECT w."Id", w."CreateTime", w."DateFrom", w."DateTo", w."Name", w."ProductId", w."Status", w."UpdateTime", w0."Id" AS "Id0", w0."CreateTime" AS "CreateTime0", w0."DateFrom" AS "DateFrom0", w0."DateTo" AS "DateTo0", w0."ProductSubTypeWorkingPeriodSampleId", w0."Recycling", w0."Status" AS "Status0", w0."UpdateTime" AS "UpdateTime0", w0."WorkingPeriodId"
+        FROM "WorkingPeriod" AS w
+        LEFT JOIN "WorkingPeriodStage" AS w0 ON w."Id" = w0."WorkingPeriodId"
+    ) AS s0 ON p."Id" = s0."ProductId"
+) AS s1 ON o."Id" = s1."OrderId"
+ORDER BY o."Number", o."Id", s1."Id", s1."Id0", s1."Id1", s1."Id2", s1."Id3"
+2026-02-25 15:39:15.266 +03:00 [INF] Microsoft.AspNetCore.Http.Result.OkObjectResult Setting HTTP status code 200.
+2026-02-25 15:39:15.270 +03:00 [INF] Microsoft.AspNetCore.Http.Result.OkObjectResult Writing value of type 'List`1' as Json.
+2026-02-25 15:39:15.294 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'HTTP: GET orderDetailed/ => GetAllDetailed'
+2026-02-25 15:39:15.302 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/orderDetailed - 200 null application/json; charset=utf-8 1995.0387ms
+2026-02-25 16:54:41.555 +03:00 [INF] Program ===== Приложение запущено в окружении Development =====
+2026-02-25 16:54:41.780 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.DefaultActionDescriptorCollectionProvider No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
+2026-02-25 16:54:41.864 +03:00 [INF] Quartz.Core.SchedulerSignalerImpl Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2026-02-25 16:54:41.868 +03:00 [INF] Quartz.Core.QuartzScheduler Quartz Scheduler created
+2026-02-25 16:54:41.876 +03:00 [INF] Quartz.Core.QuartzScheduler JobFactory set to: Quartz.Simpl.MicrosoftDependencyInjectionJobFactory
+2026-02-25 16:54:41.878 +03:00 [INF] Quartz.Simpl.RAMJobStore RAMJobStore initialized.
+2026-02-25 16:54:41.879 +03:00 [INF] Quartz.Impl.StdSchedulerFactory Quartz Scheduler 3.15.1.0 - 'QuartzScheduler' with instanceId 'NON_CLUSTERED' initialized
+2026-02-25 16:54:41.880 +03:00 [INF] Quartz.Impl.StdSchedulerFactory Using thread pool 'Quartz.Simpl.DefaultThreadPool', size: 10
+2026-02-25 16:54:41.881 +03:00 [INF] Quartz.Impl.StdSchedulerFactory Using job store 'Quartz.Simpl.RAMJobStore', supports persistence: False, clustered: False
+2026-02-25 16:54:41.891 +03:00 [INF] Quartz.ContainerConfigurationProcessor Adding 1 jobs, 1 triggers.
+2026-02-25 16:54:41.893 +03:00 [INF] Quartz.ContainerConfigurationProcessor Adding job: DEFAULT.IntegrationJob
+2026-02-25 16:54:42.279 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: http://localhost:5037
+2026-02-25 16:54:42.322 +03:00 [INF] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
+2026-02-25 16:54:42.330 +03:00 [INF] Microsoft.Hosting.Lifetime Hosting environment: Development
+2026-02-25 16:54:42.330 +03:00 [INF] Quartz.Core.QuartzScheduler Scheduler QuartzScheduler_$_NON_CLUSTERED started.
+2026-02-25 16:54:42.331 +03:00 [INF] Microsoft.Hosting.Lifetime Content root path: C:\projects\KssGroupPlanning\KssGroupPlanning
+2026-02-25 16:54:42.756 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger/index.html - null null
+2026-02-25 16:54:43.044 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger/index.html - 200 null text/html;charset=utf-8 294.2927ms
+2026-02-25 16:54:43.095 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/_framework/aspnetcore-browser-refresh.js - null null
+2026-02-25 16:54:43.095 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/_vs/browserLink - null null
+2026-02-25 16:54:43.099 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/_framework/aspnetcore-browser-refresh.js - 200 16517 application/javascript; charset=utf-8 4.2059ms
+2026-02-25 16:54:43.125 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/_vs/browserLink - 200 null text/javascript; charset=UTF-8 30.9301ms
+2026-02-25 16:54:43.303 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/swagger/v1/swagger.json - null null
+2026-02-25 16:54:43.346 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5037/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 43.2058ms
+2026-02-25 16:54:53.430 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5037/orderDetailed - null null
+2026-02-25 16:54:53.440 +03:00 [WRN] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware Failed to determine the https port for redirect.
+2026-02-25 16:54:53.443 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'HTTP: GET orderDetailed/ => GetAllDetailed'
+2026-02-25 16:54:54.303 +03:00 [WRN] Microsoft.EntityFrameworkCore.Query Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-02-25 16:54:54.590 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (33ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT o."Id", o."Contragent", o."CreateTime", o."Manager", o."Number", o."PaymentAmount", o."PaymentCurrent", o."Status", o."UpdateTime", s1."Id", s1."CreateTime", s1."EndDate", s1."FactoryId", s1."Number", s1."OrderId", s1."ParentProductId", s1."ProductSubTypeId", s1."StartDate", s1."Status", s1."SubProductStageId", s1."UpdateTime", s1."Id0", s1."Id1", s1."Id2", s1."CreateTime0", s1."Date", s1."ProductId", s1."ProductSubTypeStageSampleId", s1."Status0", s1."UpdateTime0", s1."Name", s1."ProductTypeId", s1."Name0", s1."Id3", s1."CreateTime1", s1."DateFrom", s1."DateTo", s1."Name1", s1."ProductId0", s1."Status1", s1."UpdateTime1", s1."Id00", s1."CreateTime00", s1."DateFrom0", s1."DateTo0", s1."ProductSubTypeWorkingPeriodSampleId", s1."Recycling", s1."Status00", s1."UpdateTime00", s1."WorkingPeriodId"
+FROM "Order" AS o
+LEFT JOIN (
+    SELECT p."Id", p."CreateTime", p."EndDate", p."FactoryId", p."Number", p."OrderId", p."ParentProductId", p."ProductSubTypeId", p."StartDate", p."Status", p."SubProductStageId", p."UpdateTime", p0."Id" AS "Id0", p1."Id" AS "Id1", s."Id" AS "Id2", s."CreateTime" AS "CreateTime0", s."Date", s."ProductId", s."ProductSubTypeStageSampleId", s."Status" AS "Status0", s."UpdateTime" AS "UpdateTime0", p0."Name", p0."ProductTypeId", p1."Name" AS "Name0", s0."Id" AS "Id3", s0."CreateTime" AS "CreateTime1", s0."DateFrom", s0."DateTo", s0."Name" AS "Name1", s0."ProductId" AS "ProductId0", s0."Status" AS "Status1", s0."UpdateTime" AS "UpdateTime1", s0."Id0" AS "Id00", s0."CreateTime0" AS "CreateTime00", s0."DateFrom0", s0."DateTo0", s0."ProductSubTypeWorkingPeriodSampleId", s0."Recycling", s0."Status0" AS "Status00", s0."UpdateTime0" AS "UpdateTime00", s0."WorkingPeriodId"
+    FROM "Product" AS p
+    INNER JOIN "ProductSubType" AS p0 ON p."ProductSubTypeId" = p0."Id"
+    INNER JOIN "ProductType" AS p1 ON p0."ProductTypeId" = p1."Id"
+    LEFT JOIN "Stage" AS s ON p."Id" = s."ProductId"
+    LEFT JOIN (
+        SELECT w."Id", w."CreateTime", w."DateFrom", w."DateTo", w."Name", w."ProductId", w."Status", w."UpdateTime", w0."Id" AS "Id0", w0."CreateTime" AS "CreateTime0", w0."DateFrom" AS "DateFrom0", w0."DateTo" AS "DateTo0", w0."ProductSubTypeWorkingPeriodSampleId", w0."Recycling", w0."Status" AS "Status0", w0."UpdateTime" AS "UpdateTime0", w0."WorkingPeriodId"
+        FROM "WorkingPeriod" AS w
+        LEFT JOIN "WorkingPeriodStage" AS w0 ON w."Id" = w0."WorkingPeriodId"
+    ) AS s0 ON p."Id" = s0."ProductId"
+) AS s1 ON o."Id" = s1."OrderId"
+ORDER BY o."Number", o."Id", s1."Id", s1."Id0", s1."Id1", s1."Id2", s1."Id3"
