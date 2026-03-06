@@ -1,6 +1,9 @@
-﻿using Quartz;
+﻿using KssGroupPlanning.Services;
+using KssGroupPlanning.Services.DQServices;
+using KssGroupPlanning.Services.IntergrationServices;
+using Quartz;
 
-namespace KssGroupPlanning.Services.IntergrationServices
+namespace KssGroupPlanning.Jobs.Integration
 {
     public class IntegrationJob : IJob
     {
@@ -8,15 +11,17 @@ namespace KssGroupPlanning.Services.IntergrationServices
         private readonly SrcOrderService _srcOrderService;
         private readonly SrcProductService _srcProductService;
         private readonly SrcMaterialService _srcMaterialService;
+        private readonly LoadSrcService _loadSrcService;
 
         private readonly ILogger<IntegrationJob> _logger;
 
-        public IntegrationJob(IntegrationService integrationService,SrcOrderService srcOrderService, SrcProductService srcProductService,SrcMaterialService srcMaterialService, ILogger<IntegrationJob> logger)
+        public IntegrationJob(LoadSrcService loadSrcService,IntegrationService integrationService,SrcOrderService srcOrderService, SrcProductService srcProductService,SrcMaterialService srcMaterialService, ILogger<IntegrationJob> logger)
         {
             _integrationService = integrationService;
             _srcOrderService = srcOrderService;
             _srcProductService = srcProductService;
             _srcMaterialService = srcMaterialService;
+            _loadSrcService = loadSrcService;
             _logger = logger;
         }
 
@@ -37,9 +42,12 @@ namespace KssGroupPlanning.Services.IntergrationServices
             try
             {
                 _logger.LogInformation("Заполняем Src слой новыми данными", DateTime.Now);
-                await _srcOrderService.InsertOrders();
-                await _srcProductService.InsertProducts();
-                await _srcMaterialService.InsertMaterials();
+
+                await _srcOrderService.InsertOrders(DateOnly.Parse("15.12.2025"), false);
+                await _srcProductService.InsertProducts(DateOnly.Parse("15.12.2025"), false);
+                await _srcMaterialService.InsertMaterials(DateOnly.Parse("15.12.2025"), false);
+
+                //await _loadSrcService.InsertFiles();
                 _logger.LogInformation("Заполнение Src слоя успешно завершено");
             }
             catch (Exception ex)

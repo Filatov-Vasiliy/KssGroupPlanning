@@ -49,7 +49,6 @@ public class OrderService
             CreateTime = DateTime.Now,
             UpdateTime = DateTime.Now,
         };
-        _logger.LogWarning($" ORDERSERVICE: {JsonSerializer.Serialize(order)}");
         await _orderRepository.Add(orderEntity);
     }
     public async Task Update(OrderEntity order)

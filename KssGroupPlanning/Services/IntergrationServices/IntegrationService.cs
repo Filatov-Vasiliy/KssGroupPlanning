@@ -108,10 +108,16 @@ namespace KssGroupPlanning.Services.IntergrationServices
             
             foreach (var order in orders)
             {
+                DQSrcOrderEntity dQSrcOrderEntity = new DQSrcOrderEntity();
+
                 OrderEntity entity = new OrderEntity();
                 var orderName = ClearNumber(order.OrderName);
                 if (orderName == "Failed") 
                 {
+                    //DQ
+                    dQSrcOrderEntity = dQSrcOrderEntity.SrcToDQ(order, "Failed by OrderName", false, null);
+                    await _dqSrcOrderService.Add(dQSrcOrderEntity);
+                    //
                     continue;
                 }
                 entity.Id = Guid.NewGuid();
@@ -133,25 +139,36 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 }
                 var orderNew = await _orderService.GetByNumber(entity.Number);
                 order.Id = orderNew.Id;
+                // DQ
+                dQSrcOrderEntity = dQSrcOrderEntity.SrcToDQ(order, "", true, order.Id);
+                await _dqSrcOrderService.Add(dQSrcOrderEntity);
+                // DQ
                 orderDict.Add(order.OrderNumber ?? "Пусто", order);
 
             }
-            
-            _logger.LogWarning($"Началась обработка Продуктов");
-
             var types = await _productTypeService.GetAllDetailed();
             foreach (var product in products)
             {
+                DQSrcProductEntity dQSrcProductEntity = new DQSrcProductEntity();
+
                 // Обработка Дерьмого номера
                 if (product.OrderNumber == "")
                 {
                     _logger.LogWarning($" ГОВНИЩЕ {JsonSerializer.Serialize(product)}");
+                    //DQ
+                    dQSrcProductEntity = dQSrcProductEntity.SrcToDQ(product, "Failed by OrderNumber", false, null);
+                    await _dqSrcProductService.Add(dQSrcProductEntity);
+                    //DQ
                     continue;
                 }
                 var productOrder = orderDict[product.OrderNumber];
                 var productNumber = ClearNumber(product.Comment);
                 if (productNumber == "Failed")
                 {
+                    //DQ
+                    dQSrcProductEntity = dQSrcProductEntity.SrcToDQ(product, "Failed by ProductOrderName", false, null);
+                    await _dqSrcProductService.Add(dQSrcProductEntity);
+                    //DQ
                     continue;
                 }
                 ProductEntity entity = new ProductEntity();
@@ -183,7 +200,12 @@ namespace KssGroupPlanning.Services.IntergrationServices
                 {
                     await _productService.Add(entity);
                 }
+                // DQ
+                dQSrcProductEntity = dQSrcProductEntity.SrcToDQ(product, "", true, entity.Id);
+                await _dqSrcProductService.Add(dQSrcProductEntity);
+                // DQ
                 // Формируем мапки с изделиями для мержа с материалами
+
                 try
                 {
                     productDict.Add(product.ProductOrderName, product);
@@ -203,7 +225,7 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     continue;
                 }
              }
-            
+
             // Загрузка материалов
 
             List<WorkingPeriodStageMaterialEntity> materialsFinish   = new List<WorkingPeriodStageMaterialEntity>();
@@ -265,6 +287,7 @@ namespace KssGroupPlanning.Services.IntergrationServices
 
             foreach (var material in materials) 
             {
+                DQSrcMaterialEntity dQSrcMaterialEntity = new DQSrcMaterialEntity();
                 WorkingPeriodStageMaterialEntity entity = new WorkingPeriodStageMaterialEntity();
                 if (material.ProductOrderNameChild != "") // Реализация нахождения родительского изделия
                 {
@@ -276,6 +299,10 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     }
                     catch (KeyNotFoundException ex)
                     {
+                        // DQ
+                        dQSrcMaterialEntity = dQSrcMaterialEntity.SrcToDQ(material, "Не нашелся родитель 1", false, null, null);
+                        await _dqSrcMaterialService.Add(dQSrcMaterialEntity);
+                        // DQ
                         continue;
                     }
                     ProductEntity product = new ProductEntity();
@@ -285,16 +312,26 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     }
                     catch (KeyNotFoundException ex)
                     {
+                        dQSrcMaterialEntity = dQSrcMaterialEntity.SrcToDQ(material, "Не нашелся родитель 2", false, null, null);
+                        await _dqSrcMaterialService.Add(dQSrcMaterialEntity);
                         continue;
                     }
                     if (product.Id != parentProductId)
                     {
                         product.ParentProductId = parentProductId;
                         await _productService.Update(product);
+                        // DQ
+                        dQSrcMaterialEntity = dQSrcMaterialEntity.SrcToDQ(material, "Ушел в продукты", false,null, product.Id);
+                        await _dqSrcMaterialService.Add(dQSrcMaterialEntity);
+                        // DQ
                         continue;
                     }
                     else 
                     {
+                        // DQ
+                        dQSrcMaterialEntity = dQSrcMaterialEntity.SrcToDQ(material, "Не нашелся родитель 3", false, null, null);
+                        await _dqSrcMaterialService.Add(dQSrcMaterialEntity);
+                        // DQ
                         continue;                    
                     }
                 }
@@ -323,6 +360,10 @@ namespace KssGroupPlanning.Services.IntergrationServices
                     var group = await _groupMaterialService.GetByName("Другое");
                     entity.GroupMaterialId = group.Id;
                 }
+                //DQ
+                dQSrcMaterialEntity = dQSrcMaterialEntity.SrcToDQ(material, "", true, entity.GroupMaterialId, entity.ProductId);
+                await _dqSrcMaterialService.Add(dQSrcMaterialEntity);
+                //DQ
                 // Определение даты доставки
                 (Guid, Guid) complexKey = (entity.ProductId, entity.GroupMaterialId); // Составной ключ для словаря
                 if (preparedMaterials.ContainsKey(complexKey))

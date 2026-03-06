@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
 using Serilog.Events;
+using KssGroupPlanning.Jobs.Integration;
 
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -66,6 +67,7 @@ services.AddScoped<WorkingPeriodStageTypeRelationService>();
 services.AddScoped<SrcOrderService>();
 services.AddScoped<SrcProductService>();
 services.AddScoped<SrcMaterialService>();
+services.AddScoped<LoadSrcService>();
 
 services.AddScoped<DQSrcOrderService>();
 services.AddScoped<DQSrcProductService>();

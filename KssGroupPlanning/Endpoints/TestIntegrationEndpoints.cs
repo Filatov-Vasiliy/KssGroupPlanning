@@ -16,6 +16,8 @@ public static class TestIntegrationEndpoints
         app.MapGet("integration/getAllProducts", GetAllProducts);
         app.MapGet("integration/getAllMaterials", GetAllMaterials);
         app.MapGet("integration/InsertAll", Insert);
+        app.MapGet("integration/IntegrationArchive", IntegrationArchive);
+
         app.MapGet("integration/LoadSrcToTest", LoadSrcToMain);
 
         //app.MapGet("brigadeByName/{name::string}", GetByName);
@@ -37,22 +39,29 @@ public static class TestIntegrationEndpoints
         var data = await srcMaterialService.GetAll();
         return Results.Ok(data);
     }
-    private static async Task<IResult> Insert(SrcOrderService srcOrderService,SrcMaterialService srcMaterialService,SrcProductService srcProductService)
+    private static async Task<IResult> Insert(LoadSrcService loadSrcService, SrcOrderService srcOrderService,SrcMaterialService srcMaterialService,SrcProductService srcProductService)
     {
-        await srcOrderService.InsertOrders();
-        await srcProductService.InsertProducts();
-        await srcMaterialService.InsertMaterials();
+        await loadSrcService.TruncateSrc();
+        await srcOrderService.InsertOrders(DateOnly.Parse("15.12.2025"),false);
+        await srcProductService.InsertProducts(DateOnly.Parse("15.12.2025"), false);
+        await srcMaterialService.InsertMaterials(DateOnly.Parse("15.12.2025"), false);
         return Results.Ok();
     }
-    private static async Task<IResult> LoadSrcToMain(IntegrationService integrationService, SrcOrderService srcOrderService, SrcMaterialService srcMaterialService, SrcProductService srcProductService)
+    private static async Task<IResult> LoadSrcToMain(LoadSrcService loadSrcService, IntegrationService integrationService, SrcOrderService srcOrderService, SrcMaterialService srcMaterialService, SrcProductService srcProductService)
     {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
+
         await srcOrderService.RemoveDuplicates();
         await srcProductService.RemoveDuplicates();
         await srcMaterialService.RemoveDuplicates();
         await integrationService.LoadSrcToMain();
         stopwatch.Stop();
         return Results.Ok(stopwatch.ElapsedMilliseconds);
+    }
+    private static async Task<IResult> IntegrationArchive(LoadSrcService loadSrcService)
+    {
+        await loadSrcService.InsertFilesArchive();
+        return Results.Ok();
     }
 }
