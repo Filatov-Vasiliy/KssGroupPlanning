@@ -1,7 +1,8 @@
-﻿using KssGroupPlanning.Entities;
+﻿using System.Diagnostics;
+using KssGroupPlanning.Entities;
 using KssGroupPlanning.Services;
+using KssGroupPlanning.Services.DQServices;
 using KssGroupPlanning.Services.IntergrationServices;
-using System.Diagnostics;
 
 
 namespace KssGroupPlanning.Endpoints;
@@ -17,6 +18,7 @@ public static class TestIntegrationEndpoints
         app.MapGet("integration/getAllMaterials", GetAllMaterials);
         app.MapGet("integration/InsertAll", Insert);
         app.MapGet("integration/IntegrationArchive", IntegrationArchive);
+        app.MapGet("integration/InsertAllv2", InsertAllv2);
 
         app.MapGet("integration/LoadSrcToTest", LoadSrcToMain);
 
@@ -62,6 +64,12 @@ public static class TestIntegrationEndpoints
     private static async Task<IResult> IntegrationArchive(LoadSrcService loadSrcService)
     {
         await loadSrcService.InsertFilesArchive();
+        return Results.Ok();
+    }
+    private static async Task<IResult> InsertAllv2(SrcOrderService srcOrderService,IntegrationV2Service integrationV2Service)
+    {
+        await srcOrderService.RemoveDuplicates();
+        await integrationV2Service.LoadSrcToMain();
         return Results.Ok();
     }
 }

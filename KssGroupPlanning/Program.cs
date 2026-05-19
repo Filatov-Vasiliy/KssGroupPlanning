@@ -74,6 +74,8 @@ services.AddScoped<DQSrcProductService>();
 services.AddScoped<DQSrcMaterialService>();
 
 services.AddScoped<IntegrationService>();
+services.AddScoped<IntegrationV2Service>();
+
 services.AddTransient<IntegrationJob>();
 services.AddScoped<CoreService>(); //?!?!?!?!
 
