@@ -85,7 +85,6 @@ public class IntegrationV2Service
         {
             if (productName.Contains(type.Name))
             {
-                //var seektype = await _productSubTypeService.GetByProductTypeId(type.Id);
                 var seektype = type.ProductSubTypes[0].Id;
                 return seektype;
             }
@@ -162,23 +161,6 @@ public class IntegrationV2Service
                              from b in bGroup.Where(x => srcProduct.ProductOrderName == x.ProductOrderNameChild || srcProduct.ProductName == x.MaterialName).DefaultIfEmpty()
                              select new { SrcProduct = srcProduct, SrcMaterial = b };
 
-        _logger.LogInformation($"Кол-во {leftJoinedList.Count()}");
-        /*
-        // отделяем основное от подпродукции
-        foreach (var item in joinedList)
-        {
-            if (item.SrcMaterial.Id != null)
-            {
-                productMaterialDict.Add(item.SrcProduct.ProductOrderName, item.SrcProduct);
-            }
-            else
-            {
-                productDict.Add(item.SrcProduct.ProductOrderName, item.SrcProduct);
-            }
-            srcMaterials.Remove(item.SrcMaterial);
-            // Убираем из списка материалов подпродукцию изделия
-        }
-        */
         foreach (var item in leftJoinedList)
         {
             {
@@ -218,7 +200,6 @@ public class IntegrationV2Service
                 // Обработка Дерьмого номера
                 if (product.OrderNumber == "")
                 {
-                    _logger.LogWarning($" ГОВНИЩЕ {JsonSerializer.Serialize(product)}");
                     //DQ
                     //dQSrcProductEntity = dQSrcProductEntity.SrcToDQ(product, "Failed by OrderNumber", false, null);
                     // await _dqSrcProductService.Add(dQSrcProductEntity);
@@ -307,7 +288,6 @@ public class IntegrationV2Service
             // теперь те которые наджоинились на материалы
             foreach (var productMaterial in productMaterialDict.Values)
             {
-            _logger.LogCritical("Заход");
                 var product = productMaterial.Item1;
                 var material = productMaterial.Item2;
                 ProductEntity productEntity = new ProductEntity();
@@ -327,7 +307,6 @@ public class IntegrationV2Service
                 // Обработка Дерьмого номера
                 if (product.OrderNumber == "")
                 {
-                    _logger.LogWarning($" ГОВНИЩЕ {JsonSerializer.Serialize(product)}");
                     //DQ
                     //dQSrcProductEntity = dQSrcProductEntity.SrcToDQ(product, "Failed by OrderNumber", false, null);
                     // await _dqSrcProductService.Add(dQSrcProductEntity);
@@ -407,14 +386,12 @@ public class IntegrationV2Service
                 {
                 productEntity.Number = productNumber + "."+i.ToString();
                 var entity = await _productService.GetByNumber(productEntity.Number);
-                _logger.LogCritical("я тут");
                 if (entity is not null)
                 {
                     i++;
-                    _logger.LogCritical("я тут2");
                     continue;
                 }
-                _logger.LogCritical("я тут3");
+
                 f = true;
                 }
                 if (isSHYP) // Обработка если ШУ
